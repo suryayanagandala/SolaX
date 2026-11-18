@@ -145328,3 +145328,197 @@ System.Threading.Tasks.TaskCanceledException: The request was canceled due to th
 2026-11-18 12:32:37.802 +05:30 [INF] HTTP GET /notifications responded 101 in 24751.2679 ms
 2026-11-18 12:32:41.143 +05:30 [INF] GetSummaryDashboard
 2026-11-18 12:32:41.149 +05:30 [INF] HTTP GET /api/SolarPerfomance/GetDashboardSummary responded 200 in 10614.5457 ms
+2026-11-18 16:43:05.433 +05:30 [WRN] No store type was specified for the decimal property 'Price' on entity type 'CartItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.581 +05:30 [WRN] No store type was specified for the decimal property 'ServicePrice' on entity type 'InstallationTechnician'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.582 +05:30 [WRN] No store type was specified for the decimal property 'Installation_Price' on entity type 'Installations'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.583 +05:30 [WRN] No store type was specified for the decimal property 'Amount' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.583 +05:30 [WRN] No store type was specified for the decimal property 'Tax' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.584 +05:30 [WRN] No store type was specified for the decimal property 'TotalAmount' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.584 +05:30 [WRN] No store type was specified for the decimal property 'EstimatedPrice' on entity type 'MaintenanceRequests'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.585 +05:30 [WRN] No store type was specified for the decimal property 'ServicePrice' on entity type 'MaintenanceTechnicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.585 +05:30 [WRN] No store type was specified for the decimal property 'UnitPrice' on entity type 'OrderItems'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.585 +05:30 [WRN] No store type was specified for the decimal property 'TotalAmount' on entity type 'Orders'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.587 +05:30 [WRN] No store type was specified for the decimal property 'Amount' on entity type 'Payments'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.589 +05:30 [WRN] No store type was specified for the decimal property 'Price' on entity type 'Products'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.590 +05:30 [WRN] No store type was specified for the decimal property 'Warranty_Years' on entity type 'Products'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.590 +05:30 [WRN] No store type was specified for the decimal property 'CurrentFlow' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.590 +05:30 [WRN] No store type was specified for the decimal property 'Efficiency' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.591 +05:30 [WRN] No store type was specified for the decimal property 'Power' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.591 +05:30 [WRN] No store type was specified for the decimal property 'Voltage' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.592 +05:30 [WRN] No store type was specified for the decimal property 'ExperienceYears' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.592 +05:30 [WRN] No store type was specified for the decimal property 'Salary' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:05.592 +05:30 [WRN] No store type was specified for the decimal property 'Service_Price' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:43:07.510 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'CoreModels.ApplicationDbContext'.
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlBuffer.ThrowIfNull()
+   at Microsoft.Data.SqlClient.SqlBuffer.get_String()
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlBuffer.ThrowIfNull()
+   at Microsoft.Data.SqlClient.SqlBuffer.get_String()
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-11-18 16:43:09.613 +05:30 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-11-18 16:43:10.831 +05:30 [INF] HTTP OPTIONS /api/Notification/GetNotifications/EDKZCX responded 204 in 134.3101 ms
+2026-11-18 16:43:10.831 +05:30 [INF] HTTP OPTIONS /api/Home/GetHomeCategories responded 204 in 133.8689 ms
+2026-11-18 16:43:10.831 +05:30 [INF] HTTP OPTIONS /api/Roles/AccessPermissions/EDKZCX responded 204 in 134.4460 ms
+2026-11-18 16:43:10.831 +05:30 [INF] HTTP OPTIONS /notifications/negotiate responded 204 in 133.3447 ms
+2026-11-18 16:43:10.831 +05:30 [INF] HTTP OPTIONS /api/Cart/CountOfCartItems/EDKZCX responded 204 in 133.8859 ms
+2026-11-18 16:43:11.420 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-11-18 16:43:16.442 +05:30 [WRN] Unable to contact VS to retrieve Browser Link script tag.
+2026-11-18 16:43:16.460 +05:30 [INF] HTTP GET /swagger responded 301 in 3.2473 ms
+2026-11-18 16:43:20.004 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 663.9268 ms
+2026-11-18 16:43:20.132 +05:30 [INF] HTTP GET /swagger/swagger-ui.css responded 200 in 67.4081 ms
+2026-11-18 16:43:20.144 +05:30 [INF] HTTP GET /swagger/swagger-ui-standalone-preset.js responded 200 in 85.0068 ms
+2026-11-18 16:43:20.159 +05:30 [INF] HTTP GET /swagger/swagger-ui-bundle.js responded 200 in 94.0998 ms
+2026-11-18 16:43:20.289 +05:30 [INF] HTTP POST /notifications/negotiate responded 401 in 9317.8977 ms
+2026-11-18 16:43:20.290 +05:30 [INF] HTTP GET /api/Cart/CountOfCartItems/EDKZCX responded 401 in 9319.6873 ms
+2026-11-18 16:43:20.402 +05:30 [INF] HTTP OPTIONS /api/User/VerifyRefreshToken responded 204 in 0.4190 ms
+2026-11-18 16:43:21.054 +05:30 [INF] HTTP GET /api/Notification/GetNotifications/EDKZCX responded 200 in 10083.4931 ms
+2026-11-18 16:43:21.157 +05:30 [INF] fetching home categories on main page
+2026-11-18 16:43:21.224 +05:30 [INF] Refresh token is Validate at 11/18/2026 4:43:21 PM
+2026-11-18 16:43:21.251 +05:30 [INF] HTTP POST /api/User/VerifyRefreshToken responded 200 in 818.8036 ms
+2026-11-18 16:43:21.257 +05:30 [INF] HTTP OPTIONS /api/Cart/CountOfCartItems/EDKZCX responded 204 in 0.2075 ms
+2026-11-18 16:43:21.283 +05:30 [INF] HTTP GET /api/Roles/AccessPermissions/EDKZCX responded 200 in 10311.4242 ms
+2026-11-18 16:43:21.288 +05:30 [INF] HTTP GET /api/Home/GetHomeCategories responded 200 in 10316.9423 ms
+2026-11-18 16:43:21.476 +05:30 [INF] HTTP GET /api/Cart/CountOfCartItems/EDKZCX responded 200 in 208.2188 ms
+2026-11-18 16:43:29.750 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 166.3082 ms
+2026-11-18 16:46:07.983 +05:30 [INF] HTTP OPTIONS /api/Notification/MarkAllRead/EDKZCX responded 204 in 0.4299 ms
+2026-11-18 16:46:08.053 +05:30 [INF] HTTP PATCH /api/Notification/MarkAllRead/EDKZCX responded 200 in 64.4989 ms
+2026-11-18 16:46:08.058 +05:30 [INF] HTTP OPTIONS /api/Notification/GetNotifications/EDKZCX responded 204 in 0.1743 ms
+2026-11-18 16:46:08.085 +05:30 [INF] HTTP GET /api/Notification/GetNotifications/EDKZCX responded 200 in 22.8095 ms
+2026-11-18 16:47:25.943 +05:30 [INF] HTTP OPTIONS /api/Notification/MarkAllRead/EDKZCX responded 204 in 0.1923 ms
+2026-11-18 16:47:25.957 +05:30 [INF] HTTP PATCH /api/Notification/MarkAllRead/EDKZCX responded 200 in 10.1785 ms
+2026-11-18 16:47:25.962 +05:30 [INF] HTTP OPTIONS /api/Notification/GetNotifications/EDKZCX responded 204 in 0.1231 ms
+2026-11-18 16:47:25.989 +05:30 [INF] HTTP GET /api/Notification/GetNotifications/EDKZCX responded 200 in 10.4833 ms
+2026-11-18 16:47:27.261 +05:30 [INF] HTTP OPTIONS /api/Home/GetHomePackage responded 204 in 0.1710 ms
+2026-11-18 16:47:27.350 +05:30 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-11-18 16:47:27.560 +05:30 [INF] System.Collections.Generic.List`1[CoreModels.DTO_S.CategoryDto] fetching the data
+2026-11-18 16:47:27.578 +05:30 [INF] HTTP GET /api/Home/GetHomePackage responded 200 in 313.0049 ms
+2026-11-18 16:47:27.621 +05:30 [INF] System.Collections.Generic.List`1[CoreModels.DTO_S.CategoryDto] fetching the data
+2026-11-18 16:47:27.624 +05:30 [INF] HTTP GET /api/Home/GetHomePackage responded 200 in 36.0009 ms
+2026-11-18 16:47:39.908 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductDetails/1000 responded 204 in 0.2116 ms
+2026-11-18 16:47:39.923 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductAnalytics/1000 responded 204 in 0.1312 ms
+2026-11-18 16:47:39.925 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetRecommendations responded 204 in 0.1752 ms
+2026-11-18 16:47:39.925 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetBestComboProducts responded 204 in 0.2171 ms
+2026-11-18 16:47:40.059 +05:30 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-11-18 16:47:40.145 +05:30 [INF] getting the products base on 1000
+2026-11-18 16:47:40.148 +05:30 [INF] HTTP GET /api/Home/GetProductDetails/1000 responded 200 in 221.6202 ms
+2026-11-18 16:47:40.352 +05:30 [INF] HTTP GET /uploads/products/8688affb-88ac-444c-a841-5026c40f34c5.webp responded 200 in 150.2076 ms
+2026-11-18 16:47:40.352 +05:30 [INF] HTTP GET /uploads/products/94cb90a9-673b-4171-ae03-ad4d668852c2.jpg responded 200 in 149.6313 ms
+2026-11-18 16:47:40.367 +05:30 [INF] HTTP GET /uploads/products/0e716193-bb88-44b7-b0b8-49054ed04aa8.jpg responded 200 in 166.9636 ms
+2026-11-18 16:47:41.634 +05:30 [INF] Viewing analytics of dashboard on11/18/2026 4:47:41 PM
+2026-11-18 16:47:41.639 +05:30 [INF] HTTP GET /api/Home/GetProductAnalytics/1000 responded 200 in 1709.1262 ms
+2026-11-18 16:47:45.372 +05:30 [ERR] No connection could be made because the target machine actively refused it. (localhost:11434)
+2026-11-18 16:47:45.409 +05:30 [INF] HTTP GET /api/Accessory/GetBestComboProducts responded 200 in 5472.8445 ms
+2026-11-18 16:47:45.440 +05:30 [ERR] No connection could be made because the target machine actively refused it.
+2026-11-18 16:47:45.444 +05:30 [INF] HTTP GET /api/Accessory/GetRecommendations responded 200 in 5510.4218 ms
+2026-11-18 16:48:07.754 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'CoreModels.ApplicationDbContext'.
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-11-18 16:48:20.878 +05:30 [INF] HTTP OPTIONS /api/Notification/GetNotifications/EDKZCX responded 204 in 0.7504 ms
+2026-11-18 16:48:20.883 +05:30 [INF] HTTP OPTIONS /notifications/negotiate responded 204 in 0.1266 ms
+2026-11-18 16:48:20.940 +05:30 [INF] HTTP GET /api/Notification/GetNotifications/EDKZCX responded 200 in 56.0843 ms
+2026-11-18 16:48:20.954 +05:30 [INF] HTTP POST /notifications/negotiate responded 200 in 33.8562 ms
+2026-11-18 16:48:21.100 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetRecommendations responded 204 in 0.1362 ms
+2026-11-18 16:48:21.100 +05:30 [INF] HTTP OPTIONS /api/Roles/AccessPermissions/EDKZCX responded 204 in 0.2114 ms
+2026-11-18 16:48:21.103 +05:30 [INF] HTTP OPTIONS /api/Cart/CountOfCartItems/EDKZCX responded 204 in 0.2102 ms
+2026-11-18 16:48:21.104 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductAnalytics/1000 responded 204 in 3.1438 ms
+2026-11-18 16:48:21.111 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetBestComboProducts responded 204 in 0.2743 ms
+2026-11-18 16:48:21.113 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductDetails/1000 responded 204 in 0.1288 ms
+2026-11-18 16:48:21.270 +05:30 [INF] getting the products base on 1000
+2026-11-18 16:48:21.273 +05:30 [INF] HTTP GET /api/Home/GetProductDetails/1000 responded 200 in 129.8323 ms
+2026-11-18 16:48:21.304 +05:30 [INF] HTTP GET /api/Cart/CountOfCartItems/EDKZCX responded 200 in 164.3634 ms
+2026-11-18 16:48:21.417 +05:30 [INF] HTTP GET /api/Roles/AccessPermissions/EDKZCX responded 200 in 272.2256 ms
+2026-11-18 16:48:23.056 +05:30 [INF] Viewing analytics of dashboard on11/18/2026 4:48:23 PM
+2026-11-18 16:48:23.060 +05:30 [INF] HTTP GET /api/Home/GetProductAnalytics/1000 responded 200 in 1695.1377 ms
+2026-11-18 16:49:00.640 +05:30 [INF] Get AiRecommendations of1000
+2026-11-18 16:49:00.646 +05:30 [INF] HTTP GET /api/Accessory/GetRecommendations responded 200 in 39504.3368 ms
+2026-11-18 16:50:01.760 +05:30 [ERR] The request was canceled due to the configured HttpClient.Timeout of 100 seconds elapsing.
+2026-11-18 16:50:01.761 +05:30 [INF] HTTP GET /api/Accessory/GetBestComboProducts responded 200 in 100488.1810 ms
+2026-11-18 16:50:05.912 +05:30 [INF] HTTP GET /notifications responded 101 in 104570.7797 ms
+2026-11-18 16:50:06.029 +05:30 [INF] HTTP OPTIONS /api/Notification/GetNotifications/EDKZCX responded 204 in 0.3995 ms
+2026-11-18 16:50:06.048 +05:30 [INF] HTTP OPTIONS /notifications/negotiate responded 204 in 0.0956 ms
+2026-11-18 16:50:06.073 +05:30 [INF] HTTP POST /notifications/negotiate responded 200 in 5.3267 ms
+2026-11-18 16:50:06.073 +05:30 [INF] HTTP GET /api/Notification/GetNotifications/EDKZCX responded 200 in 23.7971 ms
+2026-11-18 16:50:06.079 +05:30 [INF] HTTP OPTIONS /api/Roles/AccessPermissions/EDKZCX responded 204 in 0.0898 ms
+2026-11-18 16:50:06.088 +05:30 [INF] HTTP OPTIONS /api/Cart/CountOfCartItems/EDKZCX responded 204 in 0.0903 ms
+2026-11-18 16:50:06.105 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductDetails/1000 responded 204 in 0.4604 ms
+2026-11-18 16:50:06.111 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetRecommendations responded 204 in 0.0818 ms
+2026-11-18 16:50:06.111 +05:30 [INF] HTTP OPTIONS /api/Home/GetProductAnalytics/1000 responded 204 in 0.0352 ms
+2026-11-18 16:50:06.111 +05:30 [INF] HTTP OPTIONS /api/Accessory/GetBestComboProducts responded 204 in 0.0810 ms
+2026-11-18 16:50:06.123 +05:30 [INF] HTTP GET /api/Roles/AccessPermissions/EDKZCX responded 200 in 34.7222 ms
+2026-11-18 16:50:06.154 +05:30 [INF] HTTP GET /api/Cart/CountOfCartItems/EDKZCX responded 200 in 42.8699 ms
+2026-11-18 16:50:06.165 +05:30 [INF] getting the products base on 1000
+2026-11-18 16:50:06.171 +05:30 [INF] HTTP GET /api/Home/GetProductDetails/1000 responded 200 in 43.9723 ms
+2026-11-18 16:50:08.101 +05:30 [INF] Viewing analytics of dashboard on11/18/2026 4:50:08 PM
+2026-11-18 16:50:08.102 +05:30 [INF] HTTP GET /api/Home/GetProductAnalytics/1000 responded 200 in 1978.6544 ms
+2026-11-18 16:50:28.898 +05:30 [WRN] No store type was specified for the decimal property 'Price' on entity type 'CartItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.058 +05:30 [WRN] No store type was specified for the decimal property 'ServicePrice' on entity type 'InstallationTechnician'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.059 +05:30 [WRN] No store type was specified for the decimal property 'Installation_Price' on entity type 'Installations'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.059 +05:30 [WRN] No store type was specified for the decimal property 'Amount' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.059 +05:30 [WRN] No store type was specified for the decimal property 'Tax' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.059 +05:30 [WRN] No store type was specified for the decimal property 'TotalAmount' on entity type 'Invoices'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'EstimatedPrice' on entity type 'MaintenanceRequests'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'ServicePrice' on entity type 'MaintenanceTechnicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'UnitPrice' on entity type 'OrderItems'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'TotalAmount' on entity type 'Orders'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'Amount' on entity type 'Payments'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'Price' on entity type 'Products'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.060 +05:30 [WRN] No store type was specified for the decimal property 'Warranty_Years' on entity type 'Products'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.061 +05:30 [WRN] No store type was specified for the decimal property 'CurrentFlow' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.061 +05:30 [WRN] No store type was specified for the decimal property 'Efficiency' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.061 +05:30 [WRN] No store type was specified for the decimal property 'Power' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.062 +05:30 [WRN] No store type was specified for the decimal property 'Voltage' on entity type 'SolarPerformance'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.062 +05:30 [WRN] No store type was specified for the decimal property 'ExperienceYears' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.062 +05:30 [WRN] No store type was specified for the decimal property 'Salary' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:29.062 +05:30 [WRN] No store type was specified for the decimal property 'Service_Price' on entity type 'Technicians'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-11-18 16:50:30.805 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'CoreModels.ApplicationDbContext'.
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlBuffer.ThrowIfNull()
+   at Microsoft.Data.SqlClient.SqlBuffer.get_String()
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlBuffer.ThrowIfNull()
+   at Microsoft.Data.SqlClient.SqlBuffer.get_String()
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-11-18 16:50:31.752 +05:30 [WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-11-18 16:50:32.637 +05:30 [INF] HTTP OPTIONS /notifications/negotiate responded 204 in 73.6641 ms
+2026-11-18 16:50:33.924 +05:30 [INF] HTTP GET /swagger/index.html responded 200 in 1371.7425 ms
+2026-11-18 16:50:34.186 +05:30 [WRN] The query uses a row limiting operator ('Skip'/'Take') without an 'OrderBy' operator. This may lead to unpredictable results. If the 'Distinct' operator is used after 'OrderBy', then make sure to use the 'OrderBy' operator after 'Distinct' as the ordering would otherwise get erased.
+2026-11-18 16:50:34.734 +05:30 [INF] HTTP POST /notifications/negotiate responded 200 in 1792.2012 ms
+2026-11-18 16:50:35.264 +05:30 [INF] HTTP GET /swagger/v1/swagger.json responded 200 in 490.5685 ms
+2026-11-18 16:52:36.229 +05:30 [ERR] The operation was canceled.
+2026-11-18 16:52:36.263 +05:30 [INF] HTTP GET /api/Accessory/GetRecommendations responded 200 in 101520.5831 ms
+2026-11-18 16:55:13.376 +05:30 [INF] Get AiRecommendations of1002
+2026-11-18 16:55:13.447 +05:30 [INF] HTTP GET /api/Accessory/GetRecommendations responded 200 in 79255.9407 ms
+2026-11-18 16:55:31.084 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'CoreModels.ApplicationDbContext'.
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+System.Data.SqlTypes.SqlNullValueException: Data is Null. This method or property cannot be called on Null values.
+   at Microsoft.Data.SqlClient.SqlDataReader.GetString(Int32 i)
+   at lambda_method34(Closure, QueryContext, DbDataReader, ResultContext, SingleQueryResultCoordinator)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-11-18 16:56:02.864 +05:30 [INF] The Waaree TOPCon 600W Bifacial Panel is a great match for a Hybrid Solar 1000W system in simple terms because:  
+
+1. **Bifacial Design**: It can generate power from both the top and bottom surfaces, maximizing total solar output.  
+2. **Combined Power**: The 600W output is the combined capacity of both panels, making it suitable for a 1000W hybrid system.  
+3. **Efficiency**: The TOPCon technology ensures high energy conversion, making it efficient and cost-effective.  
+
+This combination is ideal for maximizing energy from the sun while keeping costs low.
+2026-11-18 16:56:02.874 +05:30 [INF] HTTP GET /api/Accessory/Why-this responded 200 in 67951.1949 ms
