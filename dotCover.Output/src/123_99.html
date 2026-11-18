@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\DeliveryService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class DeliveryService
+    {
+        private readonly IUnitOfWork unitOfWork;
+        public DeliveryService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
+
+        public async Task&lt;string&gt; MarkAsCompletedDelivery(int deliveryId)
+        {
+           return await this.unitOfWork.deliveryInterface.MarkAsCompletedDelivery(deliveryId);
+        }
+
+        public async Task MarkAsOutOfDelivery(int deliveryId)
+        {
+            await this.unitOfWork.deliveryInterface.MarkAsOutOfDelivery(deliveryId);
+        }
+
+        public async Task&lt;List&lt;DeliveryDto&gt;&gt;GetOutForDeliveryStock(string userId)
+        {
+            return await this.unitOfWork.deliveryInterface.GetMarkoutDelieries(userId);
+        }
+
+        public async Task&lt;List&lt;DeliveryDto&gt;&gt;GetDeliveredOrders(string userId)
+        {
+            return await this.unitOfWork.deliveryInterface.GetDeliveredOrders(userId);
+        }
+
+
+        public async Task SendNotificationtoInstallers()
+        {
+            var userIds = await unitOfWork.deliveryInterface.AssignedRemainingDeliveries();
+
+            if (userIds == null || !userIds.Any())
+                return;
+
+            foreach (var userId in userIds.Distinct())
+            {
+                var message = new Notifications
+                {
+                    UserId = userId,
+                    Type = NotificationType.Delivery,
+                    Title = &quot;New Installation&quot;,
+                    Message = &quot;New Delivery assigned to you&quot;,
+                    IsActive = true
+                };
+
+                await unitOfWork.noticationRepositry.AddNotification(message);
+
+                var dto = new NotificationDto
+                {
+                    UserId = userId,
+                    NotificationId = message.NotificationId,
+                    NotificationType = message.Type.ToString()!,
+                    Title = message.Title,
+                    Message = message.Message,
+                    IsRead = false,
+                    CreatedAt = message.CreatedAt
+                };
+
+                await unitOfWork.signalRRepository.SendAsyncNotification(userId, dto);
+            }
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,9,17,55,0],[18,9,18,10,0],[19,13,19,42,0],[20,9,20,10,0],[23,9,23,10,0],[24,12,24,95,0],[25,9,25,10,0],[28,9,28,10,0],[29,13,29,85,0],[30,9,30,10,0],[33,9,33,10,0],[34,13,34,88,0],[35,9,35,10,0],[38,9,38,10,0],[39,13,39,87,0],[40,9,40,10,0],[44,9,44,10,0],[45,13,45,92,0],[47,13,47,51,0],[48,17,48,24,0],[50,13,50,20,0],[50,22,50,32,0],[50,33,50,35,0],[50,36,50,54,0],[51,13,51,14,0],[52,17,59,19,0],[61,17,61,79,0],[63,17,72,19,0],[74,17,74,87,0],[75,13,75,14,0],[76,9,76,10,0]]);
+    </script>
+  </body>
+</html>

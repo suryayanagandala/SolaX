@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\SolarPerformanceRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.DTO_S;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.Extensions.Options;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrastructure
+{
+    public class SolarPerformanceRepositoryTest:SqliteTestBase
+    {
+        private SolarRepository solarRepository;
+        [SetUp]
+        public void SetUP()
+        {
+            var options = Options.Create(new AssignmentSettings
+            {
+                ChargePerUnit= 1
+            });
+
+            solarRepository=new SolarRepository(_db, options);
+        }
+
+        [Test]
+        public async Task GetAllUsersData_Success()
+        {
+            var data = await solarRepository.GetAllUsers();
+            Assert.IsNotNull(data);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,10,1],[19,13,22,16,1],[24,13,24,63,1],[25,9,25,10,1],[29,9,29,10,1],[30,13,30,60,1],[31,13,31,36,0],[32,9,32,10,0]]);
+    </script>
+  </body>
+</html>

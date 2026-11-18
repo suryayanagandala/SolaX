@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\RoleRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class RoleRepository : IRoleRepository
+    {
+        public ApplicationDbContext _db;
+        public RoleRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+        public async Task&lt;IEnumerable&lt;Roles&gt;&gt; GetAllRoles()
+        {
+            try
+            {
+                var data = await _db.Roles.ToListAsync();
+                return data;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public List&lt;User&gt; GetUsersFromUser(string role)
+        {
+            try
+            {
+                var user=(from r in _db.Set&lt;Roles&gt;() join u in _db.Set&lt;Users&gt;() on r.RoleId equals u.RoleId
+                          where r.RoleName==role &amp;&amp; r.IsActive select new User
+                          {
+                              UserId=u.UserId,
+                              RoleId=r.RoleId,
+                              FullName=u.FullName,
+                              EmailId=u.EmailId,
+                          }).ToList();
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
+            }   
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,55,0],[19,9,19,10,0],[20,13,20,22,0],[21,9,21,10,0],[23,9,23,10,0],[25,13,25,14,0],[26,17,26,58,0],[27,17,27,29,0],[29,13,29,32,0],[30,13,30,14,0],[31,17,31,49,0],[33,9,33,10,0],[36,9,36,10,0],[38,13,38,14,0],[39,17,46,39,0],[47,17,47,29,0],[49,13,49,30,0],[50,13,50,14,0],[51,17,51,23,0],[53,9,53,10,0]]);
+    </script>
+  </body>
+</html>

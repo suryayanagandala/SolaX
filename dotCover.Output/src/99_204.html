@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\MaintenanceRequests.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    
+
+    [Table(&quot;MaintenanceRequests&quot;)]
+
+    public class MaintenanceRequests
+    {
+        [Key]
+        [Required,StringLength(8)]
+        public required string RequestId { get; set; }  
+
+        [Required,StringLength(6)]
+        public required string UserId { get; set; }
+        public string? Description { get; set; }
+
+        [Required,MaxLength(50)]
+        public required string Status { get; set; }
+
+
+        public decimal? EstimatedPrice { get; set; }
+
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        [Required]
+        public bool IsActive { get; set; }=true;
+
+        [Required,StringLength(18)]
+        public required string InstallationId { get; set; }
+
+        [ForeignKey(&quot;UserId&quot;)]
+        public Users User { get; set; } = null!;
+
+        [ForeignKey(&quot;InstallationId&quot;)]
+        public Installations Installation { get; set; } = null!;
+
+
+        public ICollection&lt;MaintenanceTechnicians&gt; Maintenances {  get; set; }=new List&lt;MaintenanceTechnicians&gt;();
+
+        public ICollection&lt;MaintenanceReports&gt; MaintenanceReports { get; set;} =new List&lt;MaintenanceReports&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[19,44,19,48,0],[19,49,19,53,0],[22,41,22,45,0],[22,46,22,50,0],[23,38,23,42,0],[23,43,23,47,0],[26,41,26,45,0],[26,46,26,50,0],[29,42,29,46,0],[29,47,29,51,0],[32,43,32,47,0],[32,48,32,52,0],[35,32,35,36,0],[35,37,35,41,0],[35,44,35,48,0],[38,49,38,53,0],[38,54,38,58,0],[41,29,41,33,0],[41,34,41,38,0],[41,43,41,48,0],[44,45,44,49,0],[44,50,44,54,0],[44,59,44,64,0],[47,68,47,72,0],[47,73,47,77,0],[47,80,47,114,0],[49,69,49,73,0],[49,74,49,78,0],[49,81,49,111,0]]);
+    </script>
+  </body>
+</html>

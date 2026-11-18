@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\Background\SolarPerformanceService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure.Background
+{
+    public class SolarPerformanceService : BackgroundService
+    {
+        private readonly IServiceProvider serviceProvider;
+
+        
+        public SolarPerformanceService(IServiceProvider serviceProvider)
+        {
+            this.serviceProvider = serviceProvider;
+        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var random = new Random();
+                try
+                {
+                   
+                    using var scope =  this.serviceProvider.CreateScope();
+
+                    var unitOfWork=scope.ServiceProvider.GetRequiredService&lt;IUnitOfWork&gt;();
+
+                    var _db=scope.ServiceProvider.GetRequiredService&lt;ApplicationDbContext&gt;();
+
+                    var result =await unitOfWork.solarPerformaceRepository.GetPanles();
+                    foreach ( var user in result)
+                    {
+
+
+                        var data = new SolarPerformance
+                        {
+                            UserId = user.UserId,
+                            PanelId = user.PanelId,
+                            Voltage = random.Next(200, 240),
+                            CurrentFlow = random.Next(5, 15),
+                            Power = random.Next(1000, 2500),
+                            Efficiency = random.Next(80, 98),
+                            Temperature = random.Next(15,65),
+                            Generated_at = TimeUtility.NowIST()
+
+                        };
+                        await _db.Set&lt;SolarPerformance&gt;().AddAsync(data);
+                        var dto = new SolarPerformanceDto
+                        {
+                            UserId = user.UserId,
+                            CurrentFlow = data.CurrentFlow,
+                            Power = data.Power,
+                            Efficiency = data.Efficiency,
+                            Voltage = data.Voltage,
+                            Generated_at = data.Generated_at,
+                            
+
+                        };
+                        await unitOfWork.signalRRepository.SendNotificationForSolarPanles(user.UserId, dto);
+                   
+                    }
+
+                    await _db.SaveChangesAsync();
+
+                }
+                catch {
+                    throw;
+                }
+             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);   
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,73,0],[23,9,23,10,0],[24,13,24,52,0],[25,9,25,10,0],[27,9,27,10,0],[28,13,28,59,0],[29,13,29,14,0],[30,17,30,43,0],[32,17,32,18,0],[34,21,34,75,0],[36,21,36,92,0],[38,21,38,94,0],[40,21,40,88,0],[41,21,41,28,0],[41,31,41,39,0],[41,40,41,42,0],[41,43,41,49,0],[42,21,42,22,0],[45,25,56,27,0],[57,25,57,74,0],[58,25,68,27,0],[69,25,69,109,0],[71,21,71,22,0],[73,21,73,50,0],[75,17,75,18,0],[76,17,76,22,0],[76,23,76,24,0],[77,21,77,27,0],[79,14,79,71,0],[80,13,80,14,0],[81,9,81,10,0]]);
+    </script>
+  </body>
+</html>

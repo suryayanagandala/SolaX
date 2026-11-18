@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\SolarPerformanceRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.CSharp;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrastructure
+{
+    public class SolarPerformanceRepositoryTest:SqliteTestBase
+    {
+        private SolarRepository solarRepository;
+        [SetUp]
+        public void SetUP()
+        {
+            var options = Options.Create(new AssignmentSettings
+            {
+                ChargePerUnit= 1
+            });
+
+            solarRepository=new SolarRepository(_db, options);
+        }
+
+        [Test]
+        public async Task GetAllUsersData_Success()
+        {
+            var data = await solarRepository.GetAllUsers();
+            Assert.IsNotNull(data);
+            Assert.That(data.Count(), Is.EqualTo(1));   
+        }
+
+        [Test]
+        public async Task GetAllUsers_Falure()
+        {
+            var data = await solarRepository.GetAllUsers();
+            Assert.IsNotNull(data);
+            Assert.IsFalse(data.Count()&gt;1);
+        }
+
+
+        [Test]
+        public async Task GetDashboardSummary_Should_Return_Correct_Summary()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId=5,
+                UserId= &quot;ERCXET&quot;,
+                PanelName=&quot;Solar Panles&quot;,
+                Capacity=&quot;600W&quot;
+            });
+
+            await _db.SaveChangesAsync();
+
+            _db.SolarPerformances.Add(new SolarPerformance
+            {
+                UserId = &quot;ERCXET&quot;,
+                Power = 2000,
+                Voltage = (decimal)229.000,
+                Efficiency =90,
+                PanelId=1,
+                Generated_at = DateTime.Now,
+                IsActive = true
+            });
+
+            await _db.SaveChangesAsync();
+
+         
+            var result = await solarRepository.GetDashboardSummary(&quot;ERCXET&quot;);
+            Console.WriteLine(result.GetType().FullName);
+            var props = result.GetType().GetProperties();
+            foreach (var p in props)
+            {
+                Console.WriteLine(p.Name);
+            }
+
+            Assert.IsNotNull(result);
+
+            dynamic data = result;
+
+         
+            Assert.AreEqual(2000, data.TodayTotal);
+            Assert.AreEqual(2000, data.MonthlyPower);
+            Assert.Greater(data.LifeTimeSavings, 0);
+        }
+
+        [Test]
+        public async Task GetDashboardSummary_Faliure()
+        {
+            string userId = &quot;fakeid&quot;;
+            var result=await solarRepository.GetDashboardSummary(userId);
+
+            string data = result.LifeTimeSavings.ToString();
+            Assert.That(data,Is.EqualTo(&quot;0&quot;));
+        }
+
+        //GetMonthlyUpdates
+        [Test]
+        public async Task GetMonthlyUpdates_Failure()
+        {
+            string userId = &quot;ERCXET&quot;;
+            var result=await solarRepository.GetMonthlyProductionUpdate(userId);
+           
+            Assert.IsEmpty(result);
+        }
+
+        [Test]
+        public async Task GetMonthlyUpdates_Success()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId = 1,
+                UserId = &quot;ERCXET&quot;,
+                PanelName = &quot;Solar Panles&quot;,
+                Capacity = &quot;600W&quot;
+            });
+
+            await _db.SaveChangesAsync();
+
+            _db.SolarPerformances.Add(new SolarPerformance
+            {
+                UserId = &quot;ERCXET&quot;,
+                Power = 2000,
+                Voltage = (decimal)229.000,
+                Efficiency = 90,
+                PanelId = 1,
+                Generated_at = DateTime.Now,
+                IsActive = true
+            });
+
+            await _db.SaveChangesAsync();
+
+            string userId = &quot;ERCXET&quot;;
+
+            var result = await solarRepository.GetMonthlyProductionUpdate(userId);
+            Assert.IsNotEmpty(result);
+
+
+        }
+
+        //GetPerformnaces
+        [Test]
+        public async Task GetSolarPerformances_Success()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId = 5,
+                UserId = &quot;ERCXET&quot;,
+                PanelName = &quot;Solar Panles&quot;,
+                Capacity = &quot;600W&quot;
+            });
+
+            await _db.SaveChangesAsync();
+
+            _db.SolarPerformances.Add(new SolarPerformance
+            {
+                UserId = &quot;ERCXET&quot;,
+                Power = 2000,
+                Voltage = (decimal)229.000,
+                Efficiency = 90,
+                PanelId = 5,
+                Generated_at = DateTime.Now,
+                IsActive = true
+            });
+
+            await _db.SaveChangesAsync();
+
+            string userId = &quot;ERCXET&quot;;
+
+            var result=await solarRepository.GetPerformaces(userId);
+
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result);
+                Assert.AreEqual(result.Count(), 1);
+                Assert.IsNotEmpty(result.First().UserId);
+
+            });
+        }
+
+
+        [Test]
+        public void GetPerformaces_Failure_Id()
+        {
+            string userId = &quot;fakeId&quot;;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await solarRepository.GetPerformaces(userId));
+        }
+
+
+        //AddToPanel
+
+        [Test]
+        public async Task AddToPanel_Success()
+        {
+            await solarRepository.AddToPanel();
+            //checking the data is inserted
+            Assert.That(await _db.Panels.AnyAsync(), Is.True);
+
+            var installation = await _db.Installations.FirstAsync(i =&gt; i.InstallationId== &quot;INST-20260201-0002&quot;);
+
+            Assert.That(installation.IsPanelCreated, Is.True);
+        }
+
+
+        [Test]
+        public async Task GetPanles_Success()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId = 6,
+                UserId = &quot;ERCXET&quot;,
+                PanelName = &quot;Solar Panles&quot;,
+                Capacity = &quot;600W&quot;,
+                IsActive=true,
+            });
+
+            await _db.SaveChangesAsync();
+
+            var result = await solarRepository.GetPanles();
+
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result);
+                Assert.That(result.Count(), Is.EqualTo(1));
+            });
+
+        }
+
+        //ActivatedPanels
+        [Test]
+        public async Task GetActicatedPanles_Success()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId = 6,
+                UserId = &quot;ERCXET&quot;,
+                PanelName = &quot;Solar Panles&quot;,
+                Capacity = &quot;600W&quot;,
+                IsActive = true,
+            });
+
+            await _db.SaveChangesAsync();
+
+            var result = await solarRepository.GetActivatedPanles(&quot;ERCXET&quot;);
+            Assert.Multiple(() =&gt; {
+                Assert.IsNotEmpty(result);
+                Assert.That(result.Count(), Is.EqualTo(1));   
+            });
+
+        }
+
+
+        //GetPanleDetails
+        [Test]
+        public async Task GetPanlesDetails_Success()
+        {
+            _db.Panels.Add(new Panel
+            {
+                PanelId = 1,
+                UserId = &quot;ERCXET&quot;,
+                PanelName = &quot;Solar Panles&quot;,
+                Capacity = &quot;600W&quot;,
+                IsActive = true,
+            });
+
+            await _db.SaveChangesAsync();
+
+            var result = await solarRepository.GetPanelDetails(1);
+            Assert.Multiple(() =&gt; {
+                Assert.IsNotEmpty(result.ToString());
+            });
+        }
+
+        [Test]
+        public async Task GetPanlesDeatils_Falure()
+        {
+            var result = await solarRepository.GetPanelDetails(1);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result.ToString());
+            });
+        }
+
+
+        [Test]
+        public async Task GetPanels_Success()
+        {
+
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,10,1],[25,13,28,16,1],[30,13,30,63,1],[31,9,31,10,1],[35,9,35,10,1],[36,13,36,60,1],[37,13,37,36,1],[38,13,38,54,1],[39,9,39,10,1],[43,9,43,10,1],[44,13,44,60,1],[45,13,45,36,1],[46,13,46,44,1],[47,9,47,10,1],[52,9,52,10,1],[53,13,59,16,1],[61,13,61,42,1],[63,13,72,16,1],[74,13,74,42,1],[77,13,77,78,1],[78,13,78,58,1],[79,13,79,58,1],[80,13,80,20,1],[80,22,80,27,1],[80,28,80,30,1],[80,31,80,36,1],[81,13,81,14,1],[82,17,82,43,1],[83,13,83,14,1],[85,13,85,38,1],[87,13,87,35,1],[90,13,90,52,1],[91,13,91,54,1],[92,13,92,53,1],[93,9,93,10,1],[97,9,97,10,1],[98,13,98,38,1],[99,13,99,74,1],[101,13,101,61,1],[102,13,102,47,1],[103,9,103,10,1],[108,9,108,10,1],[109,13,109,38,1],[110,13,110,81,1],[112,13,112,36,1],[113,9,113,10,1],[117,9,117,10,1],[118,13,124,16,1],[126,13,126,42,0],[128,13,137,16,0],[139,13,139,42,0],[141,13,141,38,0],[143,13,143,83,0],[144,13,144,39,0],[147,9,147,10,0],[152,9,152,10,1],[153,13,159,16,1],[161,13,161,42,1],[163,13,172,16,1],[174,13,174,42,1],[176,13,176,38,1],[178,13,178,69,1],[180,13,181,13,1],[181,13,181,14,1],[181,14,182,17,1],[182,17,182,43,1],[182,43,183,17,1],[183,17,183,52,1],[183,52,184,17,1],[184,17,184,58,1],[184,58,186,13,1],[186,13,186,14,1],[186,14,186,16,1],[187,9,187,10,1],[192,9,192,10,1],[193,13,193,38,1],[194,13,194,63,1],[194,63,194,107,1],[194,107,194,109,1],[195,9,195,10,1],[202,9,202,10,1],[203,13,203,48,1],[205,13,205,63,1],[207,13,207,113,1],[209,13,209,63,1],[210,9,210,10,1],[215,9,215,10,1],[216,13,223,16,1],[225,13,225,42,1],[227,13,227,60,1],[229,13,230,13,1],[230,13,230,14,1],[230,14,231,17,1],[231,17,231,43,1],[231,43,232,17,1],[232,17,232,60,1],[232,60,233,13,1],[233,13,233,14,1],[233,14,233,16,1],[235,9,235,10,1],[240,9,240,10,1],[241,13,248,16,1],[250,13,250,42,1],[252,13,252,77,1],[253,13,253,35,1],[253,35,253,36,1],[253,36,254,17,1],[254,17,254,43,1],[254,43,255,17,1],[255,17,255,60,1],[255,60,256,13,1],[256,13,256,14,1],[256,14,256,16,1],[258,9,258,10,1],[264,9,264,10,1],[265,13,272,16,1],[274,13,274,42,0],[276,13,276,67,0],[277,13,277,35,0],[277,35,277,36,0],[277,36,278,17,0],[278,17,278,54,0],[278,54,279,13,0],[279,13,279,14,0],[279,14,279,16,0],[280,9,280,10,0],[284,9,284,10,1],[285,13,285,67,1],[286,13,287,13,1],[287,13,287,14,1],[287,14,288,17,1],[288,17,288,54,1],[288,54,289,13,1],[289,13,289,14,1],[289,14,289,16,1],[290,9,290,10,1],[295,9,295,10,1],[297,9,297,10,1]]);
+    </script>
+  </body>
+</html>

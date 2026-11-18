@@ -1,0 +1,169 @@
+{
+  "Common": {
+    "Success": "Operation completed successfully.",
+    "Failed": "Operation failed. Please try again.",
+    "Unauthorized": "You are not authorized to perform this action.",
+    "NotFound": "Requested resource not found.",
+    "InvalidRequest": "Invalid request data.",
+    "ServerError": "Something went wrong on the server."
+  },
+
+  "Auth": {
+    "LoginSuccess": "Login successful.",
+    "LoginFailed": "Invalid email or password.",
+    "LogoutSuccess": "Logged out successfully.",
+    "TokenExpired": "Session expired. Please login again.",
+    "AccessDenied": "Access denied."
+  },
+
+  "User": {
+    "UserNotFound": "User not found.",
+    "UserCreated": "User registered successfully.",
+    "UserAlreadyExists": "User already exists.",
+    "UpdatePasssword": "Password updated successfully",
+    "ResetPassword": "Reset password updated successfully",
+    "Required": "UserId must be required",
+    "Profile": "Profile is updated",
+    "UserId": "UserId is not found",
+    "Email": "Email Id not exists",
+    "Password": "You entered invalid password",
+    "OldPassword": "Oldpassowrd must be same as previous password",
+    "NewPassword": "New password cannot be same as old password",
+    "login": "loggin successfully",
+    "Name": "Already name is exists",
+    "EmailId": "Already EmailId exists"
+  },
+
+  "Cart": {
+    "CartCreated": "Cart created successfully.",
+    "ItemAdded": "Item added to cart.",
+    "ItemUpdated": "Cart item updated successfully.",
+    "ItemRemoved": "Item removed from cart.",
+    "CartEmpty": "Your cart is empty.",
+    "CartNotFound": "Cart not found."
+  },
+
+  "Order": {
+    "OrderPlaced": "Order placed successfully.",
+    "OrderConfirmed": "Order confirmed.",
+    "OrderCancelled": "Order cancelled successfully.",
+    "OrderNotFound": "Orders not found.",
+    "OrderAlreadyPaid": "Order is already paid.",
+    "OrderCODPending": "Order placed with Cash on Delivery.",
+    "OrderPaymentPending": "Payment pending for this order.",
+    "NotFound": "User not found"
+  },
+
+  "Payment": {
+    "PaymentInitiated": "Payment initiated.",
+    "PaymentSuccess": "Payment completed successfully.",
+    "PaymentFailed": "Payment failed. Please try again.",
+    "PaymentPending": "Payment is pending.",
+    "InvalidPaymentMethod": "Invalid payment method selected.",
+    "TransactionCreated": "Transaction created successfully.",
+    "QRCodeGenerated": "QR code generated successfully.",
+    "QRCodeExpired": "QR code expired. Please generate again."
+  },
+
+  "Delivery": {
+    "DeliveryCreated": "Delivery created successfully.",
+    "DeliveryAssigned": "Delivery assigned to technician.",
+    "DeliveryPending": "Delivery is pending.",
+    "OutForDelivery": "Order is out for delivery.",
+    "Delivered": "Order delivered successfully.",
+    "NoTechnicianAvailable": "No technician available at the moment.",
+    "DeliveryNotFound": "Delivery not found.",
+    "OutOfDelivery": "Delivery as outofdelivery"
+  },
+
+  "Technician": {
+    "TechnicianAssigned": "Technician assigned successfully.",
+    "TechnicianUnavailable": "Technician is not available.",
+    "TechnicianNotFound": "Technician not found.",
+    "MaxDeliveriesReached": "Technician has reached maximum deliveries.",
+    "Invalid": "Role not found"
+  },
+
+  "Validation": {
+    "RequiredField": "This field is required.",
+    "InvalidEmail": "Invalid email address.",
+    "InvalidPhone": "Invalid phone number.",
+    "InvalidCardNumber": "Invalid card number.",
+    "InvalidCVV": "Invalid CVV.",
+    "InvalidExpiry": "Invalid expiry date."
+  },
+  "Products": {
+    "Activated": "Successfully activated",
+    "Deactivated": "Sucecssfully deactivated",
+    "Update": "Successfully updated details",
+    "Deleted": "Sucessfully decativated",
+    "Success": "Successfully created",
+    "NotFound": "Product Not found",
+    "Match": "No two products are with same name",
+    "NoImage": "No image id found"
+  },
+  "ProductImages": {
+    "Activated": "Successfully activated",
+    "Deactivated": "Sucecssfully deactivated",
+    "Update": "Successfully updated details",
+    "Deleted": "Sucessfully decativated",
+    "Success": "Successfully created"
+  },
+  "Categories": {
+    "NotFound": "No category Found",
+    "Slug": "Slug exists please try with different name",
+    "Parent": "ParentId is not found",
+    "NotFoundCategories": "No categories found",
+    "DeactiveP": "Please decative parent category first",
+    "fill": "Please fill the details",
+    "Mode": "Invalid categoryId or Category is inactive mode",
+    "Active": "Invalid id or Active mode",
+    "slugNotFound": "Slug not exists"
+
+  },
+  "Error": {
+    "server": "Server error",
+    "DbError": "Database error",
+    "Validation": "Validation error",
+    "Login": "Please login first"
+  },
+  "ProductReview": {
+    "Deleted": "Successfuly deleted"
+  },
+  "Installation": {
+    "Installed": "Already Order is Installed",
+    "NotFound": "Installation Id was not found please check once again",
+    "None": "No Images were uploaded",
+    "Updated": "Successfully updated status",
+    "Completed": "Installation is completed"
+  },
+  "Request": {
+    "Success": "Request is submitted successfully"
+  },
+  "Notifications": {
+    "NoMessages": "No messages are not found",
+    "MarkAsRead": "Message  completed as read",
+    "MarkAllRead": "All Messages are marked as read"
+  },
+  "Maintenance": {
+    "Success": "Maintenance is completed",
+    "NotFound": "Maintenaces are not found",
+    "Exists": "Request already raised or installation inactive",
+    "Completed": "Maintenance already completed"
+  },
+  "SolarPerformance": {
+    "NotFound": "No Solar Performance records exist"
+  },
+  "RefreshToken": {
+    "ExpiryToken": "Token is not found",
+    "Expired": "Token is expired",
+    "User": "User NotFound"
+
+  },
+  "Messages": {
+    "Maintenance": "Requesting to issue of solar panel",
+    "Register": "You successfully registered"
+  }
+
+}
+

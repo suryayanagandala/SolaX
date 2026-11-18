@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\MaintenanceTechnicians.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;MaintenanceTechnicians&quot;)]
+    public class MaintenanceTechnicians
+    {
+        [Key]
+        [Column(&quot;MaintenanceId&quot;)]
+        public int MaintenanceId { get; set; }
+
+        [Required, StringLength(8)]
+        [Column(&quot;RequestId&quot;)]
+        public required string RequestId { get; set; }
+
+        [Required]
+        [Column(&quot;TechnicianId&quot;)]
+        public int TechnicianId { get; set; }
+
+        [Required]
+        [Column(&quot;Service_Price_At_Time&quot;)]
+        public decimal ServicePrice { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; } = true;
+
+
+        [ForeignKey(&quot;RequestId&quot;)]
+        public MaintenanceRequests GetMaintenance { get; set; } = null!;
+
+        [ForeignKey(&quot;TechnicianId&quot;)]
+        public Technicians Technician { get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,36,16,40,0],[16,41,16,45,0],[20,44,20,48,0],[20,49,20,53,0],[24,35,24,39,0],[24,40,24,44,0],[28,39,28,43,0],[28,44,28,48,0],[32,32,32,36,0],[32,37,32,41,0],[32,46,32,50,0],[36,53,36,57,0],[36,58,36,62,0],[36,67,36,72,0],[39,41,39,45,0],[39,46,39,50,0],[39,55,39,60,0]]);
+    </script>
+  </body>
+</html>

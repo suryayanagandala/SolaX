@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Helpers\CustomerUserIdProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Helpers
+{
+    public class CustomerUserIdProvider:IUserIdProvider
+    {
+        public string? GetUserId(HubConnectionContext connection)
+        {
+            var userId = connection.User?.FindFirst(&quot;UserId&quot;)?.Value;
+            Console.WriteLine($&quot;SignalR UserId resolved: {userId}&quot;);
+            return userId;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[13,9,13,10,0],[14,13,14,70,0],[15,13,15,69,0],[16,13,16,27,0],[17,9,17,10,0]]);
+    </script>
+  </body>
+</html>

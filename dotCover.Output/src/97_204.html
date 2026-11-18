@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Invoices.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;Invoices&quot;)]
+    public class Invoices
+    {
+        [Key]
+        public int InvoiceId { get; set; }  
+        public int OrderId { get; set; }
+
+        public required  string CustomerName { get; set; }
+
+        public required string CustomerEmail { get; set; }
+
+        public required string PhoneNumber {  get; set; }
+        public DateTimeOffset InvoiceDate { get; set; }
+        public decimal Amount { get; set; }
+
+        public decimal Tax { get; set; }
+
+        public required string PaymentStatus { get; set; }
+
+        public decimal TotalAmount { get; set; }
+
+        public required string OrderStatus { get; set; }
+
+        public required string PaymentMethod { get; set; }
+        public bool IsActive { get; set; } = true;
+
+
+        [ForeignKey(&quot;OrderId&quot;)]
+        public Orders Order { get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,32,15,36,0],[15,37,15,41,0],[16,30,16,34,0],[16,35,16,39,1],[18,48,18,52,0],[18,53,18,57,1],[20,48,20,52,0],[20,53,20,57,1],[22,47,22,51,0],[22,52,22,56,1],[23,45,23,49,0],[23,50,23,54,1],[24,33,24,37,0],[24,38,24,42,1],[26,30,26,34,0],[26,35,26,39,0],[28,48,28,52,0],[28,53,28,57,1],[30,38,30,42,0],[30,43,30,47,1],[32,46,32,50,0],[32,51,32,55,1],[34,48,34,52,0],[34,53,34,57,1],[35,32,35,36,0],[35,37,35,41,0],[35,46,35,50,1],[39,31,39,35,0],[39,36,39,40,0],[39,45,39,50,1]]);
+    </script>
+  </body>
+</html>

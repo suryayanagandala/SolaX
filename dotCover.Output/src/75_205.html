@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\UserTest\UserRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using BusinessLayer;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using SolarXNUnit.HelperMethods;
+using SolarXNUnit.Utilities;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
+
+namespace SolarXNUnit.UserTest
+{
+    public class UserRepositoryTest : DbContextMock
+    {
+        //check by userId
+        [Test]
+        public async Task GetUserById()
+        {
+            var user = _users.First();
+            var userIdExist = await _userRepository.GetUserById(user.UserId);
+            Assert.IsNotNull(userIdExist);
+            Assert.That(userIdExist.UserId, Is.EqualTo(user.UserId));
+        }
+        [Test]
+        public async Task GetUserById_ShouldReturnUser()
+        {
+            string userId = &quot;ABX123&quot;;
+            var user = await _userRepository.GetUserById(userId);
+            Assert.IsNotNull(user);
+            Assert.That(user.UserId, Is.EqualTo(userId));
+        }
+
+
+        [Test]
+        public Task GetByUserId_FailureTest()
+        {
+            var ex = Assert.ThrowsAsync&lt;UserNotFound&gt;(() =&gt; _userRepository.GetUserById(&quot;mockdb&quot;));
+
+            Assert.That(ex.Message, Is.Not.Empty);
+
+            return Task.CompletedTask;
+        }
+
+
+        //check email
+        [Test]
+        public async Task CheckEmailSuccess()
+        {
+            await _userRepository.CheckEmail(&quot;anand@gmail.com&quot;);
+        }
+
+        [Test]
+        public void CheckEmailFailure()
+        {
+            string existsEmail = _users.First().EmailId;
+
+            var result = Assert.ThrowsAsync&lt;EmailExists&gt;(async () =&gt;
+                await _userRepository.CheckEmail(existsEmail));
+
+            Assert.IsNotNull(result);
+        }
+
+
+
+        [Test]
+        public void AddUser_ShouldThrow_NullException()
+        {
+            var result = Assert.ThrowsAsync&lt;ArgumentNullException&gt;(async () =&gt; await _userRepository.AddUser(null!));
+            Assert.That(result.ParamName, Is.EqualTo(&quot;user&quot;));
+            _mockDb.Verify(x =&gt; x.SaveChanges(), Times.Never);
+
+        }
+
+
+        [Test]
+        public async Task AddUser_ShouldCommit_WhenSuccessful()
+        {
+            var dto = new UserCreateDto
+            {
+                EmailId = &quot;new@test.com&quot;,
+                Password = &quot;123456&quot;,
+                FullName = &quot;Test User&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+
+
+
+            var result = await _userRepository.AddUser(dto);
+
+            Assert.IsNotNull(result);
+
+            // verify commit
+            _mockDb.Object.Database.BeginTransactionAsync().Result.CommitAsync();
+
+            _signalRRepository.Verify(x =&gt;
+                x.SendAsyncNotification(It.IsAny&lt;string&gt;(), It.IsAny&lt;NotificationDto&gt;()),
+                Times.Once);
+        }
+
+        [Test]
+        public void AddUser_ShouldThrowArgumentNullException_WhenUserIsNull()
+        {
+            Assert.ThrowsAsync&lt;ArgumentNullException&gt;(async () =&gt; await _userRepository.AddUser(null));
+
+        }
+
+        [Test]
+        public void AddUser_ShouldThrowValidationException_WhenEmailIsEmpty()
+        {
+
+
+            var user = new UserCreateDto
+            {
+                EmailId = &quot;&quot;,
+                Password = &quot;123&quot;,
+                FullName = &quot;Test&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+
+            Assert.ThrowsAsync&lt;ValidationException&gt;(async () =&gt;
+                await _userRepository.AddUser(user));
+        }
+
+        [Test]
+
+        public void AddUser_ShouldThrowValidationException_WhenPasswordIsEmpty()
+        {
+
+
+            var user = new UserCreateDto
+            {
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = &quot;&quot;,
+                FullName = &quot;Test&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+
+            Assert.ThrowsAsync&lt;ValidationException&gt;(async () =&gt; await _userRepository.AddUser(user));
+        }
+
+        [Test]
+        public void AddUser_ShouldThrowValidationException_WhenFullNameIsEmpty()
+        {
+            var user = new UserCreateDto
+            {
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = &quot;Surys12&quot;,
+                FullName = &quot;&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+            Assert.ThrowsAsync&lt;ValidationException&gt;(async () =&gt; await _userRepository.AddUser(user));
+        }
+
+        [Test]
+        public void AddUser_ShouldThrowDuplicationException_UserIdExists()
+        {
+            // Arrange
+            var user = new UserCreateDto
+            {
+                UserId = _users.First().UserId,
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = &quot;123&quot;,
+                FullName = &quot;Test&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+
+            // Act &amp; Assert
+            Assert.ThrowsAsync&lt;DublicateUserException&gt;(async () =&gt;
+                await _userRepository.AddUser(user));
+        }
+
+
+        [Test]
+
+        public void AddUser_ShouldRollback_WhenExceptionOccurs()
+        {
+            // Arrange
+            _mockDb
+                .Setup(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;()))
+                .ThrowsAsync(new Exception(&quot;DB Failure&quot;)); // Force failure
+
+            var user = new UserCreateDto
+            {
+                UserId = &quot;NEW100&quot;,
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = &quot;123&quot;,
+                FullName = &quot;Test&quot;,
+                Address = &quot;Chennai&quot;,
+                PhoneNumber = &quot;9999999999&quot;
+            };
+
+            // Act
+            Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt;
+                await _userRepository.AddUser(user));
+
+            // Assert rollback called
+            //_mockDb.Verify(x =&gt; x.Database.BeginTransactionAsync(It.IsAny&lt;CancellationToken&gt;()), Times.Once);
+            _mockTransaction.Verify(x =&gt; x.RollbackAsync(It.IsAny&lt;CancellationToken&gt;()), Times.Once());
+        }
+
+        [Test]
+        public void AddUser_ShoulThrow_UserAlreadyExists()
+        {
+            _mockDb.Setup(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;())).ThrowsAsync(new DbUpdateException());
+
+            var user = new UserCreateDto
+            {
+                UserId = &quot;YYYYCC&quot;,
+                EmailId = &quot;anand@gmail.com&quot;,
+                FullName = &quot;Anand&quot;,
+                Password = &quot;Anand@123&quot;,
+                PhoneNumber = &quot;9999999999123&quot;,
+                Address = &quot;Test Address&quot;
+            };
+
+            Assert.ThrowsAsync&lt;DbUpdateException&gt;(async () =&gt; await _userRepository.AddUser(user));
+        }
+
+
+
+
+
+
+
+        //login
+        [Test]
+        public void Login_ShouldThrowUserNotFound_WhenEmailDoesNotExist()
+        {
+            var login = new LoginDto
+            {
+                Email = &quot;hdhhdhjddlkdld&quot;,
+                Password = &quot;Surya@2003&quot;
+            };
+            Assert.ThrowsAsync&lt;UserNotFound&gt;(async () =&gt; await _userRepository.Login(login));
+        }
+
+        [Test]
+        public void Login_ShouldThrowUserNotFound_WhenPasswordIsWrong()
+        {
+            // Arrange
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(&quot;correct123&quot;);
+
+            var user = new Users
+            {
+                UserId = &quot;U100&quot;,
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = hashedPassword,
+                FullName = &quot;Test&quot;,
+                RoleId = 1,
+                Address = &quot;dhsjhfehiei&quot;,
+                PhoneNumber = &quot;7890987668&quot;,
+                CreatedBy = &quot;Admin&quot;
+            };
+
+            _users = new List&lt;Users&gt; { user }.AsQueryable(); // Override mock data
+
+            var loginDto = new LoginDto
+            {
+                Email = &quot;test@gmail.com&quot;,
+                Password = &quot;wrongpassword&quot;
+            };
+
+            // Act &amp; Assert
+            Assert.ThrowsAsync&lt;UserNotFound&gt;(async () =&gt;
+                await _userRepository.Login(loginDto));
+        }
+
+
+
+
+
+
+
+        [Test]
+        public async Task Login_Success()
+        {
+            // Arrange
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(&quot;correct123&quot;);
+
+            var user = new Users
+            {
+                UserId = &quot;U100GF&quot;,
+                EmailId = &quot;test@gmail.com&quot;,
+                Password = hashedPassword,
+                FullName = &quot;Test User&quot;,
+                RoleId = 1,
+                Address = &quot;123 Main St&quot;,
+                PhoneNumber = &quot;7890987668&quot;,
+                CreatedBy = &quot;Admin&quot;,
+                Role = new Roles
+                {
+                    RoleId = 1,
+                    RoleName = &quot;Admin&quot;
+                }
+            };
+
+            // Update the IQueryable for this test
+            _users = new List&lt;Users&gt; { user }.AsQueryable();
+
+            // Recreate DbSet mock with the new data
+            var mockSet = new Mock&lt;DbSet&lt;Users&gt;&gt;();
+            mockSet.As&lt;IAsyncEnumerable&lt;Users&gt;&gt;()
+                .Setup(m =&gt; m.GetAsyncEnumerator(It.IsAny&lt;CancellationToken&gt;()))
+                .Returns(new TestAsyncEnumerator&lt;Users&gt;(_users.GetEnumerator()));
+
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;()
+                .Setup(m =&gt; m.Provider).Returns(new TestAsyncQueryProvider&lt;Users&gt;(_users.Provider));
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Expression).Returns(_users.Expression);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.ElementType).Returns(_users.ElementType);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.GetEnumerator()).Returns(_users.GetEnumerator());
+
+            // Replace Users DbSet in _mockDb
+            _mockDb.Setup(x =&gt; x.Users).Returns(mockSet.Object);
+            _mockDb.Setup(x =&gt; x.Set&lt;Users&gt;()).Returns(mockSet.Object);
+
+            var loginDto = new LoginDto
+            {
+                Email = &quot;test@gmail.com&quot;,
+                Password = &quot;correct123&quot;
+            };
+
+            // Act
+            var result = await _userRepository.Login(loginDto);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.TokenResponse);
+            Assert.AreEqual(&quot;test@gmail.com&quot;, result.Email);
+            Assert.AreEqual(&quot;Admin&quot;, result.RoleName);
+        }
+
+
+        [Test]
+        public void UpdatePassword_ShouldThrowUserNotFound_WhenEmailDoesNotExist()
+        {
+            var dto = new UpdatePassword
+            {
+                Email = &quot;notfound@example.com&quot;,
+                OldPassword = &quot;old123&quot;,
+                NewPassword = &quot;new123&quot;
+            };
+
+            Assert.ThrowsAsync&lt;UserNotFound&gt;(async () =&gt; await _userRepository.UpdatePassword(dto));
+            _mockDb.Verify(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;()), Times.Never());
+        }
+
+        [Test]
+        public void UpdatePassword_ShouldThrow_WhenOldPasswordIncorrect()
+        {
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(&quot;correctOld&quot;);
+
+            var user = new Users
+            {
+                EmailId = &quot;test@example.com&quot;,
+                Password = hashedPassword,
+                FullName = &quot;Test User&quot;,
+                RoleId = 1,
+                Address = &quot;123 Main St&quot;,
+                PhoneNumber = &quot;7890987668&quot;,
+                CreatedBy = &quot;Admin&quot;,
+                UserId = &quot;GDJIER&quot;,
+                Role = new Roles
+                {
+                    RoleId = 1,
+                    RoleName = &quot;Admin&quot;
+                }
+            };
+            _users = new List&lt;Users&gt; { user }.AsQueryable();
+
+            var mockSet = new Mock&lt;DbSet&lt;Users&gt;&gt;();
+            mockSet.As&lt;IAsyncEnumerable&lt;Users&gt;&gt;()
+                   .Setup(m =&gt; m.GetAsyncEnumerator(It.IsAny&lt;CancellationToken&gt;()))
+                   .Returns(new TestAsyncEnumerator&lt;Users&gt;(_users.GetEnumerator()));
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Provider)
+                   .Returns(new TestAsyncQueryProvider&lt;Users&gt;(_users.Provider));
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Expression).Returns(_users.Expression);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.ElementType).Returns(_users.ElementType);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.GetEnumerator()).Returns(_users.GetEnumerator());
+
+            _mockDb.Setup(x =&gt; x.Users).Returns(mockSet.Object);
+
+            var dto = new UpdatePassword
+            {
+                Email = &quot;test@example.com&quot;,
+                OldPassword = &quot;wrongOld&quot;,
+                NewPassword = &quot;new123&quot;
+            };
+
+            // Act &amp; Assert
+            var ex = Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt; await _userRepository.UpdatePassword(dto));
+            Assert.That(ex.Message, Is.EqualTo(&quot;Messages not found:User.OldPassword&quot;));
+        }
+
+
+
+
+
+        [Test]
+        public async Task UpdatePassword_ShouldUpdatePassword_WhenValid()
+        {
+            // Arrange
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(&quot;old123&quot;);
+            var user = new Users
+            {
+                EmailId = &quot;test@example.com&quot;,
+                Password = hashedPassword,
+                FullName = &quot;Test User&quot;,
+                RoleId = 1,
+                Address = &quot;123 Main St&quot;,
+                PhoneNumber = &quot;7890987668&quot;,
+                CreatedBy = &quot;Admin&quot;,
+                UserId = &quot;GDJIER&quot;,
+                Role = new Roles
+                {
+                    RoleId = 1,
+                    RoleName = &quot;Admin&quot;
+                }
+            };
+            _users = new List&lt;Users&gt; { user }.AsQueryable();
+
+            var mockSet = new Mock&lt;DbSet&lt;Users&gt;&gt;();
+            mockSet.As&lt;IAsyncEnumerable&lt;Users&gt;&gt;()
+                   .Setup(m =&gt; m.GetAsyncEnumerator(It.IsAny&lt;CancellationToken&gt;()))
+                   .Returns(new TestAsyncEnumerator&lt;Users&gt;(_users.GetEnumerator()));
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Provider)
+                   .Returns(new TestAsyncQueryProvider&lt;Users&gt;(_users.Provider));
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Expression).Returns(_users.Expression);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.ElementType).Returns(_users.ElementType);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.GetEnumerator()).Returns(_users.GetEnumerator());
+
+            _mockDb.Setup(x =&gt; x.Users).Returns(mockSet.Object);
+            _mockDb.Setup(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;())).ReturnsAsync(1);
+
+            var dto = new UpdatePassword
+            {
+                Email = &quot;test@example.com&quot;,
+                OldPassword = &quot;old123&quot;,
+                NewPassword = &quot;new123&quot;
+            };
+
+            // Act
+            await _userRepository.UpdatePassword(dto);
+
+            // Assert
+            Assert.IsTrue(BCrypt.Net.BCrypt.Verify(&quot;new123&quot;, user.Password));
+        }
+
+        //ResetPassword
+        [Test]
+        public void ResetPassword_Token_Failure()
+        {
+            var token = Guid.NewGuid();
+            Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt; await _userRepository.Resetpassword(token, &quot;oldpassword&quot;, &quot;newPassword&quot;));
+        }
+
+
+        [Test]
+        public async Task ResetPassword_Success()
+        {
+            
+            var token = Guid.Parse(&quot;EA007833-178D-4C11-8A78-C4BA6D897F12&quot;);
+
+            var user = _users.First(x =&gt; x.EmailId == &quot;surya@gmail.com&quot;);
+
+            
+            await _userRepository.Resetpassword(token, &quot;NewPass123&quot;, &quot;NewPass123&quot;);
+
+            
+            _mockDb.Verify(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;()), Times.AtLeastOnce());
+
+            Assert.That(
+                BCrypt.Net.BCrypt.Verify(&quot;NewPass123&quot;, user.Password),
+                Is.True
+            );
+
+        }
+
+        [Test]
+        public void ResetPassword_faliure_PasswordMismatch()
+        {
+            var token = Guid.Parse(&quot;EA007833-178D-4C11-8A78-C4BA6D897F12&quot;);
+
+            Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt; await _userRepository.Resetpassword(token,&quot;newPassword&quot;,&quot;confirmpassword&quot;));
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,10,1],[30,13,30,39,1],[31,13,31,78,1],[32,13,32,43,1],[33,13,33,70,1],[34,9,34,10,1],[37,9,37,10,1],[38,13,38,38,1],[39,13,39,66,1],[40,13,40,36,1],[41,13,41,58,1],[42,9,42,10,1],[47,9,47,10,1],[48,13,48,61,1],[48,61,48,98,1],[48,98,48,100,1],[50,13,50,51,1],[52,13,52,39,1],[53,9,53,10,1],[59,9,59,10,1],[60,13,60,65,1],[61,9,61,10,1],[65,9,65,10,1],[66,13,66,57,1],[68,13,69,17,1],[69,17,69,62,1],[69,62,69,64,1],[71,13,71,38,1],[72,9,72,10,1],[78,9,78,10,1],[79,13,79,80,1],[79,80,79,116,1],[79,116,79,118,1],[80,13,80,63,1],[81,13,81,63,1],[83,9,83,10,1],[88,9,88,10,1],[89,13,96,15,1],[100,13,100,61,1],[102,13,102,38,1],[105,13,105,82,1],[107,13,109,29,1],[110,9,110,10,1],[114,9,114,10,1],[115,13,115,67,1],[115,67,115,102,1],[115,102,115,104,1],[117,9,117,10,1],[121,9,121,10,1],[124,13,131,15,1],[133,13,134,17,1],[134,17,134,52,1],[134,52,134,54,1],[135,9,135,10,1],[140,9,140,10,1],[143,13,150,15,1],[152,13,152,65,1],[152,65,152,100,1],[152,100,152,102,1],[153,9,153,10,1],[157,9,157,10,1],[158,13,165,15,1],[166,13,166,65,1],[166,65,166,100,1],[166,100,166,102,1],[167,9,167,10,1],[171,9,171,10,1],[173,13,181,15,1],[184,13,185,17,1],[185,17,185,52,1],[185,52,185,54,1],[186,9,186,10,1],[192,9,192,10,1],[194,13,196,59,1],[198,13,206,15,1],[209,13,210,17,1],[210,17,210,52,1],[210,52,210,54,1],[214,13,214,104,1],[215,9,215,10,1],[219,9,219,10,1],[220,13,220,120,1],[222,13,230,15,1],[232,13,232,63,1],[232,63,232,98,1],[232,98,232,100,1],[233,9,233,10,1],[244,9,244,10,1],[245,13,249,15,1],[250,13,250,58,1],[250,58,250,92,1],[250,92,250,94,1],[251,9,251,10,1],[255,9,255,10,1],[258,13,258,79,1],[260,13,270,15,1],[272,13,272,61,1],[274,13,278,15,1],[281,13,282,17,1],[282,17,282,54,1],[282,54,282,56,1],[283,9,283,10,1],[293,9,293,10,1],[295,13,295,79,1],[297,13,312,15,1],[315,13,315,61,1],[318,13,318,52,1],[319,13,321,82,1],[323,13,324,101,1],[325,13,325,97,1],[326,13,326,99,1],[327,13,327,107,1],[330,13,330,65,1],[331,13,331,72,1],[333,13,337,15,1],[340,13,340,64,1],[343,13,343,38,1],[344,13,344,52,1],[345,13,345,61,1],[346,13,346,55,1],[347,9,347,10,1],[352,9,352,10,1],[353,13,358,15,1],[360,13,360,58,1],[360,58,360,99,1],[360,99,360,101,1],[361,13,361,99,1],[362,9,362,10,1],[366,9,366,10,1],[367,13,367,79,1],[369,13,384,15,1],[385,13,385,61,1],[387,13,387,52,1],[388,13,390,85,1],[391,13,392,81,1],[393,13,393,97,1],[394,13,394,99,1],[395,13,395,107,1],[397,13,397,65,1],[399,13,404,15,1],[407,13,407,64,1],[407,64,407,105,1],[407,105,407,107,1],[408,13,408,88,1],[409,9,409,10,1],[417,9,417,10,1],[419,13,419,75,1],[420,13,435,15,1],[436,13,436,61,1],[438,13,438,52,1],[439,13,441,85,1],[442,13,443,81,1],[444,13,444,97,1],[445,13,445,99,1],[446,13,446,107,1],[448,13,448,65,1],[449,13,449,99,1],[451,13,456,15,1],[459,13,459,55,1],[462,13,462,78,1],[463,9,463,10,1],[468,9,468,10,1],[469,13,469,40,1],[470,13,470,55,1],[470,55,470,127,1],[470,127,470,129,1],[471,9,471,10,1],[476,9,476,10,1],[478,13,478,76,1],[480,13,480,74,1],[483,13,483,84,0],[486,13,486,105,0],[488,13,491,15,0],[493,9,493,10,0],[497,9,497,10,1],[498,13,498,76,1],[500,13,500,55,1],[500,55,500,129,1],[500,129,500,131,1],[501,9,501,10,0]]);
+    </script>
+  </body>
+</html>

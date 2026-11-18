@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\UnitOfWork.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class UnitOfWork : IUnitOfWork
+    {
+        public IRoleRepository RoleRepository { get; }
+
+        public IUserRepository UserRepository {  get; }
+
+        public ITechnicianRepository TechnicianRepository { get; }
+
+        public IAdminRepository AdminRepository { get; }
+
+        public IProductsRepository ProductsRepository { get; }
+
+     
+
+        public ICategoryRepository category { get; }
+
+        public IProductReviewRepository productReviewRepository { get; }
+
+        public ICartRepository cartRepository { get; }
+
+        public IOrderRepository orderRepository {  get; }
+
+        public IHomeRepository homeRepository { get; }
+
+        public IPaymentRepository paymentRepository { get; }
+
+        public IDeliveryInterface deliveryInterface { get; }
+
+        public IInvoiceRepository invoiceRepository { get; }
+
+        public IInstallRepository installRepository { get; }
+
+        public INoticationRepositry noticationRepositry { get; }
+
+        public IMaintenanceRepository maintenanceRepository {  get; }
+
+        public ISignalRRepository signalRRepository { get; }
+
+        public ISolarPerformaceRepository solarPerformaceRepository { get; }
+
+        public ApplicationDbContext _db;
+
+        public UnitOfWork(ApplicationDbContext db,IRoleRepository roleRepository, IUserRepository userRepository, 
+            ITechnicianRepository technicianRepository, IAdminRepository adminRepository, IProductsRepository productsRepository,
+           ICategoryRepository category,IProductReviewRepository productReviewRepository,
+            ICartRepository cartRepository,IOrderRepository orderRepository,IHomeRepository homeRepository,IPaymentRepository paymentRepository,
+            IDeliveryInterface deliveryInterface, IInvoiceRepository invoiceRepository, IInstallRepository installRepository,INoticationRepositry noticationRepositry,
+            IMaintenanceRepository maintenanceRepository,ISignalRRepository signalRRepository,ISolarPerformaceRepository solarPerformaceRepository)
+        {
+            _db = db;
+            RoleRepository = roleRepository;
+            UserRepository = userRepository;
+            TechnicianRepository = technicianRepository;
+            AdminRepository = adminRepository;
+            ProductsRepository = productsRepository;
+            this.category = category;
+            this.productReviewRepository = productReviewRepository;
+            this.cartRepository = cartRepository;
+            this.orderRepository = orderRepository;
+            this.homeRepository = homeRepository;
+            this.paymentRepository = paymentRepository;
+            this.deliveryInterface = deliveryInterface;
+            this.invoiceRepository = invoiceRepository;
+            this.installRepository = installRepository;
+            this.noticationRepositry=noticationRepositry;
+            this.maintenanceRepository = maintenanceRepository;
+            this.signalRRepository = signalRRepository;
+            this.solarPerformaceRepository = solarPerformaceRepository;
+        }
+
+
+        public void Save()
+        {
+            _db.SaveChangesAsync();
+        }
+        public void Dispose()
+        {
+            _db.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[13,49,13,53,0],[15,50,15,54,0],[17,61,17,65,0],[19,51,19,55,0],[21,57,21,61,0],[25,47,25,51,0],[27,67,27,71,0],[29,49,29,53,0],[31,52,31,56,0],[33,49,33,53,0],[35,55,35,59,0],[37,55,37,59,0],[39,55,39,59,0],[41,55,41,59,0],[43,59,43,63,0],[45,64,45,68,0],[47,55,47,59,0],[49,71,49,75,0],[53,9,58,148,0],[59,9,59,10,0],[60,13,60,22,0],[61,13,61,45,0],[62,13,62,45,0],[63,13,63,57,0],[64,13,64,47,0],[65,13,65,53,0],[66,13,66,38,0],[67,13,67,68,0],[68,13,68,50,0],[69,13,69,52,0],[70,13,70,50,0],[71,13,71,56,0],[72,13,72,56,0],[73,13,73,56,0],[74,13,74,56,0],[75,13,75,58,0],[76,13,76,64,0],[77,13,77,56,0],[78,13,78,72,0],[79,9,79,10,0],[83,9,83,10,0],[84,13,84,36,0],[85,9,85,10,0],[87,9,87,10,0],[88,13,88,27,0],[89,13,89,39,0],[90,9,90,10,0]]);
+    </script>
+  </body>
+</html>

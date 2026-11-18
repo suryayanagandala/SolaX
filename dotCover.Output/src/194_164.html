@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\Background\MaintenenceAssignmentBackGroundService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Client;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure.Background
+{
+    public class MaintenenceAssignmentBackGroundService : BackgroundService
+    {
+        private readonly IServiceScopeFactory serviceScopeFactory;
+        
+
+        public MaintenenceAssignmentBackGroundService(IServiceScopeFactory serviceScopeFactory)
+        {
+            this.serviceScopeFactory = serviceScopeFactory;
+
+          
+        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    using var scope = serviceScopeFactory.CreateScope();
+                    var _db = scope.ServiceProvider.GetRequiredService&lt;ApplicationDbContext&gt;();
+                    var unitOfWork = scope.ServiceProvider.GetRequiredService&lt;IUnitOfWork&gt;();
+                    var signalRepository = scope.ServiceProvider.GetRequiredService&lt;ISignalRRepository&gt;();
+                    var pendingRequests = await _db.MaintenanceRequests
+                        .Where(x =&gt; x.Status == MaintenanceStatus.Pending.ToString())
+                        .OrderBy(x =&gt; x.CreatedAt)
+                        .ToListAsync(stoppingToken);
+
+
+                    foreach (var request in pendingRequests)
+                    {
+                       await using var transaction = await _db.Database.BeginTransactionAsync(stoppingToken);
+                        try
+                        {
+                            var technician = await _db.Technicians.Where(x =&gt; x.IsAvailable == true &amp;&amp; x.IsActiveDeliveries &lt; 5 &amp;&amp; x.IsActive == true).OrderBy(x =&gt; x.IsActiveDeliveries).ThenBy(x =&gt; x.TechnicianId).FirstOrDefaultAsync(stoppingToken);
+
+                            if (technician == null)
+                                continue;
+
+                            else
+                            {
+                                var maintenanceTechnician = new MaintenanceTechnicians
+                                {
+                                    RequestId = request.RequestId,
+                                    TechnicianId = technician.TechnicianId,
+                                    ServicePrice = technician.Service_Price,
+                                };
+
+                                await _db.MaintenanceTechnicians.AddAsync(maintenanceTechnician, stoppingToken);
+
+                                request.Status = MaintenanceStatus.Assigned.ToString();
+
+                                technician.IsActiveDeliveries += 1;
+
+                                if (technician.IsActiveDeliveries &gt;= 5)
+                                    technician.IsAvailable = false;
+                                var messages = new Notifications
+                                {
+                                    UserId = technician.UserId,
+                                    Type = NotificationType.Maintenance,
+                                    Title = &quot;New Work&quot;,
+                                    Message = $&quot;New Maintenance as been assigned to you by admin&quot;
+                                };
+                                await _db.Notifications.AddAsync(messages, stoppingToken);
+
+                                var dto = new NotificationDto
+                                {
+                                    UserId = technician.UserId,
+                                    NotificationId = messages.NotificationId,
+                                    NotificationType = messages.Type.ToString()!,
+                                    Title = messages.Title,
+                                    Message = messages.Message,
+                                    IsRead = false,
+                                    CreatedAt = messages.CreatedAt,
+                                };
+
+                                await _db.SaveChangesAsync(stoppingToken);
+                                await transaction.CommitAsync(stoppingToken);
+
+                                await signalRepository.SendAsyncNotification(dto.UserId,dto);
+
+
+                            }
+                            
+                        }
+                        catch (Exception)
+                        {
+                            await transaction.RollbackAsync(stoppingToken);
+                            throw;
+                        }
+
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex); 
+                }
+
+               
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            }
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,96,0],[26,9,26,10,0],[27,13,27,60,0],[30,9,30,10,0],[32,9,32,10,0],[33,13,33,59,0],[34,13,34,14,0],[36,17,36,18,0],[37,21,37,73,0],[38,21,38,96,0],[39,21,39,94,0],[40,21,40,107,0],[41,21,44,53,0],[47,21,47,28,0],[47,30,47,41,0],[47,42,47,44,0],[47,45,47,60,0],[48,21,48,22,0],[49,24,49,110,0],[51,25,51,26,0],[52,29,52,250,0],[54,29,54,52,0],[55,33,55,42,0],[58,29,58,30,0],[59,33,64,35,0],[66,33,66,113,0],[68,33,68,88,0],[70,33,70,68,0],[72,33,72,72,0],[73,37,73,68,0],[74,33,80,35,0],[81,33,81,91,0],[83,33,92,35,0],[94,33,94,75,0],[95,33,95,78,0],[97,33,97,94,0],[100,29,100,30,0],[102,25,102,26,0],[103,25,103,42,0],[104,25,104,26,0],[105,29,105,76,0],[106,29,106,35,0],[107,25,107,26,0],[110,21,110,22,0],[111,17,111,18,0],[112,17,112,37,0],[113,17,113,18,0],[114,21,114,43,0],[115,17,115,18,0],[118,17,118,74,0],[119,13,119,14,0],[120,9,120,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\Background\SolarPerformanceService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure.Background
+{
+    public class SolarPerformanceService : BackgroundService
+    {
+        private readonly IServiceProvider serviceProvider;
+       
+
+        
+        public SolarPerformanceService(IServiceProvider serviceProvider)
+        {
+            this.serviceProvider = serviceProvider;
+          
+        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var random = new Random();
+                try
+                {
+                   
+                    using var scope =  this.serviceProvider.CreateScope();
+
+                    var unitOfWork=scope.ServiceProvider.GetRequiredService&lt;IUnitOfWork&gt;();
+
+                    var _db=scope.ServiceProvider.GetRequiredService&lt;ApplicationDbContext&gt;();
+                    var signalRRepository = scope.ServiceProvider.GetRequiredService&lt;ISignalRRepository&gt;();
+
+                    var result =await unitOfWork.solarPerformaceRepository.GetPanles();
+                    foreach ( var user in result)
+                    {
+
+
+                        var data = new SolarPerformance
+                        {
+                            UserId = user.UserId,
+                            PanelId = user.PanelId,
+                            Voltage = random.Next(200, 240),
+                            CurrentFlow = random.Next(5, 15),
+                            Power = random.Next(1000, 2500),
+                            Efficiency = random.Next(80, 98),
+                            Temperature = random.Next(15,65),
+                            Generated_at = TimeUtility.NowIST()
+
+                        };
+                        await _db.Set&lt;SolarPerformance&gt;().AddAsync(data);
+                        var dto = new SolarPerformanceDto
+                        {
+                            UserId = user.UserId,
+                            CurrentFlow = data.CurrentFlow,
+                            Power = data.Power,
+                            Efficiency = data.Efficiency,
+                            Voltage = data.Voltage,
+                            Generated_at = data.Generated_at,
+                            
+
+                        };
+                        await signalRRepository.SendNotificationForSolarPanles(user.UserId, dto);
+                   
+                    }
+
+                    await _db.SaveChangesAsync();
+
+                }
+                catch {
+                    throw;
+                }
+             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);   
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,73,0],[24,9,24,10,0],[25,13,25,52,0],[27,9,27,10,0],[29,9,29,10,0],[30,13,30,59,0],[31,13,31,14,0],[32,17,32,43,0],[34,17,34,18,0],[36,21,36,75,0],[38,21,38,92,0],[40,21,40,94,0],[41,21,41,108,0],[43,21,43,88,0],[44,21,44,28,0],[44,31,44,39,0],[44,40,44,42,0],[44,43,44,49,0],[45,21,45,22,0],[48,25,59,27,0],[60,25,60,74,0],[61,25,71,27,0],[72,25,72,98,0],[74,21,74,22,0],[76,21,76,50,0],[78,17,78,18,0],[79,17,79,22,0],[79,23,79,24,0],[80,21,80,27,0],[82,14,82,71,0],[83,13,83,14,0],[84,9,84,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\ProductReview.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    public class ProductReview
+    {
+        [Key]
+        public int ReviewId { get; set; }
+
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        public required string  UserId { get; set; }
+
+        [Required]
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset? UpdatedAt { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        [ForeignKey(&quot;ProductId&quot;)]
+        public Products Product { get; set; } = null!;
+
+        [ForeignKey(nameof(UserId))]
+        public Users Users { get; set; }= null!;
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[14,31,14,35,0],[14,36,14,40,0],[17,32,17,36,0],[17,37,17,41,0],[20,42,20,46,0],[20,47,20,51,0],[23,29,23,33,0],[23,34,23,38,0],[24,34,24,38,0],[24,39,24,43,0],[26,43,26,47,0],[26,48,26,52,0],[28,44,28,48,0],[28,49,28,53,0],[30,32,30,36,0],[30,37,30,41,0],[30,46,30,50,0],[33,35,33,39,0],[33,40,33,44,0],[33,49,33,54,0],[36,30,36,34,0],[36,35,36,39,0],[36,43,36,48,0]]);
+    </script>
+  </body>
+</html>

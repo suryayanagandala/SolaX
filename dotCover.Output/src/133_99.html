@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\RoleService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class RoleService 
+    {
+        private IUnitOfWork unitOfWork;
+        public RoleService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
+
+        public async Task&lt;IEnumerable&lt;Roles&gt;&gt; GetRolesAsync()=&gt;await this.unitOfWork.RoleRepository.GetAllRoles();
+
+        public List&lt;User&gt;GetUsersFromRole(string role)
+        {
+            return this.unitOfWork.RoleRepository.GetUsersFromUser(role);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,51,0],[16,9,16,10,0],[17,13,17,42,0],[18,9,18,10,0],[20,64,20,114,0],[23,9,23,10,0],[24,13,24,74,0],[25,9,25,10,0]]);
+    </script>
+  </body>
+</html>

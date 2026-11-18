@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\OrderItems.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;OrderItems&quot;)]
+    public class OrderItems
+    {
+        [Key]
+        [Column(&quot;OrderItemId&quot;)]
+        public int OrderItemId {  get; set; }
+
+        [Required]
+        [Column(&quot;OrderId&quot;)]
+        public int OrderId {  get; set; }
+
+        [Required]
+        [Column(&quot;ProductId&quot;)]
+        public int ProductId { get; set; }
+
+        [Required]
+        [Column(&quot;Quantity&quot;)]
+        public int Quantity { get; set; }
+
+        [Required]
+        [Column(&quot;UnitPrice&quot;)]
+        public decimal UnitPrice { get; set; }
+
+        [Column(&quot;TotalPrice&quot;)]
+        public decimal TotalPrice =&gt; Quantity * UnitPrice;
+
+        [ForeignKey(&quot;OrderId&quot;)]
+        public Orders Order { get; set; } = null!;
+
+
+        [ForeignKey(&quot;ProductId&quot;)]
+        public Products Product {  get; set; } = null!;    
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,35,16,39,0],[16,40,16,44,0],[20,31,20,35,0],[20,36,20,40,0],[24,32,24,36,0],[24,37,24,41,0],[28,31,28,35,0],[28,36,28,40,0],[32,36,32,40,0],[32,41,32,45,0],[35,38,35,58,0],[38,31,38,35,0],[38,36,38,40,0],[38,45,38,50,0],[42,36,42,40,0],[42,41,42,45,0],[42,50,42,55,0]]);
+    </script>
+  </body>
+</html>

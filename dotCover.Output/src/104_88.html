@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\NotificationRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using DbAccessaLayer.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class NotificationRepository : INoticationRepositry
+    {
+        private readonly ApplicationDbContext _db;
+        public NotificationRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+        public async Task&lt;Notifications&gt; AddNotification(Notifications notification)
+        {
+           await _db.Set&lt;Notifications&gt;().AddAsync(notification);
+            await _db.SaveChangesAsync();
+            return notification;
+        }
+
+      
+
+        public async Task&lt;List&lt;NotificationDto&gt;&gt; GetNotifiationDtos(string userId)
+        {
+            try
+            {
+                var list= new List&lt;NotificationDto&gt;();
+
+                var notifcations=await _db.Set&lt;Notifications&gt;().Where(x=&gt;x.UserId==userId).OrderByDescending(x=&gt;x.CreatedAt).ToListAsync();
+                foreach(var item in notifcations)
+                {
+                    list.Add(new NotificationDto
+                    {
+                        UserId = userId,
+                        NotificationType = item.Type.ToString()!,
+                        Title=item.Title,
+                        Message = item.Message,
+                        IsRead = item.IsRead,
+                        CreatedAt = item.CreatedAt,
+                        NotificationId=item.NotificationId,
+                    });
+                }
+                return list;
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;NotificationDto&gt;&gt; GetUnreadMessages(string userId)
+        {
+            try
+            {
+                var notifications = await _db.Set&lt;Notifications&gt;().Where(x =&gt; x.IsRead! &amp;&amp; x.UserId == userId).ToListAsync();
+
+                if (!notifications.Any())
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Notifications&quot;, &quot;NoMessages&quot;));
+                }
+
+                var list=new List&lt;NotificationDto&gt;();    
+                foreach(var item in notifications)
+                {
+                    list.Add(new NotificationDto
+                    {
+                        UserId=item.UserId,
+                        Message=item.Message,
+                        NotificationType=item.Type.ToString()!,
+                        Title=item.Title,
+                        CreatedAt=item.CreatedAt,
+
+                    });
+                }
+
+                return list;
+
+            }
+            catch(Exception) { throw; }
+        }
+
+        public async Task MarkAllAsRead(string userId)
+        {
+            var notifications=await _db.Set&lt;Notifications&gt;().Where(x=&gt;x.UserId==userId&amp;&amp;!x.IsRead).ToListAsync();
+            foreach(var item in notifications)
+            {
+                item.IsRead = true;
+           
+            }
+            
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task MarkAsRead(int notificationId)
+        {
+            try
+            {
+                var notification=await _db.Set&lt;Notifications&gt;().Where(x=&gt;x.NotificationId==notificationId).FirstOrDefaultAsync();
+                if (notification == null)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Notifications&quot;, &quot;NoMessages&quot;));
+                }
+
+                else
+                {
+                    notification.IsRead=true;
+                    _db.Set&lt;Notifications&gt;().Update(notification);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch(Exception) { throw; }
+        }
+
+        public async Task&lt;int&gt; GetCountOfUnreadNotifications(string userId)
+        {
+            return await _db.Set&lt;Notifications&gt;().CountAsync(x=&gt;x.UserId==userId&amp;&amp;!x.IsRead);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,63,0],[19,9,19,10,0],[20,13,20,22,0],[21,9,21,10,0],[23,9,23,10,0],[24,12,24,66,0],[25,13,25,42,0],[26,13,26,33,0],[27,9,27,10,0],[32,9,32,10,0],[34,13,34,14,0],[35,17,35,55,0],[37,17,37,140,0],[38,17,38,24,0],[38,25,38,33,0],[38,34,38,36,0],[38,37,38,49,0],[39,17,39,18,0],[40,21,49,24,0],[50,17,50,18,0],[51,17,51,29,0],[53,13,53,29,0],[54,13,54,14,0],[55,17,55,23,0],[57,9,57,10,0],[60,9,60,10,0],[62,13,62,14,0],[63,17,63,126,0],[65,17,65,42,0],[66,17,66,18,0],[67,21,67,91,0],[70,17,70,54,0],[71,17,71,24,0],[71,25,71,33,0],[71,34,71,36,0],[71,37,71,50,0],[72,17,72,18,0],[73,21,81,24,0],[82,17,82,18,0],[84,17,84,29,0],[87,13,87,29,0],[87,30,87,31,0],[87,32,87,38,0],[88,9,88,10,0],[91,9,91,10,0],[92,13,92,114,0],[93,13,93,20,0],[93,21,93,29,0],[93,30,93,32,0],[93,33,93,46,0],[94,13,94,14,0],[95,17,95,36,0],[97,13,97,14,0],[99,13,99,42,0],[100,9,100,10,0],[103,9,103,10,0],[105,13,105,14,0],[106,17,106,130,0],[107,17,107,42,0],[108,17,108,18,0],[109,21,109,91,0],[113,17,113,18,0],[114,21,114,46,0],[115,21,115,67,0],[116,21,116,50,0],[117,17,117,18,0],[118,13,118,14,0],[119,13,119,29,0],[119,30,119,31,0],[119,32,119,38,0],[120,9,120,10,0],[123,9,123,10,0],[124,13,124,94,0],[125,9,125,10,0]]);
+    </script>
+  </body>
+</html>

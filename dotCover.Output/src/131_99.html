@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\ProductReviewsService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class ProductReviewsService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+
+        public ProductReviewsService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork=unitOfWork;
+        }
+
+        public async Task&lt;IEnumerable&lt;ProductReviewResponseDto&gt;&gt; GetAllReviewByPrduct(int productId)
+        {
+            return await _unitOfWork.productReviewRepository.GetAllReviewByPrduct(productId);
+        }
+
+       public async Task&lt;AddProductReviewDto&gt; AddProductReview(string userId, AddProductReviewDto dto)
+        {
+            return await _unitOfWork.productReviewRepository.AddProductReview(userId, dto);
+        }
+
+        public async Task&lt;AddProductReviewDto&gt; UpdateProductReview(string userId,int productId,AddProductReviewDto dto)
+        {
+            return await _unitOfWork.productReviewRepository.UpdateProductReview(userId, productId, dto);   
+        }
+
+        public async Task DeleteProductReview(string userId, int productId)
+        {
+            await _unitOfWork.productReviewRepository.DeleteProductReview(userId, productId);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,61,0],[16,9,16,10,0],[17,13,17,36,0],[18,9,18,10,0],[21,9,21,10,0],[22,13,22,94,0],[23,9,23,10,0],[26,9,26,10,0],[27,13,27,92,0],[28,9,28,10,0],[31,9,31,10,0],[32,13,32,106,0],[33,9,33,10,0],[36,9,36,10,0],[37,13,37,94,0],[38,9,38,10,0]]);
+    </script>
+  </body>
+</html>

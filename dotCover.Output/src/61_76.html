@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Technicians.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;Technicians&quot;)]
+    public class Technicians
+    {
+        [Key]
+        [Column(&quot;TechnicianId&quot;)]
+        public int TechnicianId { get; set; }
+
+        [Required,MaxLength(6)]
+        public required string UserId {  get; set; }
+
+        [Required,MaxLength(50)]
+        [Column(&quot;Specialization&quot;)]
+        public required string Specialization { get; set; }
+
+        [Required, Range(0, 60)]
+        [Column(&quot;ExperienceYears&quot;)]
+        public decimal ExperienceYears { get; set; }
+
+        [Required,MaxLength (100)]
+        [Column(&quot;Qualification&quot;)]
+        public required string Qualification {  get; set; }
+
+        [Column(&quot;Descipline&quot;)]
+        public string? Descipline {  get; set; }
+
+        [Required]
+        [Column(&quot;Salary&quot;)]
+        public decimal Salary {  get; set; }
+
+        [Required]
+        [Column(&quot;Service_Price&quot;)]
+        public decimal Service_Price { get; set; }
+
+        [Column(&quot;IsAvailable&quot;)]
+        public bool IsAvailable { get; set; } = true;
+
+        [Column(&quot;IsActiveDeliveries&quot;)]
+        public int? IsActiveDeliveries { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive {  get; set; }=true;
+
+        [ForeignKey(&quot;UserId&quot;)]
+        public Users User { get; set; }=null!;
+
+
+        public ICollection&lt;Delivery&gt; Deliveries { get; set; } = new List&lt;Delivery&gt;();
+
+        public ICollection&lt;InstallationTechnician&gt; Installations { get; set; }=new List&lt;InstallationTechnician&gt;();
+
+        public ICollection&lt;MaintenanceTechnicians&gt; Maintenance { get; set; }= new List&lt;MaintenanceTechnicians&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,35,17,39,1],[17,40,17,44,1],[20,42,20,46,1],[20,47,20,51,1],[24,49,24,53,1],[24,54,24,58,1],[28,42,28,46,1],[28,47,28,51,0],[32,49,32,53,1],[32,54,32,58,1],[35,38,35,42,0],[35,43,35,47,0],[39,34,39,38,1],[39,39,39,43,0],[43,40,43,44,1],[43,45,43,49,1],[46,35,46,39,0],[46,40,46,44,1],[46,49,46,53,1],[49,42,49,46,1],[49,47,49,51,1],[53,33,53,37,0],[53,38,53,42,0],[53,45,53,49,1],[56,29,56,33,1],[56,34,56,38,0],[56,41,56,46,1],[59,51,59,55,0],[59,56,59,60,0],[59,65,59,85,1],[61,68,61,72,0],[61,73,61,77,0],[61,80,61,114,1],[63,66,63,70,0],[63,71,63,75,0],[63,79,63,113,1]]);
+    </script>
+  </body>
+</html>

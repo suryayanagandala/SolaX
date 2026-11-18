@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\EmailServiceRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.Options;
+using MimeKit;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class EmailServiceRepository : IEmailService
+    {
+        private readonly EmailSettings emailSettings;
+
+        public EmailServiceRepository(IOptions&lt;EmailSettings&gt; options)
+        {
+            emailSettings = options.Value;
+        }
+
+        public async Task SendEmail(MailRequest mailRequest)
+        {
+            if (string.IsNullOrWhiteSpace(mailRequest.Email))
+             throw new Exception(&quot;Recipient email is required&quot;);
+
+            var email = new MimeMessage();
+
+            // FROM
+            email.From.Add(MailboxAddress.Parse(emailSettings.Email));
+
+            // TO  
+            email.To.Add(MailboxAddress.Parse(mailRequest.Email));
+
+            // SUBJECT
+            email.Subject = mailRequest.Subject;
+
+            // BODY
+            var builder = new BodyBuilder
+            {
+                HtmlBody = mailRequest.EmailBody
+            };
+            email.Body = builder.ToMessageBody();
+
+            using var smtp = new SmtpClient();
+
+            await smtp.ConnectAsync(emailSettings.Host,emailSettings.Port,SecureSocketOptions.StartTls);
+
+            await smtp.AuthenticateAsync(emailSettings.Email,emailSettings.Password);
+            await smtp.SendAsync(email);
+            await smtp.DisconnectAsync(true);
+        }
+    }
+
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,9,20,71,0],[21,9,21,10,0],[22,13,22,43,0],[23,9,23,10,0],[26,9,26,10,0],[27,13,27,62,0],[28,14,28,65,0],[30,13,30,43,0],[33,13,33,71,0],[36,13,36,67,0],[39,13,39,49,0],[42,13,45,15,0],[46,13,46,50,0],[48,13,48,47,0],[50,13,50,105,0],[52,13,52,86,0],[53,13,53,41,0],[54,13,54,46,0],[55,9,55,10,0]]);
+    </script>
+  </body>
+</html>

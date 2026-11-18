@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\UserRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using iText.Commons.Actions.Contexts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Transactions;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class UserRepository : IUserRepository
+    {
+        private ApplicationDbContext _db;
+
+        private readonly IEmailService _emailService;
+
+        private readonly GenearteToken genearteToken;
+
+        private readonly ISignalRRepository signalRRepository;
+        public UserRepository(ApplicationDbContext db,IEmailService emailService, IConfiguration configuration
+            ,ISignalRRepository signalRRepository)
+        {
+            _db = db;
+            _emailService = emailService;
+            this.genearteToken = new GenearteToken(configuration);
+            this.signalRRepository = signalRRepository;
+        }
+
+       
+
+        public async Task&lt;User&gt; GetUserById(string id)
+        {
+            try
+            {
+                var data = await _db.Set&lt;Users&gt;().FirstOrDefaultAsync(x =&gt; x.UserId == id);
+                if (data == null)
+                {
+                    throw new UserNotFound(MessageHelper.Get(&quot;User&quot;,&quot;UserId&quot;));
+                }
+                else
+                {
+                    var fetchData = new User
+                    {
+                        UserId = data.UserId,
+                        RoleId = data.RoleId,
+                        FullName = data.FullName,
+                        EmailId = data.EmailId,
+                        IsActive = data.IsActive,
+                        Address=data.Address,
+                        Password=data.Password,
+                        PhoneNumber=data.PhoneNumber,
+                    };
+                    return fetchData;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
+                throw;
+            }
+
+        }
+
+        public async Task CheckEmail(string email)
+        {
+            try
+            {
+                var emailData= await _db.Set&lt;Users&gt;().AnyAsync(x =&gt; x.EmailId == email);
+                if(emailData) 
+                {
+                    throw new EmailExists(MessageHelper.Get(&quot;User&quot;,&quot;Email&quot;));
+                }
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public  async Task&lt;string&gt; GenerateUserId()
+        {
+            const string chars = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&quot;;
+            var random= new Random();
+            string id;
+            bool exists;
+            do
+            {
+                id=new string(Enumerable.Repeat(chars, 6).Select(s =&gt; s[random.Next(s.Length)]).ToArray());
+
+                 exists = await UserIdExists(id); 
+                
+            }
+            while (exists);
+
+            return id;
+        }
+
+        private async Task&lt;bool&gt; UserIdExists(string id)
+        {
+            return await _db.Users.AnyAsync(x =&gt; x.UserId == id);
+        }
+        public async Task&lt;UserCreateDto&gt; AddUser(UserCreateDto user)
+        {
+            using var transactions= await _db.Database.BeginTransactionAsync();
+            try
+            {
+                if (user == null)
+                    throw new ArgumentNullException(nameof(user));
+
+                await CheckEmail(user.EmailId);
+
+                
+
+                if (string.IsNullOrWhiteSpace(user.EmailId))
+                    throw new ValidationException(&quot;EmailId is required&quot;);
+
+                if (string.IsNullOrWhiteSpace(user.Password))
+                    throw new ValidationException(&quot;Password is required&quot;);
+
+                if (string.IsNullOrWhiteSpace(user.FullName))
+                    throw new ValidationException(&quot;FullName is required&quot;);
+
+                if (string.IsNullOrWhiteSpace(user.Address))
+                    throw new ValidationException(&quot;Address is required&quot;);
+
+                if (string.IsNullOrWhiteSpace(user.PhoneNumber))
+                    throw new ValidationException(&quot;PhoneNumber is required&quot;);
+
+                var exists = await _db.Users.AnyAsync(x =&gt; x.UserId == user.UserId);
+
+                if (exists)
+                    throw new DublicateUserException(MessageHelper.Get(&quot;User&quot;,&quot;UserAlreadyExists&quot;));
+                var userData = new Users
+                {
+                    UserId=await GenerateUserId(),
+                    EmailId=user.EmailId.Trim().ToLower(),
+                    PhoneNumber=user.PhoneNumber.Trim().ToLower(),
+                    RoleId=3,
+                    Password=BCrypt.Net.BCrypt.HashPassword(user.Password),
+                    FullName=user.FullName.Trim().ToLower(),
+                    Address=user.Address.Trim().ToLower(),
+                    CreatedBy=&quot;Admin&quot;
+                };
+                _db.Users.Add(userData);
+
+                var notification = new Notifications
+                {
+                    UserId = userData.UserId,
+                    Type = NotificationType.Regsitration,
+                    Title = &quot;Registration&quot;,
+                    IsActive = false,
+                    Message = MessageHelper.Get(&quot;Messages&quot;, &quot;Register&quot;)
+                };
+                await _db.SaveChangesAsync();
+
+                await _db.Notifications.AddAsync(notification);
+
+                var signal = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString() ?? &quot;UnKnown&quot;,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+                };
+
+                await this.signalRRepository.SendAsyncNotification(userData.UserId, signal);
+                
+                await transactions.CommitAsync();
+                return user;
+
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+        }
+
+      public async Task&lt;LoginResponse&gt;Login(LoginDto login)
+        {
+            using var transactions = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var userData = await _db.Users.Include(x=&gt;x.Role).FirstOrDefaultAsync(x =&gt; x.EmailId == login.Email);
+                if (userData == null)
+                {
+                    throw new UserNotFound(MessageHelper.Get(&quot;User&quot;,&quot;UserNotFound&quot;));
+                }
+
+                bool verifyPassword = BCrypt.Net.BCrypt.Verify(login.Password,userData.Password);
+                if (!verifyPassword)
+                {
+                    throw new UserNotFound(MessageHelper.Get(&quot;User&quot;,&quot;Password&quot;));
+                }
+
+                var token = this.genearteToken.GenearteJwtToken(userData, userData.Role.RoleName);
+
+                var notification = new Notifications
+                {
+                    UserId = userData.UserId,
+                    Message = &quot;You succesfully login&quot;,
+                    Type = NotificationType.System,
+                    CreatedAt = TimeUtility.NowIST(),
+
+                };
+                await _db.Notifications.AddAsync(notification);
+                await _db.SaveChangesAsync();
+                var dto = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString()!,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+
+                };
+
+                await signalRRepository.SendAsyncNotification(userData.UserId, dto);
+                await transactions.CommitAsync();
+                return new LoginResponse
+                {
+                    TokenResponse=token,
+                    Email = userData.EmailId,
+                    UserId = userData.UserId,
+                    FullName = userData.FullName,
+                    RoleId = userData.RoleId,
+                    RoleName=userData.Role.RoleName
+                };
+                
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+      }
+
+        public async Task UpdatePassword(UpdatePassword dto)
+        {
+            var validCredentails = await _db.Users.FirstOrDefaultAsync(x =&gt; x.EmailId == dto.Email);
+            if(validCredentails == null)
+            {
+                throw new UserNotFound(MessageHelper.Get(&quot;User&quot;,&quot;Email&quot;));
+            }
+
+            bool verifyOldpassword = BCrypt.Net.BCrypt.Verify(dto.OldPassword, validCredentails.Password);
+            if (!verifyOldpassword)
+            {
+                throw new Exception(MessageHelper.Get(&quot;User&quot;, &quot;OldPassword&quot;));
+            }
+
+            if (BCrypt.Net.BCrypt.Verify(dto.NewPassword, validCredentails.Password))
+            {
+                throw new Exception(MessageHelper.Get(&quot;User&quot;, &quot;NewPasssword&quot;));
+            }
+
+            string newPassword=BCrypt.Net.BCrypt.HashPassword(dto.NewPassword); 
+
+            validCredentails.Password= newPassword;
+            validCredentails.UpdatedAt = TimeUtility.NowIST();
+            validCredentails.UpdatedBy = validCredentails.FullName;
+
+            await _db.SaveChangesAsync();
+        }
+
+        //for otp
+
+        private static string GenerateNumber()
+        {
+            Random random = new Random();
+            var randomNumber=random.Next(0,1000000).ToString(&quot;D6&quot;);
+            return randomNumber;
+        }
+
+        public async Task UpdateOtpManager(string email,string otptext,string otptype)
+        {
+            try
+            {
+                var checkEmail=await _db.Users.Where(x=&gt;x.EmailId == email).ToListAsync();
+                if (!checkEmail.Any())
+                {
+                    throw new Exception(MessageHelper.Get(&quot;User&quot;, &quot;Email&quot;));
+                }
+                else
+                {
+                   
+                    var otpContext = new OtpManager
+                    {
+                        Email = email,
+                        Otptext = otptext,
+                        Otptype = otptype,
+                        CreatedDate=TimeUtility.NowIST(),
+                        Expiration = DateTimeOffset.UtcNow.AddMinutes(5),
+                        IsUsed = false
+                    };
+                    await _db.OtpManagers.AddAsync(otpContext);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch(Exception )
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;Guid&gt; VerifyOtp(string email,string otptext)
+        {
+            try
+            {
+                email = email.Trim().ToLower();
+                otptext = otptext.Trim();
+
+                var data = await _db.OtpManagers.Where(x =&gt; x.Email.ToLower() == email &amp;&amp; x.Otptext == otptext &amp;&amp; x.IsUsed == false).OrderByDescending(x =&gt; x.Id).FirstOrDefaultAsync();
+
+                if (data == null || data.Expiration &lt; DateTimeOffset.UtcNow)
+                    throw new Exception(&quot;Invalid or expired OTP&quot;);
+                data.IsUsed = true;
+                data.token = Guid.NewGuid();
+                await _db.SaveChangesAsync();
+
+                return data.token;
+               
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+        }
+
+        private async Task SendOtpMail(string useremail, string opttext, string username)
+        {
+            var mailRequest = new MailRequest();
+            mailRequest.Email = useremail;
+            mailRequest.Subject = &quot;SolarX - Password Reset OTP&quot;;
+            mailRequest.EmailBody = GenerateEmailBody(username, opttext);
+            await _emailService.SendEmail(mailRequest);
+
+        }
+
+        private string GenerateEmailBody(string name, string otptext)
+        {
+            string emailBody = string.Empty;
+            emailBody = &quot;&lt;div style=&#39;width:100%; background-color:#342913; color:white;&#39;&gt;&quot;;
+            emailBody += &quot;&lt;h1&gt;Hi&quot; + name + &quot;, Wecome to SolarX&lt;/h1&gt;&quot;;
+            emailBody += &quot;&lt;h2&gt;Please enter OTP text and update the password &lt;/h2&gt;&quot;;
+            emailBody += &quot;&lt;h2&gt;OTP Text is:&quot; + otptext + &quot;&lt;/h2&gt;&quot;;
+            emailBody += &quot;&lt;/div&gt;&quot;;
+            return emailBody;
+        }
+
+        //private async Task SendUpdatePassword(string email,string name)
+        //{
+        //    var mailRequest = new MailRequest
+        //    {
+        //        Email = email,
+        //        Subject = &quot;Password Updatd Successfully&quot;,
+        //        EmailBody = $@&quot;&lt;div style=&#39;width:100%;padding:20px;&#39;&gt;
+        //        &lt;h2&gt;Hi,{name}&lt;/h2&gt;
+        //        &lt;p&gt;Password Updatd Successfully&lt;/p&gt; &lt;br/&gt;
+        //        &lt;b&gt;SolarX Team&lt;/b&gt;&quot;
+              
+
+               
+        //    };
+        //    await _emailService.SendEmail(mailRequest);
+        //}
+
+        private async Task SendRegisteration(string email, string name)
+        {
+            var mailRequest = new MailRequest
+            {
+                Email = email,
+                Subject = &quot;Registration successfully!&quot;,
+                EmailBody = $@&quot;&lt;div style=&#39;width:100%;padding:20px;&#39;&gt;
+                &lt;h2&gt;Hi,{name}&lt;/h2&gt;
+                &lt;p&gt;Thanks for registration and Welcome to SolarX&lt;/p&gt; &lt;br/&gt;
+                &lt;b&gt;SolarX Team&lt;/b&gt;&quot;
+
+
+
+            };
+            await _emailService.SendEmail(mailRequest);
+        }
+
+        public async Task&lt;string&gt; ForgetPassword(string email)
+        {
+            try
+            {
+                var userData=await _db.Users.Where(x=&gt;x.EmailId==email).FirstOrDefaultAsync();
+                if (userData == null)
+                {
+                    throw new UserNotFound(MessageHelper.Get(&quot;User&quot;, &quot;Email&quot;));
+                }
+                else
+                {
+                    string otpNumber = GenerateNumber();
+                    await UpdateOtpManager(email,otpNumber,&quot;Forgot Password&quot;);
+                    //await SendOtpMail(userData.EmailId, otpNumber,userData.FullName);
+                    return otpNumber;
+                }
+
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+       private async Task SendNotifications(string userId,string message)
+        {
+
+            var sendData = new Notifications
+            {
+                UserId = userId,
+                Message = message,
+                Type = CoreModels.Enums.NotificationType.System,
+                IsRead = false,
+                IsActive = true,
+            };
+
+            _db.Notifications.Add(sendData);
+            await _db.SaveChangesAsync();
+        }
+
+
+        public async Task Resetpassword(Guid token, string newPassword,string confirmPassword)
+        {
+            var otpData = await _db.OtpManagers.FirstOrDefaultAsync(x =&gt; x.token == token);
+
+            if (otpData == null)
+                throw new Exception(&quot;Invalid or expired reset request&quot;);
+
+            var userData = await _db.Users.Where(x =&gt; x.EmailId == otpData.Email).FirstOrDefaultAsync();
+
+            if (userData == null)
+                throw new UserNotFound($&quot;User not found with email &quot;);
+
+            //if (BCrypt.Net.BCrypt.Verify(newPassword, userData.Password))
+            //    throw new Exception(&quot;New password must be different from old password&quot;);
+
+            if (newPassword != confirmPassword)
+            {
+                throw new Exception($&quot;Confirm and new password must be same&quot;);
+            }
+
+            userData.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            userData.UpdatedAt = TimeUtility.NowIST();
+
+            //checkOtp.IsUsed = true;
+            await _db.SaveChangesAsync();
+
+            await SendNotifications(userData.UserId, &quot;Reset password successfully updated!&quot;);
+            //await SendUpdatePassword(userData.EmailId, userData.FullName);
+        }
+
+
+        public async Task UpdateProfile(string userId, UpdateProfileDTO dto)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(x =&gt; x.UserId == userId);
+
+            if (user == null)
+                throw new UserNotFound(&quot;User not found&quot;);
+
+            user.FullName = dto.FullName.Trim().ToLower();
+            user.PhoneNumber = dto.PhoneNumber.Trim().ToLower();
+            user.Address = dto.Address.Trim().ToLower();
+            user.UpdatedAt = TimeUtility.NowIST();
+            user.EmailId = dto.Email!.Trim().ToLower();
+
+            await _db.SaveChangesAsync();
+        }
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,31,51,1],[32,9,32,10,1],[33,13,33,22,1],[34,13,34,42,1],[35,13,35,67,1],[36,13,36,56,1],[37,9,37,10,1],[42,9,42,10,1],[44,13,44,14,1],[45,17,45,92,1],[46,17,46,34,1],[47,17,47,18,1],[48,21,48,80,1],[51,17,51,18,1],[52,21,62,23,1],[63,21,63,38,1],[66,13,66,33,1],[67,13,67,14,1],[68,17,68,47,1],[69,17,69,18,0],[70,21,70,45,0],[72,17,72,23,1],[75,9,75,10,1],[78,9,78,10,1],[80,13,80,14,1],[81,17,81,89,1],[82,17,82,30,1],[83,17,83,18,1],[84,21,84,78,1],[86,13,86,14,1],[87,13,87,29,1],[88,13,88,14,1],[89,17,89,23,1],[91,9,91,10,1],[94,9,94,10,1],[96,13,96,38,1],[100,13,100,14,1],[101,17,101,71,1],[101,71,101,95,1],[101,95,101,108,1],[103,18,103,50,1],[105,13,105,14,1],[106,13,106,28,1],[108,13,108,23,1],[109,9,109,10,1],[112,9,112,10,1],[113,13,113,66,1],[114,9,114,10,1],[116,9,116,10,1],[117,13,117,80,1],[119,13,119,14,1],[120,17,120,34,1],[121,21,121,67,1],[123,17,123,48,1],[127,17,127,61,1],[128,21,128,74,1],[130,17,130,62,1],[131,21,131,75,1],[133,17,133,62,1],[134,21,134,75,1],[136,17,136,61,1],[137,21,137,74,0],[139,17,139,65,1],[140,21,140,78,0],[142,17,142,85,1],[144,17,144,28,1],[145,21,145,101,1],[146,17,156,19,1],[157,17,157,41,1],[159,17,166,19,1],[167,17,167,46,1],[169,17,169,64,1],[171,17,180,19,1],[182,17,182,93,1],[184,17,184,50,1],[185,17,185,29,1],[188,13,188,30,1],[189,13,189,14,1],[190,17,190,52,1],[191,17,191,23,1],[192,13,192,14,0],[193,9,193,10,1],[196,9,196,10,1],[197,13,197,81,1],[199,13,199,14,1],[200,17,200,118,1],[201,17,201,38,1],[202,17,202,18,1],[203,21,203,86,1],[206,17,206,98,1],[207,17,207,37,1],[208,17,208,18,0],[209,21,209,82,0],[212,17,212,99,1],[214,17,221,19,1],[222,17,222,64,1],[223,17,223,46,1],[224,17,234,19,1],[236,17,236,85,1],[237,17,237,50,1],[238,17,246,19,1],[249,13,249,30,1],[250,13,250,14,1],[251,17,251,52,1],[252,17,252,23,1],[253,13,253,14,0],[254,7,254,8,1],[257,9,257,10,1],[258,13,258,101,1],[259,13,259,41,1],[260,13,260,14,1],[261,17,261,75,1],[264,13,264,107,1],[265,13,265,36,1],[266,13,266,14,1],[267,17,267,79,1],[270,13,270,86,1],[271,13,271,14,0],[272,17,272,80,0],[275,13,275,80,1],[277,13,277,52,1],[278,13,278,63,1],[279,13,279,68,1],[281,13,281,42,1],[282,9,282,10,1],[287,9,287,10,1],[288,13,288,42,1],[289,13,289,68,1],[290,13,290,33,1],[291,9,291,10,1],[294,9,294,10,1],[296,13,296,14,1],[297,17,297,91,1],[298,17,298,39,1],[299,17,299,18,1],[300,21,300,77,1],[303,17,303,18,1],[305,21,313,23,1],[314,21,314,64,1],[315,21,315,50,1],[316,17,316,18,1],[317,13,317,14,1],[318,13,318,30,1],[319,13,319,14,1],[320,17,320,23,1],[322,9,322,10,1],[325,9,325,10,1],[327,13,327,14,1],[328,17,328,48,1],[329,17,329,42,1],[331,17,331,185,1],[333,17,333,77,1],[334,21,334,67,1],[335,17,335,36,0],[336,17,336,45,0],[337,17,337,46,0],[339,17,339,35,0],[343,13,343,30,1],[344,13,344,14,1],[345,17,345,23,1],[348,9,348,10,0],[351,9,351,10,0],[352,13,352,49,0],[353,13,353,43,0],[354,13,354,65,0],[355,13,355,74,0],[356,13,356,56,0],[358,9,358,10,0],[361,9,361,10,0],[362,13,362,45,0],[363,13,363,92,0],[364,13,364,70,0],[365,13,365,84,0],[366,13,366,65,0],[367,13,367,35,0],[368,13,368,30,0],[369,9,369,10,0],[389,9,389,10,0],[390,13,401,15,0],[402,13,402,56,0],[403,9,403,10,0],[406,9,406,10,1],[408,13,408,14,1],[409,17,409,95,1],[410,17,410,38,1],[411,17,411,18,1],[412,21,412,80,1],[415,17,415,18,1],[416,21,416,57,1],[417,21,417,79,1],[419,21,419,38,1],[424,13,424,30,1],[425,13,425,14,1],[426,17,426,23,1],[428,9,428,10,1],[431,9,431,10,0],[433,13,440,15,0],[442,13,442,45,0],[443,13,443,42,0],[444,9,444,10,0],[448,9,448,10,1],[449,13,449,92,1],[451,13,451,33,1],[452,17,452,73,1],[454,13,454,105,1],[456,13,456,34,1],[457,17,457,71,1],[462,13,462,48,0],[463,13,463,14,0],[464,17,464,79,0],[467,13,467,77,0],[468,13,468,55,0],[471,13,471,42,0],[473,13,473,94,0],[475,9,475,10,0],[479,9,479,10,1],[480,13,480,85,1],[482,13,482,30,1],[483,17,483,58,1],[485,13,485,59,1],[486,13,486,65,1],[487,13,487,57,1],[488,13,488,51,1],[489,13,489,56,1],[491,13,491,42,1],[492,9,492,10,1]]);
+    </script>
+  </body>
+</html>

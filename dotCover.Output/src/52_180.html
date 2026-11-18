@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\SolarPerformance.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;SolarPerformance&quot;)]
+    public class SolarPerformance
+    {
+        [Key]
+        public int PerformanceId { get; set; }
+
+        [Required,StringLength(6)]
+        public required string UserId { get; set; }
+
+        public int PanelId {  get; set; }
+        public decimal? Voltage { get; set; }
+        public decimal? CurrentFlow { get; set; }
+        public decimal? Power { get; set; }
+        public decimal? Efficiency { get; set; }
+        public DateTimeOffset Generated_at { get; set; }
+
+      public int Temperature {  get; set; } 
+        public bool IsActive { get; set; } = true;
+
+        [ForeignKey(&quot;UserId&quot;)]
+        public Users User { get; set; } = null!;
+
+        [ForeignKey(&quot;PanelId&quot;)]
+        public Panel Panel { get; set; } = null!;
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,36,15,40,1],[15,41,15,45,1],[18,41,18,45,1],[18,46,18,50,1],[20,31,20,35,1],[20,36,20,40,1],[21,35,21,39,1],[21,40,21,44,1],[22,39,22,43,1],[22,44,22,48,1],[23,33,23,37,1],[23,38,23,42,1],[24,38,24,42,1],[24,43,24,47,1],[25,46,25,50,1],[25,51,25,55,1],[27,33,27,37,0],[27,38,27,42,0],[28,32,28,36,0],[28,37,28,41,1],[28,46,28,50,1],[31,29,31,33,0],[31,34,31,38,0],[31,43,31,48,1],[34,30,34,34,0],[34,35,34,39,0],[34,44,34,49,1]]);
+    </script>
+  </body>
+</html>

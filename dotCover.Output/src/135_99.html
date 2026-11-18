@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\TechnicianService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class TechnicianService
+    {
+        private readonly IUnitOfWork unitOfWork;
+
+        public TechnicianService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
+
+        public async Task CreateTechnician(TechnicianCreateDto dto)
+        {
+            await this.unitOfWork.TechnicianRepository.AssignedTechnician(dto);
+        }
+
+        public async Task&lt;TechnicianResponse&gt;GetTechncianResponse(string userId)
+        {
+            return await this.unitOfWork.TechnicianRepository.GetTechnician(userId);
+        
+        }
+
+        public async Task&lt;TechnicianDashboardDto&gt;GetDashboard(string userId)
+        {
+            return await this.unitOfWork.TechnicianRepository.GetDashboard(userId);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,57,0],[17,9,17,10,0],[18,13,18,42,0],[19,9,19,10,0],[22,9,22,10,0],[23,13,23,80,0],[24,9,24,10,0],[27,9,27,10,0],[28,13,28,85,0],[30,9,30,10,0],[33,9,33,10,0],[34,13,34,84,0],[35,9,35,10,0]]);
+    </script>
+  </body>
+</html>

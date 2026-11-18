@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\MaintenanceService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class MaintenanceService
+    {
+        private readonly IUnitOfWork unitOfWork;
+        public MaintenanceService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
+
+        public List&lt;DeliveryDto&gt; GetMaintenanceForUser(string userId)
+        {
+            return this.unitOfWork.maintenanceRepository.GetMaintenanceStatus(userId);
+        }
+
+        public async Task RaiseMaintenanaceRequest(MaintenanceRequestCreateDto dto)
+        {
+            await this.unitOfWork.maintenanceRepository.RaiseComplete(dto);
+        }
+
+        public  async Task&lt;List&lt;MaintenanceRequestDto&gt;&gt; GetMaintenanceJods(string userId)
+        {
+            return await unitOfWork.maintenanceRepository.maintenanceRequestDtos(userId);
+        }
+
+        public async Task UploadMaintennaceStatus(MaintenanceReportDto maintenanceReportDto)
+        {
+            var list=await this.unitOfWork.maintenanceRepository.CompletedMaintenanceTask(maintenanceReportDto);
+            if (list.Count &gt;= 4)
+            {
+                var userId = list[1];
+                var technicianId = list[0];
+                var orderId= list[2];
+                var requestId= list[3];
+
+                var messages = new Notifications
+                {
+                    UserId = userId,
+                    Type = NotificationType.Maintenance,
+                    Title = &quot;Maintenance Update&quot;,
+                    Message = $&quot;Maintenance completed of {orderId} having requestId {requestId}&quot;
+                };
+                await this.unitOfWork.noticationRepositry.AddNotification(messages);
+
+                var notificationDto = new NotificationDto
+                {
+                    UserId = userId,
+                    NotificationType = messages.Type.ToString()!,
+                    Title = messages.Title,
+                    Message = messages.Message,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now,
+                    NotificationId = messages.NotificationId,
+                };
+
+                await this.unitOfWork.signalRRepository.SendAsyncNotification(userId, notificationDto);
+                await this.unitOfWork.signalRRepository.SendNotificationAdmin(userId, notificationDto);
+            }
+
+        }
+
+        public async Task&lt;List&lt;object&gt;&gt;GetCompletedMaintenanaces(string userId)
+        {
+            return await this.unitOfWork.maintenanceRepository.GetCompletedMaintenances(userId);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,58,0],[17,9,17,10,0],[18,13,18,42,0],[19,9,19,10,0],[22,9,22,10,0],[23,13,23,87,0],[24,9,24,10,0],[27,9,27,10,0],[28,13,28,76,0],[29,9,29,10,0],[32,9,32,10,0],[33,13,33,90,0],[34,9,34,10,0],[37,9,37,10,0],[38,13,38,113,0],[39,13,39,33,0],[40,13,40,14,0],[41,17,41,38,0],[42,17,42,44,0],[43,17,43,38,0],[44,17,44,40,0],[46,17,52,19,0],[53,17,53,85,0],[55,17,64,19,0],[66,17,66,104,0],[67,17,67,104,0],[68,13,68,14,0],[70,9,70,10,0],[73,9,73,10,0],[74,13,74,97,0],[75,9,75,10,0]]);
+    </script>
+  </body>
+</html>

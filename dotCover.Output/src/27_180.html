@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\GenearteToken.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.Entities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Asn1.Crmf;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+
+
+namespace CoreModels
+{
+    public class GenearteToken
+    {
+        private readonly IConfiguration _configuration;
+
+        public GenearteToken(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+        public string GenearteJwtToken(Users user, string userRole)
+        {
+            var claims = new List&lt;Claim&gt;()
+            {
+                // idetify the email as subject
+                new Claim(JwtRegisteredClaimNames.Sub, user.EmailId),
+
+                //custom claim
+                new Claim(&quot;UserId&quot;, user.UserId),
+
+                //standard email claim
+                new Claim(ClaimTypes.Email, user.EmailId),
+
+                //Role claim for authorization 
+                new Claim(ClaimTypes.Role, userRole),
+
+                //unique token
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            //convert secret key from json to bites
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration[&quot;Jwt:Key&quot;]));
+
+            //how the token will be signed
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            //create the token with issuer,auience,claim
+            var token = new JwtSecurityToken(
+                issuer: _configuration[&quot;Jwt:Issuer&quot;],
+                audience: _configuration[&quot;Jwt:Audience&quot;],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(3),
+                signingCredentials: creds
+                );
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,9,20,59,1],[21,9,21,10,1],[22,13,22,44,1],[23,9,23,10,1],[25,9,25,10,1],[26,13,42,15,1],[46,13,46,99,1],[49,13,49,84,1],[52,13,58,19,1],[59,13,59,68,1],[60,9,60,10,1]]);
+    </script>
+  </body>
+</html>

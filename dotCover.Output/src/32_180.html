@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\CartItem.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using MimeKit.Cryptography;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;CartItems&quot;)]
+    public class CartItem
+    {
+        [Key]
+        public int CartItemId { get; set; }
+
+        [Required]
+        public int CartId { get; set; }
+
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        public int Quantity { get; set; }
+
+        
+        [Required]
+        public decimal Price { get; set; }
+
+        public DateTimeOffset? UpdatedAt { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+
+        [ForeignKey(nameof(CartId))]
+        public Cart Cart { get; set; } = null!;
+
+        [ForeignKey(nameof(ProductId))]
+        public Products Product { get; set; } = null!;
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,33,16,37,1],[16,38,16,42,1],[19,29,19,33,0],[19,34,19,38,0],[22,32,22,36,1],[22,37,22,41,1],[25,31,25,35,1],[25,36,25,40,1],[29,32,29,36,1],[29,37,29,41,1],[31,44,31,48,0],[31,49,31,53,1],[33,32,33,36,1],[33,37,33,41,1],[33,46,33,50,1],[37,28,37,32,1],[37,33,37,37,0],[37,42,37,47,1],[40,35,40,39,1],[40,40,40,44,0],[40,49,40,54,1]]);
+    </script>
+  </body>
+</html>

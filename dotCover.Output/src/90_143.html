@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\RoleRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using DbAccessaLayer.Infrastructure;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrstructure
+{
+    public class RoleRepositoryTest:SqliteTestBase
+    {
+        private RoleRepository roleRepository;
+
+        [SetUp]
+        public void SetUp()
+        {
+            roleRepository = new RoleRepository(_db);
+        }
+
+        [Test]
+        public async Task GetAllRoles()
+        {
+            var result=await roleRepository.GetAllRoles();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.Count());
+        }
+
+        [Test]
+        public void GetUsersBaedOnRole_Success()
+        {
+            string roleName = &quot;Admin&quot;;
+            var result= roleRepository.GetUsersFromUser(roleName);
+            Assert.IsNotNull(result);   
+            Assert.AreEqual(1, result.Count());
+        }
+
+        [Test]
+        public void GetUsersFromRoles_Failure()
+        {
+            string roleName = &quot;fakerole&quot;;
+
+            var result = roleRepository.GetUsersFromUser(roleName);
+
+            Assert.IsNotNull(result);
+            Assert.IsEmpty(result);
+        }
+        [Test]
+        public void GetUsersFromUser_NullRole_ThrowsException()
+        {
+            var ex = Assert.Throws&lt;ArgumentException&gt;(() =&gt;
+                roleRepository.GetUsersFromUser(null));
+
+            Assert.That(ex.Message, Is.EqualTo(&quot;Role name is required&quot;));
+        }
+        [Test]
+        public void GetUsersFromUser_InvalidRole_ThrowsException()
+        {
+            string roleName = &quot;fakerole&quot;;
+
+            var ex = Assert.Throws&lt;Exception&gt;(() =&gt;
+                roleRepository.GetUsersFromUser(roleName));
+
+            Assert.That(ex.Message, Is.EqualTo(&quot;No users found for this role&quot;));
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,10,1],[19,13,19,54,1],[20,9,20,10,1],[24,9,24,10,1],[25,13,25,59,1],[26,13,26,38,1],[27,13,27,48,1],[28,9,28,10,1],[32,9,32,10,1],[33,13,33,39,1],[34,13,34,67,1],[35,13,35,38,1],[36,13,36,48,1],[37,9,37,10,0],[41,9,41,10,1],[42,13,42,42,1],[44,13,44,68,1],[46,13,46,38,0],[47,13,47,36,0],[48,9,48,10,0],[51,9,51,10,1],[52,13,53,17,1],[53,17,53,54,1],[53,54,53,56,1],[55,13,55,74,1],[56,9,56,10,1],[59,9,59,10,1],[60,13,60,42,1],[62,13,63,17,1],[63,17,63,58,1],[63,58,63,60,1],[65,13,65,81,1],[66,9,66,10,1]]);
+    </script>
+  </body>
+</html>

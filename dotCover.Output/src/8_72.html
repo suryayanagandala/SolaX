@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\DeliveryRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using SolarXNUnit.SqLite.Base;
+using SolarXNUnit.SqLite.SeedData;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrstructure
+{
+    public class DeliveryRepositoryTest:SqliteTestBase
+    {
+        private  DeliveryRepository deliveryRepository;
+        private  FakeSignalRRepository fakeSignalRRepository;
+
+        [SetUp]
+        public void setUp()
+        {
+            fakeSignalRRepository = new FakeSignalRRepository();
+            deliveryRepository = new DeliveryRepository(_db, fakeSignalRRepository);
+        }
+
+        [Test]
+        public async Task MarkAsCompletedDelivery_Should_AlreadyInstallationCreated()
+        {
+          
+            var delivery = _db.Deliveries.First(d =&gt; d.Status == &quot;OutForDelivery&quot;);
+            delivery.AssignedToTechId = 1;
+            delivery.AssignedToTech = _db.Technicians.First();
+            await _db.SaveChangesAsync();
+
+          
+
+            // Assert
+            Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt; await deliveryRepository.MarkAsCompletedDelivery(delivery.DeliveryId));
+
+            //Assert.IsTrue(fakeSignalRRepository.SentNotifications.Any());
+            //var sentNotification = fakeSignalRRepository.SentNotifications.First();
+            //Assert.AreEqual(order.UserId, sentNotification.UserId);
+        }
+
+        [Test]
+        public async Task MarkAsCompletedDelivery_Should_UpdateStatusAndCreateInstallation()
+        {
+            try
+            {
+                var user = new Users
+                {
+                    UserId = &quot;ERCXEk&quot;,
+                    FullName = &quot;Suryaq&quot;,
+                    EmailId = &quot;surya@12gmail.com&quot;,
+                    Password = BCrypt.Net.BCrypt.HashPassword(&quot;Surya@2003&quot;),
+                    PhoneNumber = &quot;9876543213&quot;,
+                    IsActive = true,
+                    Address = &quot;jfiurhurhf&quot;,
+                    CreatedBy = &quot;Admin&quot;,
+
+                };
+                await _db.Users.AddAsync(user);
+
+                // Technician
+                var tech = new Technicians
+                {
+                    TechnicianId = 3,
+                    UserId = user.UserId,
+                    IsAvailable = true,
+                    IsActiveDeliveries = 0,
+                    Specialization = &quot;Installer&quot;,
+                    Qualification = &quot;Diploma&quot;,
+                    Service_Price = 500
+                };
+                await _db.Technicians.AddAsync(tech);
+
+                // Order
+                var order = new Orders
+                {
+                    OrderId = 99,
+                    UserId = user.UserId,
+                    Status = OrderStatus.CREATED,
+                    TotalAmount = 15000,
+                    PhoneNumber = user.PhoneNumber,
+                    FullName = user.FullName,
+                    IsActive = true,
+                    DeliveryAddress = &quot;Vijayawada Kondapalli&quot;,
+                    CreatedAt = TimeUtility.NowIST(),
+                    OrderItem = new List&lt;OrderItems&gt;
+                {
+                    new OrderItems
+                    {
+                        OrderItemId = 3,
+                        ProductId = 1,
+                        Quantity = 1,
+                        UnitPrice = 15000
+                    }
+                }
+                };
+                await _db.Orders.AddAsync(order);
+
+                // Delivery
+                var delivery = new Delivery
+                {
+                    DeliveryId = 99,
+                    OrderId = order.OrderId,
+                    AssignedToTechId = tech.TechnicianId,
+                    Status = DeliveryStatus.OutForDelivery.ToString(),
+                    AssignedAt = TimeUtility.NowIST(),
+                    DeliveryAt = TimeUtility.NowIST().AddDays(1),
+                    AssignedBy = &quot;Admin&quot;,
+                    AssignedToTech = tech,  
+                    Order = order          
+                };
+                await _db.Deliveries.AddAsync(delivery);
+
+                await _db.SaveChangesAsync();
+
+                var userId = await deliveryRepository.MarkAsCompletedDelivery(99);
+
+                // Assert
+                var updatedDelivery = await _db.Deliveries
+                    .Include(d =&gt; d.Order)
+                    .FirstOrDefaultAsync(d =&gt; d.DeliveryId == 99);
+
+                Assert.AreEqual(&quot;Delivered&quot;, updatedDelivery.Status);
+                Assert.AreEqual(OrderStatus.DELIVERED, updatedDelivery.Order.Status);
+
+
+            }
+            catch (DbUpdateException ex)
+            {
+                var errorMessages=ex.InnerException!=null? ex.InnerException.Message:ex.Message;
+                Console.WriteLine(errorMessages);
+                throw new Exception(errorMessages);
+
+            }
+            
+        }
+
+
+        [Test]
+        public void MarkAsCompletedDelivery_DeliveryNotFound_ThrowsException()
+        {
+            // Act &amp; Assert
+            var ex = Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt;
+                await deliveryRepository.MarkAsCompletedDelivery(199));
+
+            Assert.That(ex.Message, Is.EqualTo(&quot;No items are indelivery mode&quot;));
+        }
+
+
+        [Test]
+        public async Task MarkAsCompletedDelivery_DeliveryOrderNull_ThrowsException()
+        {
+            // Arrange
+            var delivery = new Delivery
+            {
+                DeliveryId = 5,
+                Status = &quot;OutForDelivery&quot;,
+                AssignedToTechId = null,
+                AssignedToTech = null,
+                AssignedAt=TimeUtility.NowIST(),
+                OrderId =5,
+            };
+            _db.Deliveries.Add(delivery);
+            await _db.SaveChangesAsync();
+
+            // Act &amp; Assert
+            var ex = Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt;
+                await deliveryRepository.MarkAsCompletedDelivery(delivery.DeliveryId));
+
+            
+        }
+
+        [Test]
+        public void GetDeliveies()
+        {
+            string userId = &quot;ABX123&quot;;
+            var result=deliveryRepository.GetMarkoutDelieries(userId);
+            Assert.That(result, Is.Not.Null);
+        }
+
+
+        [Test]
+        public void GetDeliveries_fAkeId()
+        {
+            string userId = &quot;fakeId&quot;;
+            Assert.ThrowsAsync&lt;Exception&gt;(async () =&gt; await deliveryRepository.GetMarkoutDelieries(userId));
+        }
+
+        [Test]
+        public void GetDeliveredOrders()
+        {
+            var userId = &quot;ABX123&quot;;
+            var result=deliveryRepository.GetDeliveredOrders(userId);
+            Assert.That(result,Is.Not.Null);
+        }
+
+        [Test]
+        public void GetDeliveredOrders_Falire()
+        {
+            var userId = &quot;fakeId&quot;;
+            Assert.ThrowsAsync&lt;Exception&gt;(async()=&gt;await deliveryRepository.GetDeliveredOrders(userId));
+        }
+
+
+        [Test]
+        public async Task MarkAsOutOfDelivery_Success()
+
+        { 
+            var dto = new Delivery()
+            {
+                DeliveryId = 4,
+                OrderId = 1,
+                AssignedAt = TimeUtility.NowIST(),
+                AssignedToTechId = 1,
+                DeliveryAt = TimeUtility.NowIST().AddDays(2),
+            };
+            _db.Deliveries.Add(dto);
+            _db.SaveChanges();
+            var deliveryId = dto.DeliveryId;
+            await deliveryRepository.MarkAsOutOfDelivery(deliveryId);
+            var updatedData = await _db.Deliveries.FirstOrDefaultAsync(x=&gt;x.DeliveryId==dto.DeliveryId);
+            if (updatedData!=null)
+            {
+                Assert.That(updatedData.Status, Is.EqualTo(DeliveryStatus.OutForDelivery.ToString()));
+            }
+
+        }
+
+        [Test]
+        public void MarkAsOutOfDelivery_Failure()
+        {
+            int deliveryId = 80;
+            var ex=Assert.ThrowsAsync&lt;Exception&gt;(async()=&gt;await deliveryRepository.MarkAsOutOfDelivery(deliveryId));
+            Assert.That(ex.Message, Does.StartWith(&quot;No delivery found &quot;));
+        }
+        
+    }
+
+  
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,10,1],[24,13,24,65,1],[25,13,25,85,1],[26,9,26,10,1],[30,9,30,10,1],[32,13,32,84,1],[33,13,33,43,1],[34,13,34,63,1],[35,13,35,42,1],[40,13,40,55,1],[40,55,40,124,1],[40,124,40,126,1],[45,9,45,10,1],[49,9,49,10,1],[51,13,51,14,1],[52,17,63,19,1],[64,17,64,48,1],[67,17,76,19,1],[77,17,77,54,1],[80,17,101,19,1],[102,17,102,50,1],[105,17,116,19,1],[117,17,117,57,1],[119,17,119,46,1],[121,17,121,83,1],[124,17,126,67,0],[128,17,128,70,0],[129,17,129,86,0],[132,13,132,14,0],[133,13,133,41,0],[134,13,134,14,0],[135,17,135,97,0],[136,17,136,50,0],[137,17,137,52,0],[141,9,141,10,0],[146,9,146,10,1],[148,13,149,17,1],[149,17,149,70,1],[149,70,149,72,1],[151,13,151,81,1],[152,9,152,10,1],[157,9,157,10,1],[159,13,167,15,1],[168,13,168,42,1],[169,13,169,42,1],[172,13,173,17,1],[173,17,173,86,1],[173,86,173,88,1],[176,9,176,10,1],[180,9,180,10,1],[181,13,181,38,1],[182,13,182,71,1],[183,13,183,46,1],[184,9,184,10,1],[189,9,189,10,1],[190,13,190,38,1],[191,13,191,55,1],[191,55,191,107,1],[191,107,191,109,1],[192,9,192,10,1],[196,9,196,10,1],[197,13,197,35,1],[198,13,198,70,1],[199,13,199,45,1],[200,9,200,10,1],[204,9,204,10,1],[205,13,205,35,1],[206,13,206,52,1],[206,52,206,103,1],[206,103,206,105,1],[207,9,207,10,0],[213,9,213,10,1],[214,13,221,15,1],[222,13,222,37,1],[223,13,223,31,1],[224,13,224,45,1],[225,13,225,70,1],[226,13,226,105,1],[227,13,227,35,1],[228,13,228,14,1],[229,17,229,103,1],[230,13,230,14,1],[232,9,232,10,1],[236,9,236,10,1],[237,13,237,33,1],[238,13,238,59,1],[238,59,238,115,1],[238,115,238,117,1],[239,13,239,75,1],[240,9,240,10,1]]);
+    </script>
+  </body>
+</html>

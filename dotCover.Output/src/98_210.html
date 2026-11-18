@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\OtpManager.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+
+    [Table(&quot;OtpManager&quot;)]
+    public class OtpManager
+    {
+
+        [Key]
+        [Column(&quot;OtpId&quot;)]
+        public int Id { get; set; }
+
+        [StringLength(50)]
+        [Column(&quot;EmailId&quot;)]
+        public required string Email{ get; set; }
+
+        [StringLength(10)]
+        [Column(&quot;OtpText&quot;)]
+        public string Otptext { get; set; } = null!;
+
+        [StringLength(20)]
+        [Column(&quot;OtpType&quot;)]
+        public string? Otptype { get; set; }
+
+        [Column(&quot;expiration&quot;)]
+        public DateTimeOffset Expiration { get; set; }
+
+        [Column(&quot;createdAt&quot;)]
+        public DateTimeOffset CreatedDate { get; set; }
+
+        [Column(&quot;IsUsed&quot;)]
+        public bool IsUsed {  get; set; }= false;
+
+        [Column(&quot;ResetToken&quot;)]
+        public Guid token { get; set; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,25,18,29,0],[18,30,18,34,1],[22,39,22,43,1],[22,44,22,48,1],[26,33,26,37,0],[26,38,26,42,1],[26,47,26,52,1],[30,34,30,38,0],[30,39,30,43,1],[33,44,33,48,0],[33,49,33,53,1],[36,45,36,49,0],[36,50,36,54,1],[39,31,39,35,0],[39,36,39,40,1],[39,44,39,49,1],[42,29,42,33,1],[42,34,42,38,1]]);
+    </script>
+  </body>
+</html>

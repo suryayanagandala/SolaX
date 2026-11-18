@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\HelperMethods\TestAsyncQueryProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Microsoft.EntityFrameworkCore.Query;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.HelperMethods
+{
+    public class TestAsyncQueryProvider&lt;TEntity&gt; : IAsyncQueryProvider
+    {
+        private readonly IQueryProvider _queryProvider;
+
+        public TestAsyncQueryProvider(IQueryProvider queryProvider)
+        {
+            _queryProvider = queryProvider;
+        }
+        public IQueryable CreateQuery(Expression expression)
+        {
+            return new TestAsyncEnumerable&lt;TEntity&gt;(expression);
+        }
+
+        public IQueryable&lt;TElement&gt; CreateQuery&lt;TElement&gt;(Expression expression)
+        {
+            return new TestAsyncEnumerable&lt;TElement&gt;(expression);
+        }
+
+        public object? Execute(Expression expression)
+        {
+            return _queryProvider.Execute(expression);
+        }
+
+        public TResult Execute&lt;TResult&gt;(Expression expression)
+        {
+           return _queryProvider.Execute&lt;TResult&gt;(expression);  
+        }
+
+        public TResult ExecuteAsync&lt;TResult&gt;(Expression expression, CancellationToken cancellationToken = default)
+        {
+            var expectedResultType = typeof(TResult).GetGenericArguments().First();
+
+            var executionResult = typeof(IQueryProvider)
+                .GetMethod(nameof(IQueryProvider.Execute), 1, new[] { typeof(Expression) })
+                .MakeGenericMethod(expectedResultType)
+                .Invoke(_queryProvider, new[] { expression });
+
+            return (TResult)typeof(Task)
+                .GetMethod(nameof(Task.FromResult))
+                .MakeGenericMethod(expectedResultType)
+                .Invoke(null, new[] { executionResult });
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,68,1],[16,9,16,10,1],[17,13,17,44,1],[18,9,18,10,1],[20,9,20,10,0],[21,13,21,65,0],[22,9,22,10,0],[25,9,25,10,1],[26,13,26,66,1],[27,9,27,10,1],[30,9,30,10,0],[31,13,31,55,0],[32,9,32,10,0],[35,9,35,10,0],[36,12,36,63,0],[37,9,37,10,0],[40,9,40,10,1],[41,13,41,84,1],[43,13,46,63,1],[48,13,51,58,1],[52,9,52,10,1]]);
+    </script>
+  </body>
+</html>

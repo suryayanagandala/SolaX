@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\Utilities\DataInitializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.Utilities
+{
+    public class DataInitializer
+    {
+        public static IQueryable&lt;Users&gt; UsersData()
+        {
+            var users = new List&lt;Users&gt;
+            {
+                new Users{
+                    UserId=&quot;ERCXET&quot;,
+                    FullName=&quot;Surya&quot;,
+                    EmailId=&quot;surya@gmail.com&quot;,
+                    Password = BCrypt.Net.BCrypt.HashPassword(&quot;Surya@2003&quot;),
+                    PhoneNumber=&quot;987654321&quot;,
+                    RoleId=3,
+                    IsActive=true,
+                    Address=&quot;vijaywada kondapalli&quot;,
+                    CreatedBy=&quot;Admin&quot;,
+                    CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+                },
+
+                 new Users{
+                UserId=&quot;ABX123&quot;,
+                FullName=&quot;Priya Sharma&quot;,
+                EmailId=&quot;priya.sharma@example.com&quot;,
+                Password = BCrypt.Net.BCrypt.HashPassword(&quot;Priya@123&quot;),
+                PhoneNumber=&quot;9123456780&quot;,
+                RoleId=2,
+                IsActive=true,
+                Address=&quot;Hyderabad Banjara Hills&quot;,
+                CreatedBy=&quot;Admin&quot;,
+                CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+                  },
+
+                    new Users{
+                        UserId=&quot;LMN456&quot;,
+                        FullName=&quot;Rahul Verma&quot;,
+                        EmailId=&quot;rahul.verma@example.com&quot;,
+                        Password = BCrypt.Net.BCrypt.HashPassword(&quot;Rahul@2025&quot;),
+                        PhoneNumber=&quot;9988776655&quot;,
+                        RoleId=1,
+                        IsActive=true,
+                        Address=&quot;Bengaluru Whitefield&quot;,
+                        CreatedBy=&quot;Admin&quot;,
+                        CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+                    },
+
+            new Users{
+                UserId=&quot;XYZ789&quot;,
+                FullName=&quot;Anita Reddy&quot;,
+                EmailId=&quot;anita.reddy@example.com&quot;,
+                Password = BCrypt.Net.BCrypt.HashPassword(&quot;Anita@2026&quot;),
+                PhoneNumber=&quot;9876501234&quot;,
+                RoleId=3,
+                IsActive=false,
+                Address=&quot;Chennai Anna Nagar&quot;,
+                CreatedBy=&quot;Admin&quot;,
+                CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+              }
+            };
+
+            return users.AsQueryable();
+        }
+
+        public static IQueryable&lt;OtpManager&gt; OtpManagers()
+        {
+            var data = new List&lt;OtpManager&gt;
+            {
+                new OtpManager{Id=1,Email=&quot;surya@gmail.com&quot;,Otptext=&quot;452478&quot;,Otptype=&quot;Forgot Password&quot;,
+                CreatedDate=TimeUtility.NowIST(),IsUsed=false,Expiration=TimeUtility.NowIST().AddMinutes(5),token=Guid.Parse(&quot;EA007833-178D-4C11-8A78-C4BA6D897F12&quot;)}
+            };
+            return data.AsQueryable();
+        }
+
+        public static List&lt;Users&gt; GetUsers()
+        {
+            return new List&lt;Users&gt;
+            {
+                new Users
+                {
+                    UserId = &quot;ERCXET&quot;,
+                    FullName = &quot;Surya&quot;,
+                    EmailId = &quot;surya@gmail.com&quot;,
+                    Password = BCrypt.Net.BCrypt.HashPassword(&quot;Surya@2003&quot;),
+                    PhoneNumber = &quot;9876543210&quot;,
+                    RoleId = 3,
+                    IsActive = true,
+                    Address = &quot;Vijayawada Kondapalli&quot;,
+                    CreatedBy = &quot;Admin&quot;,
+                    CreatedDate = DateTimeOffset.UtcNow
+                },
+                new Users
+                {
+                    UserId = &quot;ABX123&quot;,
+                    FullName = &quot;Priya Sharma&quot;,
+                    EmailId = &quot;priya.sharma@example.com&quot;,
+                    Password = BCrypt.Net.BCrypt.HashPassword(&quot;Priya@123&quot;),
+                    PhoneNumber = &quot;9123456780&quot;,
+                    RoleId = 2,
+                    IsActive = true,
+                    Address = &quot;Hyderabad Banjara Hills&quot;,
+                    CreatedBy = &quot;Admin&quot;,
+                    CreatedDate = DateTimeOffset.UtcNow
+                }
+            };
+        }
+
+        // =========================
+        // CATEGORY
+        // =========================
+
+        public static List&lt;Category&gt; GetCategories()
+        {
+            return new List&lt;Category&gt;
+            {
+               new Category
+               {
+                CategoryId = 1,
+                CategoryName = &quot;Solar&quot;,
+                Slug = &quot;solar-panels&quot;,
+                CreatedAt=TimeUtility.NowIST()
+               }
+            };
+        }
+
+        // =========================
+        // PRODUCTS
+        // =========================
+
+        public static List&lt;Products&gt; GetProducts()
+        {
+            return new List&lt;Products&gt;
+            {
+                new Products
+                {
+                    ProductId = 1,
+                    ProductName = &quot;Solar Panel 500W&quot;,
+                    CategoryId = 1, 
+                    Brand = &quot;Tata&quot;,
+                    Type = &quot;Panel&quot;,
+                    CapacityValue = 500,
+                    Capacity = &quot;500W&quot;,
+                    Price = 15000,
+                    Warranty_Years = 5,
+                    Stock = 10,
+                    Description = &quot;High efficiency solar panel&quot;,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    IsActive = true
+                }
+            };
+        }
+
+        // =========================
+        // ORDERS
+        // =========================
+
+        public static List&lt;Orders&gt; GetOrders()
+        {
+            return new List&lt;Orders&gt;
+            {
+                new Orders
+                {
+                    OrderId = 1,
+                    UserId = &quot;ERCXET&quot;, 
+                    OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                    Status = OrderStatus.CREATED,
+                    TotalAmount = 15000,
+                    PhoneNumber = &quot;9876543210&quot;,
+                    FullName = &quot;Surya&quot;,
+                    IsActive = true,
+                    DeliveryAddress = &quot;Vijayawada Kondapalli&quot;,
+                    CreatedAt=TimeUtility.NowIST(),
+                    OrderItem = new List&lt;OrderItems&gt;
+                    {
+                        new OrderItems
+                        {
+                            OrderItemId = 1,
+                            ProductId = 1,  
+                            Quantity = 1,
+                            UnitPrice = 15000
+                        }
+                    }
+                },
+
+                new Orders
+                {
+                    OrderId = 2,
+                    UserId = &quot;ABX123&quot;,
+                    OrderDate = DateOnly.FromDateTime(DateTime.Now),
+                    Status = OrderStatus.CREATED,
+                    TotalAmount = 15000,
+                    PhoneNumber = &quot;9876543210&quot;,
+                    FullName = &quot;Surya&quot;,
+                    IsActive = true,
+                    DeliveryAddress = &quot;Vijayawada Kondapalli&quot;,
+                    CreatedAt=TimeUtility.NowIST(),
+                    OrderItem = new List&lt;OrderItems&gt;
+                    {
+                        new OrderItems
+                        {
+                            OrderItemId = 2,
+                            ProductId = 1,
+                            Quantity = 1,
+                            UnitPrice = 15000
+                        }
+                    }
+                }
+            };
+        }
+
+        // =========================
+        // PAYMENTS
+        // =========================
+
+        public static List&lt;Payments&gt; GetPayments()
+        {
+            return new List&lt;Payments&gt;(); 
+        }
+
+        // =========================
+        // CART
+        // =========================
+
+        public static List&lt;Cart&gt; GetCarts()
+        {
+             return new List&lt;Cart&gt;
+             {
+                new Cart
+                {
+                    CartId = 1,
+                    UserId = &quot;ABX123&quot;,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    IsActive = true,
+                    CartItems = new List&lt;CartItem&gt;
+                    {
+                        new CartItem
+                        {
+                            CartItemId = 1,
+                            ProductId = 1,
+                            Quantity = 2,
+                            Price = 15000
+                        }
+                    }
+                }
+             };
+        }
+
+        // =========================
+        // TECHNICIANS
+        // =========================
+
+        public static List&lt;Technicians&gt; GetTechnicians()
+        {
+            return new List&lt;Technicians&gt;
+            {
+                new Technicians
+                {
+                    TechnicianId = 1,
+                    Specialization = &quot;Installer&quot;,
+                    IsAvailable = true,
+                    IsActiveDeliveries = 0,
+                    UserId = &quot;ABX123&quot;,
+                    Qualification = &quot;Diploma&quot;
+                }
+            };
+        }
+
+
+        public static List&lt;Roles&gt; GetRoles()
+        {
+            return new List&lt;Roles&gt;
+            {
+                new Roles { RoleId = 2, RoleName = &quot;User&quot; },
+                new Roles { RoleId = 3, RoleName = &quot;Admin&quot; }
+            };
+        }
+
+    };
+
+
+
+}
+
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,10,1],[17,13,70,15,1],[72,13,72,40,1],[73,9,73,10,1],[76,9,76,10,1],[77,13,81,15,1],[82,13,82,39,1],[83,9,83,10,1],[86,9,86,10,1],[87,13,115,15,1],[116,9,116,10,1],[123,9,123,10,1],[124,13,133,15,1],[134,9,134,10,1],[141,9,141,10,1],[142,13,160,15,1],[161,9,161,10,1],[168,9,168,10,1],[169,13,218,15,1],[219,9,219,10,1],[226,9,226,10,1],[227,13,227,41,1],[228,9,228,10,1],[235,9,235,10,1],[236,14,255,16,1],[256,9,256,10,1],[263,9,263,10,1],[264,13,275,15,1],[276,9,276,10,1],[280,9,280,10,1],[281,13,285,15,1],[286,9,286,10,1]]);
+    </script>
+  </body>
+</html>

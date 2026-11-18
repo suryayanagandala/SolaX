@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Base\SqliteTestBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels;
+using iText.Commons.Actions.Contexts;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using SolarXNUnit.SqLite.SeedData;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Base
+{
+    public abstract class SqliteTestBase
+    {
+        protected ApplicationDbContext _db;
+        private SqliteConnection _connection;
+        protected IHttpContextAccessor HttpContextAccessor;
+
+        [SetUp]
+        public void BaseSetUp()
+        {
+            _connection = new SqliteConnection(&quot;Filename=:memory:&quot;);
+            _connection.Open();
+
+            var options = new DbContextOptionsBuilder&lt;ApplicationDbContext&gt;()
+                .UseSqlite(_connection)
+                .EnableSensitiveDataLogging()
+                .EnableDetailedErrors()
+                .Options;
+
+            // Create a fake HttpContext for claims
+            var context = new DefaultHttpContext();
+            context.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+        new Claim(&quot;UserId&quot;, &quot;TestUser123&quot;),
+        new Claim(ClaimTypes.Role, &quot;Admin&quot;)
+    }));
+
+            HttpContextAccessor = new HttpContextAccessor
+            {
+                HttpContext = context
+            };
+
+            // Initialize DbContext first
+            _db = new ApplicationDbContext(options, HttpContextAccessor);
+
+            // Disable audit logs for tests
+            _db.DisableAudit = true;
+
+            _db.Database.EnsureCreated();
+
+            // Seed test data
+            TestDataSeeder.SeedBasicOrder(_db);
+        }
+
+        [TearDown]
+        public void BaseTearDown()
+        {
+            _db.Dispose();
+            _connection.Close();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,10,1],[26,13,26,69,1],[27,13,27,32,1],[29,13,33,26,1],[36,13,36,52,1],[37,13,41,9,1],[43,13,46,15,1],[49,13,49,74,1],[52,13,52,37,1],[54,13,54,42,1],[57,13,57,48,1],[58,9,58,10,1],[62,9,62,10,1],[63,13,63,27,1],[64,13,64,33,1],[65,9,65,10,1]]);
+    </script>
+  </body>
+</html>

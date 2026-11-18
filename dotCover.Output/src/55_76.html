@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Payments.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+  
+  
+
+    [Table(&quot;Payments&quot;)]
+    public class Payments
+    {
+        [Key]
+        [Column(&quot;PaymentId&quot;)]
+        public int PaymentId { get; set; }
+
+        [Required]
+        [Column(&quot;OrderId&quot;)]
+        public int OrderId { get; set; }
+
+        [Required]
+        [Column(&quot;PaymentMethod&quot;)]
+        public required string PaymentMethod { get; set; }
+
+        [Required]
+        [Column(&quot;PaymentStatus&quot;)]
+        public required string PaymentStatus { get; set; }
+
+        [Required,StringLength(15)]
+        [Column(&quot;TransactionId&quot;)]
+        public required string TransactionId { get; set; }
+
+        [Required]
+        [Column(&quot;Amount&quot;)]
+        public decimal Amount { get; set; }
+
+        [Column(&quot;PaymentDate&quot;)]
+        public DateTimeOffset PaymentDate { get; set; }
+
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; } = true;
+
+        [ForeignKey(&quot;OrderId&quot;)]
+        public Orders Order { get; set; } = null!;
+        
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[19,32,19,36,0],[19,37,19,41,1],[23,30,23,34,1],[23,35,23,39,1],[27,48,27,52,1],[27,53,27,57,1],[31,48,31,52,1],[31,53,31,57,1],[35,48,35,52,0],[35,53,35,57,1],[39,33,39,37,1],[39,38,39,42,1],[42,45,42,49,1],[42,50,42,54,1],[45,32,45,36,1],[45,37,45,41,1],[45,46,45,50,1],[48,31,48,35,0],[48,36,48,40,1],[48,45,48,50,1]]);
+    </script>
+  </body>
+</html>

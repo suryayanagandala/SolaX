@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\DTO'S\InstallationReportDto.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using iText.Forms.Form.Element;
+using Microsoft.AspNetCore.Http;
+using Org.BouncyCastle.Crypto.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.DTO_S
+{
+    public class InstallationReportDto
+    {
+        public string InstallationId { get; set; } = null!;
+        public string? Notes { get; set; }
+        public string? CheckList { get; set; }
+
+        public List&lt;IFormFile&gt; Images { get; set; } = new();
+    }
+
+    public class MaintenanceReportDto
+    {
+        public string RequestId {  get; set; }=string.Empty;
+
+        public string Notes { get; set; } = string.Empty;
+
+        public List&lt;IFormFile&gt; Images { get; set; } = new();
+
+        public string ReplacedParts {  get; set; } = string.Empty;
+
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[14,40,14,44,0],[14,45,14,49,0],[14,54,14,59,0],[15,32,15,36,0],[15,37,15,41,0],[16,36,16,40,0],[16,41,16,45,0],[18,41,18,45,0],[18,46,18,50,0],[18,55,18,60,0],[23,36,23,40,0],[23,41,23,45,0],[23,48,23,60,0],[25,31,25,35,0],[25,36,25,40,0],[25,45,25,57,0],[27,41,27,45,0],[27,46,27,50,0],[27,55,27,60,0],[29,40,29,44,0],[29,45,29,49,0],[29,54,29,66,0]]);
+    </script>
+  </body>
+</html>

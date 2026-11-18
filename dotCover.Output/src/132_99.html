@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\ProductService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class ProductService
+    {
+        private readonly IUnitOfWork unitOfWork;
+
+        public ProductService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;
+        }
+
+        public async Task AddProducts(ProductResponse productCreateDto)
+        {
+            await this.unitOfWork.ProductsRepository.AddProduct(productCreateDto);
+        }
+
+        public async Task&lt;IEnumerable&lt;ProductDto&gt;&gt; GetAllProducts()
+        {
+            return await this.unitOfWork.ProductsRepository.GetAllPrducts();
+
+        }
+
+        public async Task&lt;ProductDto&gt;GetProductById(int productId)
+        {
+            return await this.unitOfWork.ProductsRepository.GetProductById(productId);
+        }
+        public async Task UpdateProduct(int productId,ProductResponse dto)
+        {
+            await this.unitOfWork.ProductsRepository.UpdateProduct(productId, dto);
+        }
+
+        public async Task DeleteProductById(int productId)
+        {
+            await this.unitOfWork.ProductsRepository.DeleteProductById(productId);
+        }
+
+        public async Task SoftDeleteProduct(SoftDeleteProductDto dto)
+        {
+            await this.unitOfWork.ProductsRepository.SoftDeleteProduct(dto);
+        }
+
+        public async Task RestoreProduct(int productId)
+        {
+            await this.unitOfWork.ProductsRepository.RestoreProduct(productId);
+        }
+        public async Task AddProductImages(int productId, List&lt;IFormFile&gt; images)
+        {
+            await this.unitOfWork.ProductsRepository.AddImage(productId, images);
+        }
+
+        public async Task UpdatePrpductImage(int imageId, IFormFile file)
+        {
+            await this.unitOfWork.ProductsRepository.UpdateProductImage(imageId, file);
+        }
+
+       public async Task&lt;IEnumerable&lt;ProductImageResponseDto&gt;&gt; GetIamgesById(int productId)
+        {
+            return await this.unitOfWork.ProductsRepository.GetIamges(productId);
+        }
+
+        public async Task DeleteImageById(int imageId)
+        {
+            await this.unitOfWork.ProductsRepository.DeleteImage(imageId);
+        }
+
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,54,0],[19,9,19,10,0],[20,13,20,42,0],[21,9,21,10,0],[24,9,24,10,0],[25,13,25,83,0],[26,9,26,10,0],[29,9,29,10,0],[30,13,30,77,0],[32,9,32,10,0],[35,9,35,10,0],[36,13,36,87,0],[37,9,37,10,0],[39,9,39,10,0],[40,13,40,84,0],[41,9,41,10,0],[44,9,44,10,0],[45,13,45,83,0],[46,9,46,10,0],[49,9,49,10,0],[50,13,50,77,0],[51,9,51,10,0],[54,9,54,10,0],[55,13,55,80,0],[56,9,56,10,0],[58,9,58,10,0],[59,13,59,82,0],[60,9,60,10,0],[63,9,63,10,0],[64,13,64,88,0],[65,9,65,10,0],[68,9,68,10,0],[69,13,69,82,0],[70,9,70,10,0],[73,9,73,10,0],[74,13,74,75,0],[75,9,75,10,0]]);
+    </script>
+  </body>
+</html>

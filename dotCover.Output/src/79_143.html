@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\CategoryRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using NUnit.Framework.Constraints;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.Xml;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrastructure
+{
+    public class CategoryRepositoryTest:SqliteTestBase
+    {
+        private CategoryRepository categoryRepository;
+
+        [SetUp]
+        public void SetUp()
+        {
+            categoryRepository=new CategoryRepository(_db);
+
+        }
+
+        //GetAllCategories
+        [Test]
+        public async Task GetAllCategories_Success()
+        {
+            
+            var result=await categoryRepository.GetAllCategories();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+        }
+
+        [Test]
+        public void GetAllCategories_ThrowException()
+        {
+            categoryRepository = new CategoryRepository(null);
+            Assert.ThrowsAsync&lt;NullReferenceException&gt;(async() =&gt; await categoryRepository.GetAllCategories());  
+        }
+
+        //GetCategoryListById
+        [Test]
+        public async Task GetCategoryListById_Success()
+        {
+            int id = 1;
+            var result=await categoryRepository.GetCategoryListById(id);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.CategoryId);
+        }
+
+        [Test]
+        public void GetCategoryListById_ThrowException()
+        {
+            var id = 90;
+            var ex=Assert.ThrowsAsync&lt;Exception&gt;(async()=&gt;await categoryRepository.GetCategoryListById(id));
+            Assert.That(ex.Message, Does.Contain($&quot;no existing CategoryId {id} was found &quot;));
+        }
+
+       //Create Category
+       [Test]
+       public async Task CreateCategory_Success()
+        {
+            var dto = new CategoryDto
+            {
+                Name = &quot;light panel&quot;,
+                Slug = &quot;light panel 1&quot;,
+                Description = &quot;used for light power generation&quot;,
+                ParentId = null,
+                
+            };
+
+            var result= await categoryRepository.CreateCategory(dto);
+            _db.SaveChanges();
+            Assert.IsNotNull(result);
+            Assert.IsNotEmpty(result.Slug);
+        }
+
+        
+        [Test]
+        public void CreateCategory_ThrowException_SlugExists()
+        {
+            var dto = new CategoryDto
+            {
+                Name = &quot;solar child-1&quot;,
+                Description = &quot;used for light power generation&quot;,
+                ParentId = null,
+
+            };
+
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async () =&gt; await categoryRepository.CreateCategory(dto));
+        }
+
+        [Test]
+
+        public void CreateCategory_ThrowException_ParentIdNotExist()
+        {
+            var dto = new CategoryDto
+            {
+                Name = &quot;solar bi panel&quot;,
+                Description = &quot;used for light power generation&quot;,
+                ParentId = 5,
+
+            };
+
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async () =&gt; await categoryRepository.CreateCategory(dto));
+        }
+
+
+
+        //Update Category
+        [Test]
+        public void UpdateCategory_Faliure_InvalidId()
+        {
+            int id = 9;
+            var dto = new CreateUpdateCategoryDto
+            {
+                Name = &quot;solar n panels&quot;,
+                Description = &quot;more reliable&quot;
+            };
+
+           Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await categoryRepository.UpdateCategory(id, dto));
+        }
+
+        [Test]
+        public void SlugExists_UpdateCategory_Faliure()
+        {
+            int id = 1;
+            var dto = new CreateUpdateCategoryDto
+            {
+                Name = &quot;solar child-1&quot;,
+                Description = &quot;more reliable&quot;
+            };
+
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async () =&gt; await categoryRepository.UpdateCategory(id, dto));
+        }
+
+        [Test]
+        public async Task UpdateCategory_Success()
+        {
+            int id = 1;
+            var dto = new CreateUpdateCategoryDto
+            {
+                Name = &quot;solar child&quot;,
+                Description = &quot;more reliable&quot;
+            };
+
+            var result=await categoryRepository.UpdateCategory(id,dto);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.That(result.Name, Is.Not.Empty);
+                Assert.That(result.ParentId, Is.EqualTo(null));
+            });
+        }
+
+
+        //DeleteCategory
+        [Test]
+        public void DeleteCategory_Faliure_InvalidId()
+        {
+            int id = 7;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await  categoryRepository.DeleteCategory(id));
+        }
+
+        [Test]
+        public async Task DeleteCategory_Success()
+        {
+            int id = 1;
+            var result=await categoryRepository.DeleteCategory(id);
+
+            Assert.Multiple(() =&gt; {
+                Assert.IsNotEmpty(result);
+            });
+        }
+
+
+        //DeleteCategory
+        [Test]
+        public void DeleteCategory_Faliure_Id()
+        {
+            var dto = new SoftDeleteCategoryDto { CategoryId = 3, Reason = &quot;Low production&quot; };
+            Assert.ThrowsAsync&lt;InActiveModeExceptions&gt;(async()=&gt;await categoryRepository.SoftDeleteCategory(dto));
+
+        }
+
+        [Test]
+        public async Task DeleteCategory_SuccessCase()
+        {
+            var dto = new SoftDeleteCategoryDto { CategoryId = 2, Reason = &quot;Low production&quot; };
+            int id = dto.CategoryId;
+            await categoryRepository.SoftDeleteCategory(dto);
+            var updatedCategory=await _db.Categories.FirstOrDefaultAsync(x=&gt;x.CategoryId==id);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.That(updatedCategory!.IsActive, Is.EqualTo(false));
+            });
+        }
+
+        //RestoreCategory
+        [Test]
+        public void RestoreCategory_Failure_Id()
+        {
+            int id = 8;
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async()=&gt;await categoryRepository.RestoreCategory(id));
+        }
+
+        [Test]
+        public async Task RestoreCategorySuccess()
+        {
+            int id = 3;
+            await categoryRepository.RestoreCategory(id);
+
+            var updatedCtegory=await _db.Categories.FirstOrDefaultAsync(x=&gt;x.CategoryId == id);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.That(updatedCtegory!.IsActive, Is.EqualTo(true));
+            });
+        }
+
+        //UpdateParentCategory
+        [Test]
+        public void UpdateCategory_Faliure_Id()
+        {
+            int id = 8;
+            var dto = new CreateUpdateCategoryDto
+            {
+                Name = &quot;solar child&quot;,
+                Description = &quot;more reliable&quot;
+            };
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await categoryRepository.UpdateParentCategory(id, dto));
+        }
+
+
+        [Test]
+        public void UpdateParentCategory_NullExeception()
+        {
+            int id = 2;
+            Assert.ThrowsAsync&lt;ArgumentNullException&gt;(async () =&gt; await categoryRepository.UpdateParentCategory(id, null));
+        }
+
+        [Test]
+        public async Task UpdateParentCategory_Success()
+        {
+            int id = 1;
+            var dto = new CreateUpdateCategoryDto
+            {
+                Name = &quot;solar child&quot;,
+                Description = &quot;more reliable&quot;
+            };
+
+            await categoryRepository.UpdateParentCategory(id,dto);
+
+            var updatedCategory=await _db.Categories.FirstAsync(x=&gt;x.CategoryId==id);
+
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotNull(updatedCategory.UpdatedAt);
+                Assert.That(updatedCategory.IsActive, Is.EqualTo(true));
+            });
+        }
+
+
+        //DeleteParentCategory
+        [Test]
+        public void DeleteParentCategory_Falure()
+        {
+            var dto = new SoftDeleteCategoryDto { CategoryId = 2, Reason = &quot;Low production&quot; };
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await  categoryRepository.DeleteParentCategory(dto));
+        }
+
+        [Test]
+        public void DeleteParentCategory_Failure_Active()
+        {
+            var dto = new SoftDeleteCategoryDto { CategoryId = 1, Reason = &quot;Low production&quot; };
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async () =&gt; await categoryRepository.DeleteParentCategory(dto));
+        }
+
+        [Test]
+        public async Task DeleteParentCategory_Success()
+        {
+            var dto = new SoftDeleteCategoryDto { CategoryId = 4, Reason = &quot;Low production&quot; };
+            await categoryRepository.DeleteParentCategory(dto);
+
+            var updatedCategory= await _db.Categories.FirstAsync( x=&gt;x.CategoryId==dto.CategoryId);
+            Assert.That(updatedCategory.IsActive,Is.EqualTo(false));
+        }
+
+
+        //RestoreParentCategory
+        [Test]
+        public void RestoreParentCategory_FalureId()
+        {
+            int id = 9;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await categoryRepository.RestoreParentCategory(id));
+        }
+
+        [Test]
+        public async Task RestoreParentCategory_Success()
+        {
+            int id = 3;
+            await categoryRepository.RestoreParentCategory(id);
+
+            var updatedCategory=await _db.Categories.FirstAsync(x=&gt;x.CategoryId==id);
+            Assert.That(updatedCategory.IsActive, Is.EqualTo(true));
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,10,1],[24,13,24,60,1],[26,9,26,10,1],[31,9,31,10,1],[33,13,33,68,1],[34,13,34,38,1],[35,13,35,48,1],[36,9,36,10,0],[40,9,40,10,1],[41,13,41,63,1],[42,13,42,67,1],[42,67,42,110,1],[42,110,42,112,1],[43,9,43,10,1],[48,9,48,10,1],[49,13,49,24,1],[50,13,50,73,1],[51,13,51,38,1],[52,13,52,51,1],[53,9,53,10,1],[57,9,57,10,1],[58,13,58,25,1],[59,13,59,59,1],[59,59,59,107,1],[59,107,59,109,1],[60,13,60,94,1],[61,9,61,10,1],[66,9,66,10,1],[67,13,74,15,1],[76,13,76,70,1],[77,13,77,31,1],[78,13,78,38,1],[79,13,79,44,1],[80,9,80,10,1],[85,9,85,10,1],[86,13,92,15,1],[94,13,94,65,1],[94,65,94,109,1],[94,109,94,111,1],[95,9,95,10,1],[100,9,100,10,1],[101,13,107,15,1],[109,13,109,65,1],[109,65,109,109,1],[109,109,109,111,1],[110,9,110,10,1],[117,9,117,10,1],[118,13,118,24,1],[119,13,123,15,1],[125,12,125,62,1],[125,62,125,110,1],[125,110,125,112,1],[126,9,126,10,1],[130,9,130,10,1],[131,13,131,24,1],[132,13,136,15,1],[138,13,138,65,1],[138,65,138,113,1],[138,113,138,115,1],[139,9,139,10,1],[143,9,143,10,1],[144,13,144,24,1],[145,13,149,15,1],[151,13,151,72,1],[152,13,153,13,1],[153,13,153,14,1],[153,14,154,17,1],[154,17,154,56,1],[154,56,155,17,1],[155,17,155,64,1],[155,64,156,13,1],[156,13,156,14,1],[156,14,156,16,1],[157,9,157,10,1],[163,9,163,10,1],[164,13,164,24,1],[165,13,165,60,1],[165,60,165,104,1],[165,104,165,106,1],[166,9,166,10,1],[170,9,170,10,1],[171,13,171,24,1],[172,13,172,68,1],[174,13,174,35,1],[174,35,174,36,1],[174,36,175,17,1],[175,17,175,43,1],[175,43,176,13,1],[176,13,176,14,1],[176,14,176,16,1],[177,9,177,10,1],[183,9,183,10,1],[184,13,184,95,1],[185,13,185,65,1],[185,65,185,113,1],[185,113,185,115,1],[187,9,187,10,1],[191,9,191,10,1],[192,13,192,95,1],[193,13,193,37,1],[194,13,194,62,1],[195,13,195,95,1],[196,13,197,13,1],[197,13,197,14,1],[197,14,198,17,1],[198,17,198,75,1],[198,75,199,13,1],[199,13,199,14,1],[199,14,199,16,1],[200,9,200,10,1],[205,9,205,10,1],[206,13,206,24,1],[207,13,207,62,1],[207,62,207,106,1],[207,106,207,108,1],[208,9,208,10,1],[212,9,212,10,1],[213,13,213,24,1],[214,13,214,58,1],[216,13,216,96,1],[217,13,218,13,1],[218,13,218,14,1],[218,14,219,17,1],[219,17,219,73,1],[219,73,220,13,1],[220,13,220,14,1],[220,14,220,16,1],[221,9,221,10,1],[226,9,226,10,1],[227,13,227,24,1],[228,13,232,15,1],[233,13,233,63,1],[233,63,233,117,1],[233,117,233,119,1],[234,9,234,10,1],[239,9,239,10,1],[240,13,240,24,1],[241,13,241,67,1],[241,67,241,122,1],[241,122,241,124,1],[242,9,242,10,1],[246,9,246,10,1],[247,13,247,24,1],[248,13,252,15,1],[254,13,254,67,1],[256,13,256,86,1],[258,13,259,13,1],[259,13,259,14,1],[259,14,260,17,1],[260,17,260,61,1],[260,61,261,17,1],[261,17,261,73,1],[261,73,262,13,1],[262,13,262,14,1],[262,14,262,16,1],[263,9,263,10,1],[269,9,269,10,1],[270,13,270,95,1],[271,13,271,60,1],[271,60,271,111,1],[271,111,271,113,1],[272,9,272,10,1],[276,9,276,10,1],[277,13,277,95,1],[278,13,278,65,1],[278,65,278,115,1],[278,115,278,117,1],[279,9,279,10,1],[283,9,283,10,1],[284,13,284,95,1],[285,13,285,64,1],[287,13,287,100,1],[288,13,288,69,1],[289,9,289,10,1],[295,9,295,10,1],[296,13,296,24,1],[297,13,297,63,1],[297,63,297,113,1],[297,113,297,115,1],[298,9,298,10,1],[302,9,302,10,1],[303,13,303,24,1],[304,13,304,64,1],[306,13,306,86,1],[307,13,307,69,1],[308,9,308,10,1]]);
+    </script>
+  </body>
+</html>
