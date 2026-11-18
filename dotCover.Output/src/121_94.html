@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\SolarRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using iText.Kernel.Pdf.Tagutils;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class SolarRepository : ISolarPerformaceRepository
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly AssignmentSettings assignmentSettings;
+
+        public SolarRepository(ApplicationDbContext db,IOptions&lt;AssignmentSettings&gt; options)
+        {
+            _db = db;
+            assignmentSettings = options.Value;
+        }
+        public async Task&lt;IEnumerable&lt;SolarPeformance&gt;&gt; GetAllUsers()
+        {
+            var users = await _db.Users
+                .Include(u =&gt; u.Order)
+                    .ThenInclude(o =&gt; o.OrderItem)
+                        .ThenInclude(oi =&gt; oi.Product)
+                .Include(u =&gt; u.Order)
+                    .ThenInclude(o =&gt; o.Delivery)
+                        .ThenInclude(d =&gt; d.Installations)
+                .ToListAsync();
+
+            var result = users
+                .SelectMany(u =&gt; u.Order
+                    .Where(o =&gt; o.IsActive &amp;&amp;
+                                o.OrderItem.Any() &amp;&amp;
+                                o.Delivery != null &amp;&amp;
+                                o.Delivery.Status == DeliveryStatus.Delivered.ToString() &amp;&amp;
+                                o.Delivery.Installations.Any(i =&gt;
+                                    i.Status == InstallationStatus.Completed.ToString()))
+                    .SelectMany(o =&gt; o.OrderItem.Select(item =&gt; new SolarPeformance
+                    {
+                        UserId = u.UserId,
+                        UserName = u.FullName,
+                        OrderId = o.OrderId,
+                        DeliveryStatus = o.Delivery!.Status!,
+                        InstallationStatus = o.Delivery.Installations
+                            .FirstOrDefault(i =&gt; i.Status == InstallationStatus.Completed.ToString())?.Status
+                            ?? &quot;No Installation&quot;,
+                        ProductName = item.Product.ProductName,
+                        Capacity = item.Product.Capacity
+                    })))
+                .OrderByDescending(x =&gt; x.OrderId)
+                .ToList();
+
+            return result;
+        }
+
+        public async Task&lt;DashboardSummaryDto&gt; GetDashboardSummary(string userId, int? panelId=null)
+        {
+            try
+            {
+                var today=TimeUtility.StartOffDay();
+                var monthDate=TimeUtility.StartOffCurrentMonth();
+
+                var query =  _db.SolarPerformances.Where(x =&gt; x.UserId == userId);
+
+                if (panelId.HasValue)
+                {
+                    query = query.Where(x =&gt; x.PanelId == panelId);
+                }
+
+                var data = await query.ToListAsync();
+
+                var todayTotal = data.Where(x =&gt; x.Generated_at &gt;= today).Sum(x =&gt; x.Power);
+
+                var monthlyPower = data.Where(x =&gt; x.Generated_at &gt;= monthDate).Sum(x =&gt; x.Power);
+
+                var lifeTimePower = data.Sum(x =&gt; x.Power);
+
+                var lifeTimeSavings = lifeTimePower * assignmentSettings.ChargePerUnit;
+                return new DashboardSummaryDto
+                {
+                    TodayTotal = todayTotal,
+                    MonthlyPower = monthlyPower,
+                    LifeTimePower = lifeTimePower,
+                    LifeTimeSavings = lifeTimeSavings
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;MonthlyProductionDto&gt;&gt; GetMonthlyProductionUpdate(string userId,int? panelId = null)
+        {
+            var startDate = TimeUtility.StartOffCurrentMonth();
+            var endDate = startDate.AddMonths(1);
+
+            var query = _db.SolarPerformances.Where(x =&gt; x.UserId == userId);
+
+            if (panelId.HasValue)
+            {
+                query = query.Where(x =&gt; x.PanelId == panelId.Value);
+            }
+
+            var data = await query.Where(x =&gt; x.Generated_at &gt;= startDate &amp;&amp; x.Generated_at &lt; endDate).ToListAsync();
+
+          
+            var result = data.GroupBy(x =&gt; x.Generated_at.Date)
+                        .Select(x =&gt; new MonthlyProductionDto
+                        {
+                            Date = x.Key,
+                            TotalPower = x.Sum(p =&gt; p.Power)
+                        })
+                        .OrderBy(x =&gt; x.Date)
+                        .ToList();
+
+            return result;
+        }
+
+        public async Task&lt;List&lt;SolarPerformance&gt;&gt; GetPerformaces(string userId, int? panelId=null)
+        {
+            try
+            {
+                var query = _db.SolarPerformances.Where(x =&gt; x.UserId == userId);
+
+                if (panelId.HasValue)
+                {
+                    query.Where(x=&gt;x.PanelId==panelId);
+                }
+                var performance = await query.Where(x =&gt;  x.IsActive).OrderByDescending(x =&gt; x.Generated_at).Take(20).ToListAsync();
+                if( performance.Count==0||!performance.Any())
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;SolarPerformance&quot;, &quot;NotFound&quot;));
+                }
+                var results = new List&lt;SolarPerformance&gt;(); 
+                foreach (var item in performance) 
+                { 
+                    results.Add(new SolarPerformance 
+                    { UserId = userId,
+                      Generated_at = item.Generated_at, 
+                      Voltage = item.Voltage, 
+                      CurrentFlow = item.CurrentFlow, 
+                      Efficiency = item.Efficiency, 
+                      Power = item.Power, 
+                      PerformanceId = item.PerformanceId, 
+                    }); 
+                }
+                return results;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task AddToPanel()
+        {
+            try
+            {
+                var deliveries = await _db.Deliveries.Include(d =&gt; d.Order) .ThenInclude(o =&gt; o.OrderItem).ThenInclude(oi =&gt; oi.Product)
+                                .Include(d =&gt; d.Installations).Where(d =&gt; d.Status == DeliveryStatus.Delivered.ToString()&amp;&amp; d.Installations.Any(i =&gt;
+                                i.Status == InstallationStatus.Completed.ToString() &amp;&amp; i.IsPanelCreated==false)).ToListAsync();
+
+                var panelsToAdd = deliveries
+                    .SelectMany(d =&gt; d.Order.OrderItem.Select(oi =&gt; new Panel
+                    {
+                        UserId = d.Order.UserId,   
+                        PanelName = oi.Product.ProductName,
+                        Capacity = oi.Product.Capacity,
+                        IsActive=true
+                    }))
+                    .ToList();
+
+                await _db.Panels.AddRangeAsync(panelsToAdd);
+                foreach (var delivery in deliveries)
+                {
+                    foreach (var installation in delivery.Installations
+                             .Where(i =&gt; i.Status == InstallationStatus.Completed.ToString()))
+                    {
+                        installation.IsPanelCreated = true;
+                    }
+                }
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;Panel&gt;&gt; GetPanles()
+        {
+            try
+            {
+                return await _db.Panels.Where(x =&gt; x.IsActive).ToListAsync();
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;object&gt;&gt; GetActivatedPanles(string userId)
+        {
+            try
+            {
+                var panles = await _db.Panels.Where(x =&gt; x.UserId == userId &amp;&amp; x.IsActive).
+                                 Select(x =&gt; new
+                                 {
+                                     panelId = x.PanelId,
+                                     PanelName = x.PanelName,
+                                     Capacity = x.Capacity,
+                                 }).ToListAsync&lt;object&gt;();
+                return panles;
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;object&gt; GetPanelDetails(int panelId)
+        {
+            try
+            {
+                var panelDetails = await _db.SolarPerformances
+                    .Where(x =&gt; x.PanelId == panelId &amp;&amp; x.IsActive)
+                    .OrderByDescending(x =&gt; x.Generated_at)
+                    .Select(x =&gt; new
+                    {
+                        panelId = x.PanelId,
+                        CurrentFlow = x.CurrentFlow,
+                        Voltage = x.Voltage,
+                        Efficiency = x.Efficiency,
+                        Temperature = x.Temperature,
+                        Power=x.Power,
+                    }).FirstOrDefaultAsync();
+
+                if (panelDetails == null)
+                    return new { Message = &quot;No active panel found&quot; };
+
+                return panelDetails;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,26,93,1],[27,9,27,10,1],[28,13,28,22,1],[29,13,29,48,1],[30,9,30,10,1],[32,9,32,10,1],[33,13,40,32,1],[42,13,43,34,1],[43,34,44,33,1],[44,33,49,37,1],[49,37,49,88,1],[49,88,49,89,1],[49,89,50,38,1],[50,38,50,65,1],[50,65,57,50,1],[57,50,57,101,1],[57,101,61,22,1],[61,22,61,23,1],[61,23,61,24,1],[61,24,62,41,1],[62,41,62,50,1],[62,50,63,27,1],[65,13,65,27,1],[66,9,66,10,1],[69,9,69,10,1],[71,13,71,14,1],[72,17,72,53,1],[73,17,73,66,1],[75,17,75,83,1],[77,17,77,38,1],[78,17,78,18,0],[79,21,79,68,0],[80,17,80,18,0],[82,17,82,54,1],[84,17,84,50,1],[84,50,84,73,1],[84,73,84,84,1],[84,84,84,91,1],[84,91,84,93,1],[86,17,86,52,1],[86,52,86,79,1],[86,79,86,90,1],[86,90,86,97,1],[86,97,86,99,1],[88,17,88,51,1],[88,51,88,58,1],[88,58,88,60,1],[90,17,90,88,1],[91,17,97,19,1],[99,13,99,30,0],[100,13,100,14,0],[101,17,101,23,0],[103,9,103,10,1],[106,9,106,10,1],[107,13,107,64,1],[108,13,108,50,1],[110,13,110,78,1],[112,13,112,34,1],[113,13,113,14,0],[114,17,114,70,0],[115,13,115,14,0],[117,13,117,118,1],[120,13,120,44,1],[120,44,120,63,0],[120,63,121,38,1],[121,38,124,53,0],[124,53,124,60,0],[124,60,125,26,0],[125,26,126,39,1],[126,39,126,45,0],[126,45,127,35,1],[129,13,129,27,1],[130,9,130,10,1],[133,9,133,10,1],[135,13,135,14,1],[136,17,136,82,1],[138,17,138,38,1],[139,17,139,18,0],[140,21,140,56,0],[141,17,141,18,0],[142,17,142,133,1],[143,17,143,62,1],[144,17,144,18,1],[145,21,145,100,1],[147,17,147,60,1],[148,17,148,24,1],[148,26,148,34,1],[148,35,148,37,1],[148,38,148,49,1],[149,17,149,18,1],[150,21,158,24,1],[159,17,159,18,1],[160,17,160,32,1],[162,13,162,30,1],[163,13,163,14,1],[164,17,164,23,1],[166,9,166,10,1],[169,9,169,10,1],[171,13,171,14,1],[172,17,174,128,1],[176,17,177,38,1],[177,38,177,69,1],[177,69,183,22,1],[183,22,183,23,1],[183,23,184,31,1],[186,17,186,61,1],[187,17,187,24,1],[187,26,187,38,1],[187,39,187,41,1],[187,42,187,52,1],[188,17,188,18,1],[189,21,189,28,1],[189,30,189,46,1],[189,47,189,49,1],[189,50,190,42,1],[190,42,190,93,1],[190,93,190,94,1],[191,21,191,22,1],[192,25,192,60,1],[193,21,193,22,1],[194,17,194,18,1],[195,17,195,46,1],[196,13,196,14,1],[197,13,197,30,0],[198,13,198,14,0],[199,17,199,23,0],[201,9,201,10,1],[204,9,204,10,1],[206,13,206,14,1],[207,17,207,78,1],[210,13,210,30,0],[211,13,211,14,0],[212,17,212,23,0],[214,9,214,10,1],[217,9,217,10,1],[219,13,219,14,1],[220,17,226,59,1],[227,17,227,31,1],[229,13,229,29,0],[230,13,230,14,0],[231,17,231,23,0],[233,9,233,10,1],[236,9,236,10,1],[238,13,238,14,1],[239,17,250,46,1],[252,17,252,42,1],[253,21,253,70,0],[255,17,255,37,1],[257,13,257,30,0],[258,13,258,14,0],[259,17,259,23,0],[261,9,261,10,1]]);
+    </script>
+  </body>
+</html>

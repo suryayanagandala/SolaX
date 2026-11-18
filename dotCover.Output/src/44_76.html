@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Installations.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    
+
+    [Table(&quot;Installations&quot;)]
+    public class Installations
+    {
+        [Key]
+        [Required,StringLength(18)]
+        [Column(&quot;InstallationId&quot;)]
+        public required  string InstallationId { get; set; }
+
+        [Required]
+        [Column(&quot;OrderId&quot;)]
+        public int OrderId { get; set; }
+
+        [Required]
+        [Column(&quot;CreatedAt&quot;)]
+        public DateTimeOffset CreatedAt { get; set; }
+
+        [Required]
+        [Column(&quot;Status&quot;)]
+        public required string Status { get; set; }
+
+        [Column(&quot;CompletedDate&quot;)]
+        public DateTimeOffset? CompletedDate { get; set; }
+
+        [Column(&quot;Installation_Price&quot;)]
+        public decimal? Installation_Price { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; } = true;
+
+        [Column(&quot;IsPanelCreated&quot;)]
+        public bool IsPanelCreated {  get; set; }
+        
+        [Column(&quot;DeliveryId&quot;)]
+        public int DeliveryId { get; set; }
+
+        [ForeignKey(&quot;OrderId&quot;)]
+        public Orders Order { get; set; } = null!;
+
+        [ForeignKey(&quot;DeliveryId&quot;)]
+        public Delivery delivery { get; set; } = null!;
+
+        public ICollection&lt;InstallationTechnician&gt; installationTechnicians { get; set; }= new List&lt;InstallationTechnician&gt;();
+
+        public ICollection&lt;InstallationReports&gt; Reports { get; set; } = new List&lt;InstallationReports&gt;();
+
+        public ICollection&lt;MaintenanceRequests&gt; MaintenanceRequest { get; set;} = new List&lt;MaintenanceRequests&gt;();
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[19,50,19,54,0],[19,55,19,59,1],[23,30,23,34,1],[23,35,23,39,1],[27,43,27,47,0],[27,48,27,52,1],[31,41,31,45,1],[31,46,31,50,1],[34,48,34,52,0],[34,53,34,57,1],[37,46,37,50,0],[37,51,37,55,0],[41,32,41,36,1],[41,37,41,41,1],[41,46,41,50,1],[44,39,44,43,1],[44,44,44,48,1],[47,33,47,37,0],[47,38,47,42,1],[50,31,50,35,0],[50,36,50,40,0],[50,45,50,50,1],[53,36,53,40,0],[53,41,53,45,0],[53,50,53,55,1],[55,78,55,82,1],[55,83,55,87,0],[55,91,55,125,1],[57,59,57,63,0],[57,64,57,68,0],[57,73,57,104,1],[59,70,59,74,0],[59,75,59,79,0],[59,83,59,114,1]]);
+    </script>
+  </body>
+</html>

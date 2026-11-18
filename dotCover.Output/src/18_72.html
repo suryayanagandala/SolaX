@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\InvoiceRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.CustomMessages;
+using DbAccessaLayer.Infrastructure;
+using iText.Pdfua.Checkers.Utils.Ua1;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrstructure
+{
+    public class InvoiceRepositoryTest:SqliteTestBase
+    {
+        private InvoiceRepository invoiceRepository;
+        [SetUp]
+        public void SetUp()
+        {
+            invoiceRepository = new InvoiceRepository(_db);
+
+        }
+
+        [Test]
+        public void GetrInvoice_Failure_OrderId()
+        {
+            try
+            {
+                int orderId = 90;
+                Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await invoiceRepository.GetInvoice(orderId));
+            }
+            catch (Exception ex)
+            {
+                var errorMessages = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                throw new Exception(errorMessages);
+            }
+        }
+
+        [Test]
+        public async Task GetInvoice_Success()
+        {
+            var result = await invoiceRepository.GetInvoice(1);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(&quot;Surya&quot;, result.CustomerName);
+            Assert.AreEqual(0, result.Tax);
+        }
+
+        //generatePdf
+        [Test]
+        public async Task GeneratePdf_Success()
+        {
+            var result = await invoiceRepository.GeneratePdf(1);
+
+            
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Length &gt; 0);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,10,1],[19,13,19,60,1],[21,9,21,10,1],[25,9,25,10,1],[27,13,27,14,1],[28,17,28,34,1],[29,17,29,67,1],[29,67,29,110,1],[29,110,29,112,1],[30,13,30,14,1],[31,13,31,33,0],[32,13,32,14,0],[33,17,33,104,0],[34,17,34,52,0],[36,9,36,10,1],[40,9,40,10,1],[41,13,41,64,1],[44,13,44,38,1],[45,13,45,59,1],[46,13,46,44,1],[47,9,47,10,1],[52,9,52,10,1],[53,13,53,65,1],[56,13,56,38,1],[57,13,57,46,1],[58,9,58,10,1]]);
+    </script>
+  </body>
+</html>

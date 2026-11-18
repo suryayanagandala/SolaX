@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\Background\AddToPanels.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure.Background
+{
+    public class AddToPanels : BackgroundService
+    {
+        private readonly IServiceProvider serviceProvider;
+        public AddToPanels(IServiceProvider serviceProvider)
+        {
+            this.serviceProvider = serviceProvider;
+        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                using var scope=serviceProvider.CreateScope();
+                var solarRepository = scope.ServiceProvider.GetRequiredService&lt;ISolarPerformaceRepository&gt;();
+                await solarRepository.AddToPanel();
+
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,61,0],[16,9,16,10,0],[17,13,17,52,0],[18,9,18,10,0],[20,9,20,10,0],[21,13,21,59,0],[22,13,22,14,0],[23,17,23,63,0],[24,17,24,110,0],[25,17,25,52,0],[27,17,27,74,0],[28,13,28,14,0],[29,9,29,10,0]]);
+    </script>
+  </body>
+</html>

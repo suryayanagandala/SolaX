@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Products.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+
+    [Table(&quot;Products&quot;)]
+    public class Products
+    {
+        [Key]
+        [Column(&quot;ProductId&quot;)]
+        public int ProductId { get; set; }
+
+        [Required,MaxLength(250)]
+        [Column(&quot;ProductName&quot;)]
+        public required string ProductName {  get; set; }
+
+
+        public int CategoryId { get; set; }
+
+        [Required,MaxLength(200)]
+        [Column(&quot;Brand&quot;)]
+        public required string Brand {  get; set; }
+
+        [Required,MaxLength(100)]
+        [Column(&quot;Type&quot;)]
+        public required string Type {  get; set; }
+
+        [Required]
+        [Column(&quot;CapacityValue&quot;)]
+        public int CapacityValue {  get; set; }
+
+        [Required]
+        [Column(&quot;Capacity&quot;)]
+        public required string Capacity { get; set; }
+
+        [Required]
+        [Column(&quot;Price&quot;)]
+        public decimal Price {  get; set; }
+
+        [Required]
+        [Column(&quot;Warranty_Years&quot;)]
+        public decimal Warranty_Years {  get; set; }
+
+        [Required]
+        [Column(&quot;Stock&quot;)]
+        public int Stock {  get; set; }
+
+        [Required]
+        [Column(&quot;Description&quot;)]
+        public required string Description { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; } = true;
+
+      
+        [Column(&quot;CreatedAt&quot;)]
+        public DateTimeOffset CreatedAt {  get; set; }
+
+       
+        [Column(&quot;UpdatedAt&quot;)]
+        public DateTimeOffset? UpdatedAt { get;set; }
+
+        public double? AverageRating { get; set; }
+        public int? RatingCount { get; set; }
+
+        public string? DeletedReason { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
+
+        [ForeignKey(nameof(CategoryId))]
+        public Category Category { get; set; } = null!;
+
+
+        public ICollection&lt;ProductImage&gt; ProductImages { get; set; } = new List&lt;ProductImage&gt;();
+
+        public ICollection&lt;CartItem&gt; CartItem {  get; set; }= new List&lt;CartItem&gt;();
+
+        public ICollection&lt;OrderItems&gt; OrderItem { get; set; }= new List&lt;OrderItems&gt;();
+
+        public ICollection&lt;ProductReview&gt; ProductReviews { get; set; }=new List&lt;ProductReview&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,32,17,36,1],[17,37,17,41,1],[21,47,21,51,1],[21,52,21,56,1],[24,33,24,37,1],[24,38,24,42,1],[28,41,28,45,1],[28,46,28,50,1],[32,40,32,44,1],[32,45,32,49,1],[36,37,36,41,1],[36,42,36,46,1],[40,43,40,47,1],[40,48,40,52,1],[44,33,44,37,1],[44,38,44,42,1],[48,42,48,46,1],[48,47,48,51,1],[52,29,52,33,1],[52,34,52,38,1],[56,46,56,50,1],[56,51,56,55,1],[60,32,60,36,1],[60,37,60,41,1],[60,46,60,50,1],[64,44,64,48,0],[64,49,64,53,1],[68,44,68,48,0],[68,48,68,52,1],[70,40,70,44,1],[70,45,70,49,0],[71,35,71,39,1],[71,40,71,44,0],[73,40,73,44,0],[73,45,73,49,1],[74,44,74,48,0],[74,49,74,53,1],[78,36,78,40,1],[78,41,78,45,0],[78,50,78,55,1],[81,58,81,62,1],[81,63,81,67,1],[81,72,81,96,1],[83,50,83,54,0],[83,55,83,59,0],[83,63,83,83,1],[85,52,85,56,0],[85,57,85,61,0],[85,65,85,87,1],[87,60,87,64,1],[87,65,87,69,0],[87,72,87,97,1]]);
+    </script>
+  </body>
+</html>

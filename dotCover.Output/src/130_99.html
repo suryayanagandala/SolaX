@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\PaymentService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class PaymentService
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        public PaymentService(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task&lt;PaymentCreateDto&gt; PaymentGateway(PaymentCreateDto dto)
+        {
+           return await _unitOfWork.paymentRepository.PaymentGateway(dto);
+        }
+
+        public async Task&lt;QrResponseDto&gt; GenerateQr(int orderId)
+        {
+            return await _unitOfWork.paymentRepository.GenerateQr(orderId);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,54,0],[17,9,17,10,0],[18,13,18,38,0],[19,9,19,10,0],[22,9,22,10,0],[23,12,23,75,0],[24,9,24,10,0],[27,9,27,10,0],[28,13,28,76,0],[29,9,29,10,0]]);
+    </script>
+  </body>
+</html>

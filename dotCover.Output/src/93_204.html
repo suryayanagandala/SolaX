@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Delivery.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    
+
+    [Table(&quot;Delivery&quot;)]
+    public class Delivery
+    {
+        [Key]
+        [Column(&quot;DeliveryId&quot;)]
+        public int DeliveryId {  get; set; }
+
+        [Required]
+        [Column(&quot;OrderId&quot;)]
+        public int OrderId { get; set; }
+
+        
+        [Column(&quot;AssignedToTechId&quot;)]
+        public int? AssignedToTechId { get; set; }
+
+        [MaxLength(30)]
+        [Column(&quot;Status&quot;)]
+        public string? Status { get; set; } = null!;
+
+        [Column(&quot;AssignedAt&quot;)]
+        public DateTimeOffset AssignedAt { get; set; }
+
+        [Column(&quot;DeliveryAt&quot;)]
+        public DateTimeOffset? DeliveryAt { get; set; }
+
+        [Column(&quot;AssignedBy&quot;)]
+        public string AssignedBy { get; set; } = &quot;Admin&quot;;
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; }=true;
+
+        [ForeignKey(&quot;OrderId&quot;)]
+        public Orders Order { get; set; } = null!;
+
+        [ForeignKey(&quot;AssignedToTechId&quot;)]
+        public Technicians? AssignedToTech { get; set; }
+
+
+        public ICollection&lt;Installations&gt; Installations { get; set; } = new List&lt;Installations&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,34,18,38,0],[18,39,18,43,0],[22,30,22,34,0],[22,35,22,39,1],[26,40,26,44,0],[26,45,26,49,1],[30,33,30,37,1],[30,38,30,42,1],[30,47,30,52,1],[33,44,33,48,0],[33,49,33,53,1],[36,45,36,49,1],[36,50,36,54,1],[39,36,39,40,0],[39,41,39,45,1],[39,50,39,57,1],[43,32,43,36,0],[43,37,43,41,0],[43,44,43,48,1],[46,31,46,35,0],[46,36,46,40,0],[46,45,46,50,1],[49,46,49,50,0],[49,51,49,55,0],[52,59,52,63,0],[52,64,52,68,0],[52,73,52,98,1]]);
+    </script>
+  </body>
+</html>

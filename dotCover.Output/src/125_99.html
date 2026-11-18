@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\InstallationService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+
+namespace BusinessLayer
+{
+    public class InstallationService
+    {
+        private readonly IUnitOfWork unitOfWork;
+        public InstallationService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork=unitOfWork;
+        }
+
+    
+        public async Task&lt;List&lt;InstallationCreateDto&gt;&gt;GetInsttalationStatus(string userId)
+        {
+            return await this.unitOfWork.installRepository.GetInstallationStatus(userId);
+        }
+
+        public async Task MarkasProgress(string id)
+        {
+            await this.unitOfWork.installRepository.MarkasProgress(id);
+        }
+
+        public async Task&lt;string&gt; CompletedInstallation(InstallationReportDto dto)
+        {
+           return await unitOfWork.installRepository.UploadInstallationReports(dto);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,9,17,59,0],[18,9,18,10,0],[19,13,19,40,0],[20,9,20,10,0],[24,9,24,10,0],[25,13,25,90,0],[26,9,26,10,0],[29,9,29,10,0],[30,13,30,72,0],[31,9,31,10,0],[34,9,34,10,0],[35,12,35,85,0],[36,9,36,10,0]]);
+    </script>
+  </body>
+</html>

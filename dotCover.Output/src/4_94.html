@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\DeliveryRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using iText.Layout.Renderer;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class DeliveryRepository : IDeliveryInterface
+    {
+        private readonly ApplicationDbContext _db;
+
+        private readonly ISignalRRepository signalRRepository;
+
+        public DeliveryRepository(ApplicationDbContext db, ISignalRRepository signalRRepository)
+        {
+            _db = db;
+            this.signalRRepository = signalRRepository;
+        }
+        public async Task&lt;string&gt; MarkAsCompletedDelivery(int deliveryId)
+        {
+            using var transactions = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                
+                var delivery = await _db.Set&lt;Delivery&gt;().Include(x=&gt;x.AssignedToTech).Include(x=&gt;x.Order).Where(x =&gt; x.DeliveryId == deliveryId&amp;&amp;x.Status== &quot;OutForDelivery&quot;).FirstOrDefaultAsync();
+                if (delivery == null)
+                {
+                    throw new Exception(&quot;No items are indelivery mode&quot;);
+                }
+
+                //if (delivery.Order == null)
+                //    throw new Exception(&quot;delivery.Order is null&quot;);
+
+                delivery.Status = &quot;Delivered&quot;;
+                if (delivery.AssignedToTechId != null &amp;&amp; delivery.AssignedToTech!=null)
+                {
+                    delivery.AssignedToTech.IsActiveDeliveries -= 1;
+                    delivery.AssignedToTech.IsAvailable = true;
+                    delivery.DeliveryAt = DateTimeOffset.Now;
+                    delivery.Order.Status = OrderStatus.DELIVERED;
+                    _db.Deliveries.Update(delivery);
+                   
+                }
+
+                var exists = await _db.Set&lt;Installations&gt;().AnyAsync(x =&gt; x.OrderId == delivery.OrderId);
+                if (exists)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Installation&quot;,&quot;Installed&quot;));
+                }
+
+                var installation = new Installations
+                {
+                    InstallationId = await GenerateInstallationId(),
+                    OrderId=delivery.OrderId,
+                    Status= InstallationStatus.Assigned.ToString(),
+                    DeliveryId=deliveryId,
+                    CreatedAt=TimeUtility.NowIST(),
+
+                };
+                await _db.Installations.AddAsync(installation);
+
+                if(delivery.AssignedToTech != null&amp;&amp;delivery.AssignedToTechId!=null)
+                {
+                    await _db.InstallationTechnicians.AddAsync(new InstallationTechnician
+                    {
+                        InstallationId = installation.InstallationId,
+                        TechnicianId = (int)delivery.AssignedToTechId,
+                        ServicePrice = delivery.AssignedToTech.Service_Price,
+                    });
+                }
+
+                var notification = new Notifications
+                {
+                    UserId = delivery.Order.UserId,
+                    Type = NotificationType.Order,
+                    Title = &quot;Dlivery update&quot;,
+                    IsActive = false,
+                    Message = $&quot;your orderId has succesfully delivered&quot;,
+                    CreatedAt = TimeUtility.NowIST(),
+                };
+
+                await _db.Set&lt;Notifications&gt;().AddAsync(notification);
+                await _db.SaveChangesAsync();
+
+                var dto = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString()!,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+                };
+
+                await this.signalRRepository.SendAsyncNotification(notification.UserId,dto);
+                await _db.SaveChangesAsync();
+                await transactions.CommitAsync();
+                return delivery.Order.UserId;
+                
+
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task MarkAsOutOfDelivery(int deliveryId)
+        {
+            try
+            {
+                var delivery = await _db.Set&lt;Delivery&gt;().Include(x =&gt; x.Order).FirstOrDefaultAsync(x =&gt; x.DeliveryId == deliveryId);
+                if (delivery == null)
+                {
+                    throw new Exception(&quot;No delivery found &quot;);
+                }
+                if (delivery.Order == null)
+                {
+                    throw new Exception(&quot;Order not found for this delivery&quot;);
+                }
+                delivery.Status = &quot;OutForDelivery&quot;;
+                delivery.Order.Status = OrderStatus.SHIPPED;
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;string&gt;&gt; AssignedRemainingDeliveries()
+        {
+            var assignedUserIds = new List&lt;string&gt;();
+
+            var deliveries = await _db.Deliveries.Where(x =&gt; x.AssignedToTechId == null &amp;&amp; x.IsActive).ToListAsync();
+
+            foreach (var item in deliveries)
+            {
+                var technician = await _db.Technicians.Where(x =&gt; x.IsAvailable).OrderBy(x =&gt; x.IsActiveDeliveries)
+                                .FirstOrDefaultAsync();
+
+                if (technician == null)
+                    continue;
+
+                item.AssignedToTechId = technician.TechnicianId;
+                item.Status = &quot;Assigned&quot;;
+                technician.IsActiveDeliveries += 1;
+
+
+                var notification = new Notifications
+                {
+                    UserId = technician.UserId,
+                    Type = NotificationType.Delivery,
+                    Title = &quot;Delivery update&quot;,
+                    IsActive = false,
+                    Message = $&quot;you have assigend new delivery&quot;,
+                    CreatedAt=TimeUtility.NowIST(),
+                };
+
+                await _db.Set&lt;Notifications&gt;().AddAsync(notification);
+                await _db.SaveChangesAsync();
+
+                var dto = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString()!,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+                };
+
+                await this.signalRRepository.SendAsyncNotification(notification.UserId, dto);
+
+                if (technician.IsActiveDeliveries == 5)
+                {
+                    technician.IsAvailable = false;
+                }
+
+                assignedUserIds.Add(technician.UserId);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return assignedUserIds.Distinct().ToList();
+        }
+
+
+        public async Task&lt;List&lt;DeliveryDto&gt;&gt; GetMarkoutDelieries(string userId)
+        {
+            try
+            {
+                var deliveries = await _db.Deliveries.Include(x =&gt; x.AssignedToTech).ThenInclude(x =&gt; x.User).Include(x =&gt; x.Order).ThenInclude(x =&gt; x.OrderItem)
+                                 .Include(x =&gt; x.Order).ThenInclude(x =&gt; x.Payment).Where(x =&gt; x.AssignedToTechId != null &amp;&amp; x.AssignedToTech!.UserId == userId &amp;&amp; x.Status != &quot;Delivered&quot; &amp;&amp; x.IsActive &amp;&amp;x.Order.Status!=OrderStatus.CANCELLED)
+                                 .OrderBy(x=&gt;x.AssignedAt).ToListAsync();
+
+                if (!deliveries.Any())
+                    throw new Exception(&quot;No deliveries found&quot;);
+
+                var result = new List&lt;DeliveryDto&gt;();
+
+                foreach (var item in deliveries)
+                {
+                   
+                    var products = await (
+                        from io in _db.OrderItems
+                        join p in _db.Products on io.ProductId equals p.ProductId
+                        join img in _db.ProductImages on p.ProductId equals img.ProductId
+                        where io.OrderId == item.OrderId 
+                        select new ProductImageForDelivery
+                        {
+                            ProductName = p.ProductName,
+                            ImageUrl = img.ImageUrl
+                        }
+                    ).Distinct().ToListAsync();
+
+                 
+                    var payment = item.Order.Payment.FirstOrDefault(p =&gt; p.IsActive);
+
+                    result.Add(new DeliveryDto
+                    {
+                        DeliveryId=item.DeliveryId,
+                        OrderId = item.OrderId,
+                        UserName = item.AssignedToTech!.User.FullName,
+                        Products = products,
+                        CustomerName=item.Order.FullName,
+                        DelievryAddress=item.Order.DeliveryAddress,
+                        PhoneNumber=item.Order.PhoneNumber,
+                        Quantity = item.Order.OrderItem.Sum(x =&gt; x.Quantity),
+                        PaymentMethod = payment?.PaymentMethod ?? &quot;UnKnown&quot;,
+                        Price = payment?.Amount ?? 0,
+                        Status = item.Status!,
+                        DeliveryAt=item.DeliveryAt??DateTimeOffset.Now,
+                    });
+                }
+
+                return result;
+
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private async Task&lt;string&gt; GenerateInstallationId()
+        {
+            var today = DateTimeOffset.Now.Date;
+            var tomorrow = today.AddDays(1);
+
+            var countToday = await _db.Installations
+                .CountAsync(x =&gt; x.CreatedAt &gt;= today &amp;&amp; x.CreatedAt &lt; tomorrow);
+
+            return $&quot;INST-{today:yyyyMMdd}-{(countToday + 1).ToString(&quot;D4&quot;)}&quot;;
+        }
+
+        public async Task&lt;List&lt;DeliveryDto&gt;&gt; GetDeliveredOrders(string userId)
+        {
+            try
+            { 
+                var deliveries=(from d in _db.Deliveries join t in _db.Technicians on d.AssignedToTechId equals
+                          t.TechnicianId join u in _db.Users on t.UserId equals u.UserId
+                          where u.UserId == userId &amp;&amp; d.Status== &quot;Delivered&quot;
+                          select new DeliveryDto
+                          {
+                              UserId=userId,
+                              DeliveryAt=d.DeliveryAt??DateTimeOffset.Now,
+                              DelievryAddress=d.Order.DeliveryAddress,
+                              PaymentMethod=d.Order.Payment.First().PaymentMethod,
+                              Status=d.Status!,
+                              OrderId=d.OrderId
+                          }
+                          ).OrderByDescending(x=&gt;x.DeliveryAt).ToListAsync();
+
+                return await  deliveries;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task SentDelayMessagesForDeliveryData()
+        {
+            var todayData = TimeUtility.NowIST();
+            var lateDeliveries=await _db.Deliveries.Include(x=&gt;x.Installations).Include(x=&gt;x.Order).Where(x=&gt;x.Status!=DeliveryStatus.Delivered.ToString()&amp;&amp;
+            x.DeliveryAt&lt;todayData).ToListAsync();
+
+            foreach (var delivery in lateDeliveries)
+            {
+                var notification = new Notifications
+                {
+                    UserId = delivery.Order.UserId,
+                    Type = NotificationType.Delivery,
+                    Title = &quot;Delivery update&quot;,
+                    IsActive = false,
+                    Message = $&quot;Sorry for delay your delivery is reaching at {todayData.AddDays(1)}&quot;,
+                    CreatedAt = TimeUtility.NowIST(),
+                };
+
+                await _db.Set&lt;Notifications&gt;().AddAsync(notification);
+                await _db.SaveChangesAsync();
+
+                var dto = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString()!,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+                };
+
+                await signalRRepository.SendAsyncNotification(notification.UserId, dto);
+
+                if (delivery.AssignedToTechId.HasValue &amp;&amp; delivery.AssignedToTech!=null)
+                {
+                    var techNotifications = new Notifications
+                    {
+                        UserId = delivery.AssignedToTech.UserId,
+                        Type = NotificationType.Delivery,
+                        Title = &quot;Delivery update&quot;,
+                        IsActive = false,
+                        Message = $&quot;Hurry up the orderId {delivery.OrderId} is still pending please try to completed at  {todayData.AddDays(1)}&quot;,
+                        CreatedAt = TimeUtility.NowIST(),
+                    };
+
+                    await _db.Set&lt;Notifications&gt;().AddAsync(techNotifications);
+                    await _db.SaveChangesAsync();
+
+                    var dtos = new NotificationDto
+                    {
+                        UserId = techNotifications.UserId,
+                        NotificationId = techNotifications.NotificationId,
+                        NotificationType = techNotifications.Type.ToString()!,
+                        Title =techNotifications.Title,
+                        Message = techNotifications.Message,
+                        IsRead = false,
+                        CreatedAt = techNotifications.CreatedAt,
+                    };
+
+                    await signalRRepository.SendAsyncNotification(techNotifications.UserId, dtos);
+                }
+                ;
+
+            };
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,26,97,1],[27,9,27,10,1],[28,13,28,22,1],[29,13,29,56,1],[30,9,30,10,1],[32,9,32,10,1],[33,13,33,81,1],[35,13,35,14,1],[37,17,37,197,1],[38,17,38,38,1],[39,17,39,18,1],[40,21,40,73,1],[46,17,46,47,1],[47,17,47,88,1],[48,17,48,18,1],[49,21,49,69,1],[50,21,50,64,1],[51,21,51,62,1],[52,21,52,67,1],[53,21,53,53,1],[55,17,55,18,1],[57,17,57,106,1],[58,17,58,28,1],[59,17,59,18,1],[60,21,60,88,1],[63,17,71,19,0],[72,17,72,64,0],[74,17,74,85,0],[75,17,75,18,0],[76,21,81,24,0],[82,17,82,18,0],[84,17,92,19,0],[94,17,94,71,0],[95,17,95,46,0],[97,17,106,19,0],[108,17,108,93,0],[109,17,109,46,0],[110,17,110,50,0],[111,17,111,46,0],[115,13,115,30,1],[116,13,116,14,1],[117,17,117,52,1],[118,17,118,23,1],[119,13,119,14,0],[120,9,120,10,0],[123,9,123,10,1],[125,13,125,14,1],[126,17,126,133,1],[127,17,127,38,1],[128,17,128,18,1],[129,21,129,63,1],[131,17,131,44,1],[132,17,132,18,0],[133,21,133,78,0],[135,17,135,52,1],[136,17,136,61,1],[137,17,137,46,1],[138,13,138,14,1],[139,13,139,30,1],[141,13,141,14,1],[142,17,142,23,1],[144,9,144,10,1],[147,9,147,10,1],[148,13,148,54,1],[150,13,150,118,1],[152,13,152,20,1],[152,22,152,30,1],[152,31,152,33,1],[152,34,152,44,1],[153,13,153,14,1],[154,17,155,56,1],[157,17,157,40,1],[158,21,158,30,0],[160,17,160,65,1],[161,17,161,42,1],[162,17,162,52,1],[165,17,173,19,1],[175,17,175,71,1],[176,17,176,46,1],[178,17,187,19,1],[189,17,189,94,1],[191,17,191,56,1],[192,17,192,18,0],[193,21,193,52,0],[194,17,194,18,0],[196,17,196,56,1],[197,13,197,14,1],[199,13,199,42,1],[201,13,201,56,1],[202,9,202,10,1],[206,9,206,10,1],[208,13,208,14,1],[209,17,211,74,1],[213,17,213,39,1],[214,21,214,64,1],[216,17,216,54,1],[218,17,218,24,1],[218,26,218,34,1],[218,35,218,37,1],[218,38,218,48,1],[219,17,219,18,1],[221,21,231,48,1],[234,21,234,74,1],[234,74,234,84,1],[234,84,234,86,1],[236,21,245,66,1],[245,66,245,76,1],[245,76,250,24,1],[251,17,251,18,1],[253,17,253,31,1],[257,13,257,30,1],[258,13,258,14,1],[259,17,259,23,1],[261,9,261,10,1],[264,9,264,10,0],[265,13,265,49,0],[266,13,266,45,0],[268,13,269,82,0],[271,13,271,79,0],[272,9,272,10,0],[275,9,275,10,1],[277,13,277,14,1],[278,17,290,78,1],[292,17,292,42,1],[294,13,294,30,1],[295,13,295,14,1],[296,17,296,23,1],[298,9,298,10,0],[301,9,301,10,1],[302,13,302,50,1],[303,13,304,51,1],[306,13,306,20,1],[306,22,306,34,1],[306,35,306,37,1],[306,38,306,52,1],[307,13,307,14,1],[308,17,316,19,1],[318,17,318,71,1],[319,17,319,46,1],[321,17,330,19,1],[332,17,332,89,1],[334,17,334,89,1],[335,17,335,18,1],[336,21,344,23,1],[346,21,346,80,1],[347,21,347,50,1],[349,21,358,23,1],[360,21,360,99,1],[361,17,361,18,1],[362,17,362,18,1],[364,13,364,14,1],[364,14,364,15,1],[365,9,365,10,1]]);
+    </script>
+  </body>
+</html>

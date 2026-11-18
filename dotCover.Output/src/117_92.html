@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\TechnicianRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Transactions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class TechnicianRepository : ITechnicianRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        private readonly IEmailService _emailService;
+        public TechnicianRepository(ApplicationDbContext db,IConfiguration configuration, IEmailService emailService)
+        {
+            _db = db;
+            _emailService = emailService;
+        }
+
+      
+
+        //email set up
+
+        private async Task SendUpateForAssignTech(string email, string name)
+        {
+            var mailRequest = new MailRequest
+            {
+                Email = email,
+                Subject = &quot;Appointed to Technician&quot;,
+                EmailBody = $@&quot;&lt;div style=&#39;width:100%;padding:20px;&#39;&gt;
+                &lt;h2&gt;Hi,{name}&lt;/h2&gt;
+                &lt;p&gt;Hearty welcome to SolarX!.Thank you for join us we hope you bring a lot of contribution&lt;/p&gt; &lt;br/&gt;
+                &lt;b&gt;SolarX Team&lt;/b&gt;&quot;
+
+
+
+            };
+            await _emailService.SendEmail(mailRequest);
+        }
+        public async Task AssignedTechnician(TechnicianCreateDto dto)
+        {
+            using var transactions = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var user = await _db.Users.Where(x =&gt; x.UserId == dto.UserId).FirstOrDefaultAsync();
+                if (user == null)
+                    throw new UserNotFound($&quot;User Data not found absed on your id entered {dto.UserId}&quot;);
+                if (user.RoleId == (int)RoleIds.Technician)
+                {
+                    throw new Exception($&quot;User already technican&quot;);
+                }
+
+                bool exists = await _db.Technicians.AnyAsync(x =&gt; x.UserId == user.UserId);
+                if (exists)
+                    throw new Exception(&quot;Technician already created&quot;);
+
+                
+
+                user.RoleId = (int)RoleIds.Technician;
+                 _db.Users.Update(user);
+
+                var technicans = new Technicians
+                {
+                    UserId = user.UserId,
+                    Specialization = dto.Specialization.ToString(),
+                    Descipline = dto.Discipline.ToString(),
+                    ExperienceYears = dto.ExperienceYears,
+                    Qualification = dto.Qualification.ToString(),
+                    Salary = dto.Salary,
+                    Service_Price = dto.ServicePrice,
+                    IsActive = true,
+                };
+
+                if (technicans.Specialization == &quot;Installer&quot;)
+                {
+                    technicans.IsActiveDeliveries = 0;
+                }
+
+                await _db.Technicians.AddAsync(technicans);
+                await _db.SaveChangesAsync();
+                await transactions.CommitAsync();
+                //await SendUpateForAssignTech(user.EmailId, user.FullName);
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task&lt;TechnicianResponse&gt; GetTechnician(string userId)
+        {
+            try
+            {
+                var technician=await _db.Technicians.Where(x=&gt;x.UserId == userId &amp;&amp;x.IsActive).Include(x=&gt;x.User).FirstOrDefaultAsync(); 
+                
+                if(technician == null)
+                {
+                    throw new Exception($&quot;Invalid userId entered {userId}&quot;);
+                }
+                return new TechnicianResponse
+                {
+                    TechnicianId = technician.TechnicianId,
+                    UserId = userId,
+                    TechnicianName = technician.User.FullName,
+                    Specifications = technician.Specialization,
+                    ActiveDeliveries = Convert.ToInt32(technician.IsActiveDeliveries),
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;TechnicianDashboardDto&gt; GetDashboard(string technicianId)
+        {
+            try
+            {
+                var data = await GetTechnician(technicianId);
+                if (data == null)
+                    throw new Exception(&quot;Technician not found&quot;);
+
+                
+                var start = DateTimeOffset.UtcNow.Date;
+                var end = start.AddDays(1);
+
+               
+                if (data.Specifications.Equals(TechnicianRoles.Installer.ToString(),StringComparison.OrdinalIgnoreCase))
+                {
+                    var technician = await _db.Technicians.FirstOrDefaultAsync(x =&gt; x.UserId == technicianId);
+
+                    if (technician == null)
+                        throw new Exception(&quot;Invalid technician&quot;);
+
+                    var deliveryQuery = _db.Deliveries.Include(x =&gt; x.Order).Where(x =&gt;x.AssignedToTechId == technician.TechnicianId &amp;&amp;x.IsActive);
+
+                    return new TechnicianDashboardDto
+                    {
+                        PendingCount = await deliveryQuery.CountAsync(x =&gt;x.Status == DeliveryStatus.Pending.ToString()),
+
+                        OutForDeliveryCount = await deliveryQuery.CountAsync(x =&gt; x.Status == DeliveryStatus.OutForDelivery.ToString()),
+
+                        DeliveredTodayCount = await deliveryQuery.CountAsync(x =&gt;x.Status == DeliveryStatus.Delivered.ToString() &amp;&amp;x.DeliveryAt.HasValue &amp;&amp;x.DeliveryAt &gt;= start &amp;&amp;x.DeliveryAt &lt; end),
+
+                        TotalActiveDeliveries = await deliveryQuery.CountAsync(x =&gt;x.Status != DeliveryStatus.Delivered.ToString() &amp;&amp;x.Order.IsActive),
+
+                        Specilization = data.Specifications
+                    };
+                }
+
+               
+                var maintenanceQuery = _db.MaintenanceTechnicians.Include(x =&gt; x.GetMaintenance).ThenInclude(x =&gt; x.MaintenanceReports).Where(x =&gt;x.TechnicianId == data.TechnicianId &amp;&amp;x.IsActive);
+
+                return new TechnicianDashboardDto
+                {
+                    PendingCount = await maintenanceQuery.CountAsync(j =&gt;j.GetMaintenance.Status == MaintenanceStatus.Pending.ToString()),
+
+                    AssignedCount = await maintenanceQuery.CountAsync(j =&gt;j.GetMaintenance.Status == MaintenanceStatus.Assigned.ToString()),
+
+                    InProgressCount = await maintenanceQuery.CountAsync(j =&gt;j.GetMaintenance.Status == MaintenanceStatus.Inprogress.ToString()),
+
+                    CompletedCount = await maintenanceQuery.CountAsync(j =&gt;j.GetMaintenance.Status == MaintenanceStatus.Completed.ToString()),
+
+                    DeliveredTodayCount = await maintenanceQuery.CountAsync(j =&gt;j.GetMaintenance.Status == MaintenanceStatus.Completed.ToString() &amp;&amp;
+                                          j.GetMaintenance.MaintenanceReports.Any(r =&gt;r.CreatedAt &gt;= start &amp;&amp; r.CreatedAt &lt; end)),
+
+                    Specilization = data.Specifications
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,118,0],[25,9,25,10,0],[26,13,26,22,0],[27,13,27,42,0],[28,9,28,10,0],[35,9,35,10,0],[36,13,47,15,0],[48,13,48,56,0],[49,9,49,10,0],[51,9,51,10,0],[52,13,52,81,0],[54,13,54,14,0],[55,17,55,101,0],[56,17,56,34,0],[57,21,57,106,0],[58,17,58,60,0],[59,17,59,18,0],[60,21,60,68,0],[63,17,63,92,0],[64,17,64,28,0],[65,21,65,71,0],[69,17,69,55,0],[70,18,70,41,0],[72,17,82,19,0],[84,17,84,62,0],[85,17,85,18,0],[86,21,86,55,0],[87,17,87,18,0],[89,17,89,60,0],[90,17,90,46,0],[91,17,91,50,0],[93,13,93,14,0],[94,13,94,30,0],[95,13,95,14,0],[96,17,96,52,0],[97,17,97,23,0],[98,13,98,14,0],[99,9,99,10,0],[102,9,102,10,0],[104,13,104,14,0],[105,17,105,137,0],[107,17,107,39,0],[108,17,108,18,0],[109,21,109,77,0],[111,17,118,19,0],[120,13,120,30,0],[121,13,121,14,0],[122,17,122,23,0],[124,9,124,10,0],[127,9,127,10,0],[129,13,129,14,0],[130,17,130,62,0],[131,17,131,34,0],[132,21,132,65,0],[135,17,135,56,0],[136,17,136,44,0],[139,17,139,121,0],[140,17,140,18,0],[141,21,141,111,0],[143,21,143,44,0],[144,25,144,67,0],[146,21,146,148,0],[148,21,159,23,0],[163,17,163,197,0],[165,17,179,19,0],[181,13,181,30,0],[182,13,182,14,0],[183,17,183,23,0],[185,9,185,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\CustomValidations\CustomValidationForPassword.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.CustomValidations
+{
+    public static class CustomValidationForPassword
+    {
+        public static ValidationResult ValidatePassword(string value)
+        {
+
+            string specialChars = &quot;@#$%^&amp;*&quot;;
+            if (string.IsNullOrEmpty(value))
+            {
+                return new ValidationResult(&quot;Password Must not be empty&quot;);
+            }
+            value = value.Trim();
+
+
+            if (!value.Any(char.IsLower))
+            {
+                return new ValidationResult(&quot;pasword must contain alteast lower case  letter&quot;);
+
+            }
+            else if (!value.Any(char.IsNumber))
+            {
+                return new ValidationResult(&quot; Atleast contains one number&quot;);
+            }
+            else if (!value.Any(char.IsUpper))
+            {
+                return new ValidationResult(&quot;pasword must contain alteast One Upper case  letter&quot;);
+            }
+
+            else if (!char.IsUpper(value[0]))
+            {
+                return new ValidationResult(&quot;password first letter must be upper case only&quot;);
+            }
+            else if (value.Length &lt; 6)
+            {
+                return new ValidationResult(&quot;Atleast passowrd length must be greater than 6 characters&quot;);
+            }
+            else if (value.Length &gt; 12)
+            {
+                return new ValidationResult(&quot;Password must be less than 12 characters&quot;);
+            }
+            else if (!specialChars.Any(value.Contains))
+            {
+                return new ValidationResult(&quot;password contains atleast one special character&quot;);
+            }
+
+            return ValidationResult.Success!;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[13,9,13,10,0],[15,13,15,45,0],[16,13,16,45,0],[17,13,17,14,0],[18,17,18,75,0],[20,13,20,34,0],[23,13,23,42,0],[24,13,24,14,0],[25,17,25,96,0],[28,18,28,48,0],[29,13,29,14,0],[30,17,30,77,0],[32,18,32,47,0],[33,13,33,14,0],[34,17,34,100,0],[37,18,37,46,0],[38,13,38,14,0],[39,17,39,94,0],[41,18,41,39,0],[42,13,42,14,0],[43,17,43,106,0],[45,18,45,40,0],[46,13,46,14,0],[47,17,47,89,0],[49,18,49,56,0],[50,13,50,14,0],[51,17,51,96,0],[54,13,54,46,0],[55,9,55,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\MaintenanceReports.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;MaintenanceReports&quot;)]
+    public class MaintenanceReports
+    {
+        [Key]
+        [Column(&quot;ReportId&quot;)]
+        public int ReportId { get; set; }
+
+        [Required, StringLength(18)]
+        [Column(&quot;RequestId&quot;)]
+        public required string RequestId { get; set; }
+
+        [Column(&quot;Notes&quot;)]
+        public string? Notes { get; set; }
+
+        [Column(&quot;Image_Url&quot;)]
+        public string? Image_Url { get; set; }
+
+        [Column(&quot;ReplacedParts&quot;)]
+        public required string ReplacedParts { get; set; }
+
+        [Column(&quot;CreatedAt&quot;)]
+        public DateTimeOffset CreatedAt { get; set; }
+
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; }
+
+
+        [ForeignKey(&quot;RequestId&quot;)]
+        public MaintenanceRequests Request{ get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,31,16,35,0],[16,36,16,40,0],[20,44,20,48,0],[20,49,20,53,1],[23,32,23,36,0],[23,37,23,41,1],[26,36,26,40,0],[26,41,26,45,1],[29,48,29,52,0],[29,53,29,57,1],[32,43,32,47,0],[32,48,32,52,1],[35,32,35,36,0],[35,37,35,41,0],[39,45,39,49,0],[39,50,39,54,0],[39,59,39,64,1]]);
+    </script>
+  </body>
+</html>

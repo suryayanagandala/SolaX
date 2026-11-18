@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\PaymentRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Serilog.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class PaymentRepository : IPaymentRepository
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly AssignmentSettings _assignmentSettings;
+        private readonly ISignalRRepository signalRRepository;
+        public PaymentRepository(ApplicationDbContext db,IOptions&lt;AssignmentSettings&gt; options,ISignalRRepository signalRRepository)
+        {
+            _db = db;
+            _assignmentSettings = options.Value;
+            this.signalRRepository = signalRRepository;
+        }
+
+        public async Task&lt;PaymentCreateDto&gt; PaymentGateway(PaymentCreateDto dto)
+        {
+            using var transactions = await _db.Database.BeginTransactionAsync();
+            try
+            {
+
+                var order = await _db.Orders.Include(x =&gt; x.OrderItem).ThenInclude(x =&gt; x.Product).FirstOrDefaultAsync(
+                    x =&gt; x.OrderId == dto.OrderId &amp;&amp; x.IsActive);
+
+                if (order == null)
+                {
+                    throw new Exception(&quot;Order not found ot inactive&quot;);
+                }
+
+                decimal totalAmount = order.OrderItem.Sum(x =&gt; x.Quantity * x.Product.Price);
+
+                var payment = new Payments
+                {
+                    OrderId = dto.OrderId,
+                    PaymentMethod = dto.PaymentMethod,
+                    PaymentStatus = dto.PaymentMethod,
+                    TransactionId = GenerateTransactionId(),
+                    Amount = totalAmount,
+                    PaymentDate = TimeUtility.NowIST()
+                };
+
+                if (dto.PaymentMethod == &quot;COD&quot;)
+                {
+                    payment.PaymentStatus = &quot;PENDING&quot;;
+                    
+                }
+                else
+                {
+                    payment.PaymentStatus = &quot;SUCCESS&quot;;
+                   
+                }
+                Console.WriteLine($&quot;orderId:{order.UserId}&quot;);
+                await ConfirmOrder(dto.OrderId, order.UserId);
+
+                await _db.Payments.AddAsync(payment);
+
+                _db.Orders.Update(order);
+              
+                await _db.SaveChangesAsync();
+             
+                await AssignDeliveriesToTechnician(dto.OrderId);
+                await CreateInvoice(order.OrderId);
+                var notification = new Notifications
+                {
+                    UserId = order.UserId,
+                    Type = NotificationType.Order,
+                    Title = &quot;Order confirmed&quot;,
+                    IsActive = false,
+                    Message = $&quot;your order {payment.OrderId} is now {OrderStatus.CONFIRMED.ToString()}&quot;
+                };
+
+                await _db.Set&lt;Notifications&gt;().AddAsync(notification);
+                Console.WriteLine($&quot; Notification saved with ID {notification.NotificationId}&quot;);
+
+                var signal = new NotificationDto
+                {
+                    UserId = notification.UserId,
+                    NotificationId = notification.NotificationId,
+                    NotificationType = notification.Type.ToString()!,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    IsRead = false,
+                    CreatedAt = notification.CreatedAt,
+                };
+
+                await signalRRepository.SendAsyncNotification(notification.UserId, signal);
+
+
+
+                await transactions.CommitAsync();
+                return new PaymentCreateDto
+                {
+                    OrderId=payment.OrderId,
+                    PaymentMethod=payment.PaymentMethod,
+                    UserId=order.UserId,
+                    
+                };
+
+
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task CreateInvoice(int orderId)
+        {
+            try
+            {
+                var order=await _db.Orders.Include(x=&gt;x.Payment).Include(x=&gt;x.User).FirstOrDefaultAsync(x=&gt;x.OrderId==orderId);
+                if (order == null)
+                {
+                    throw new Exception(&quot;no order found&quot;);
+                }
+                var payment=order.Payment.OrderByDescending(x=&gt;x.PaymentDate).FirstOrDefault();
+                var invoice = new Invoices
+                {
+                    OrderId = orderId,
+                    CustomerName = order.FullName,
+                    CustomerEmail = order.User.EmailId,
+                    PhoneNumber = order.PhoneNumber,
+                    Amount = order.TotalAmount,
+                    PaymentMethod = order.Payment.FirstOrDefault()?.PaymentMethod ?? &quot;Cash&quot;,
+                    TotalAmount = order.Payment.First().Amount,
+                    OrderStatus = order.Status.ToString(),
+                    PaymentStatus = order.Payment.FirstOrDefault()?.PaymentStatus ?? &quot;Pending&quot;,
+                    InvoiceDate = TimeUtility.NowIST()
+                };
+
+                await _db.Invoices.AddAsync(invoice);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public Task&lt;QrResponseDto&gt; GenerateQr(int orderId)
+        {
+
+            var order=_db.Orders.FirstOrDefaultAsync(x=&gt;x.OrderId== orderId);   
+            if (order == null)
+            {
+                throw new Exception(&quot;OrderId was not found&quot;);
+            }
+            //dummy text encoded into qr
+            string dummyText = $&quot;ORDER-{orderId}-PAYMENT&quot;;
+
+            //using var ensures it will be disposed automatically after use.
+            using var qrGenerator = new QRCoder.QRCodeGenerator();
+
+            //qrData holds the raw QR matrix.
+            using var qrData = qrGenerator.CreateQrCode(dummyText, QRCoder.QRCodeGenerator.ECCLevel.Q);
+
+            //Wraps the QR data into a QRCode object.
+
+            using var qrCode = new QRCoder.QRCode(qrData);
+
+            //get image pixels with 20
+            using var bitmap = qrCode.GetGraphic(20);
+
+            //Creates a memory stream to hold the image data in memory instead of saving to disk.
+            using var ms = new MemoryStream();
+
+
+            //now the images is stored in png format with binary format in memory
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+            // Converts the PNG image bytes into a Base64 string
+            var base64 = Convert.ToBase64String(ms.ToArray());
+
+            var qrResponse = new QrResponseDto 
+            { QrCodeImage = $&quot;data:image/png;base64,{base64}&quot;,
+                ExpiresIn = 300 
+            };
+
+            return Task.FromResult(qrResponse);
+
+
+
+        }
+
+        private  string GenerateTransactionId()
+        {
+            return &quot;TXN&quot; + Guid.NewGuid().ToString(&quot;N&quot;).Substring(0, 12).ToUpper();
+        } 
+
+        private async  Task ReduceStock(Orders orders)
+        {
+            try
+            {
+                foreach(var item in orders.OrderItem)
+                {
+                    var product = item.Product;
+                    if (product.Stock &lt; item.Quantity)
+                        throw new Exception($&quot;Out of stock: {product.ProductName}&quot;);
+
+                    product.Stock -= item.Quantity;
+                    _db.Products.Update(product);
+                    
+                }
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        private async Task ClearUserCart(string userId)
+        {
+            var cart = await _db.Carts.Include(c =&gt; c.CartItems).FirstOrDefaultAsync(c =&gt; c.UserId == userId &amp;&amp; c.IsActive);
+
+            if (cart != null)
+            {
+                cart.CartItems.Clear();
+            }
+        }
+
+        private  void RestoreStock(Orders order)
+        {
+            foreach ( var item in order.OrderItem)
+            {
+                item.Product.Stock += item.Quantity;
+            }
+        }
+
+        private async Task ConfirmOrder(int orderId, string userId)
+        {
+
+            try
+            {
+                var order = await _db.Orders.Include(x =&gt; x.OrderItem).FirstOrDefaultAsync(x =&gt; x.OrderId == orderId &amp;&amp; x.UserId == userId);
+                if (order == null)
+                {
+                    throw new Exception(&quot;No order is found please check again&quot;);
+                }
+
+                var payment = order.Payment.FirstOrDefault(x=&gt;x.OrderId==order.OrderId);
+
+                //if (order.Payment.Any(x=&gt;x.OrderId==order.OrderId))
+                //{
+                //    throw new Exception(&quot;Already payment exist&quot;);
+                //}
+
+                foreach (var item in order.OrderItem)
+                {
+                    var product = await _db.Products.FindAsync(item.ProductId);
+                    if (product == null)
+                    {
+                        throw new Exception(&quot;No product found&quot;);
+                    }
+
+                    product.Stock -= item.Quantity;
+                    _db.Products.Update(product);
+
+
+                }
+
+                order.Status = OrderStatus.CONFIRMED;
+                _db.Orders.Update(order);
+
+                await _db.Carts.Where(x =&gt; x.UserId == userId).ExecuteUpdateAsync(x =&gt; x.SetProperty(s =&gt; s.IsActive, false));
+                await _db.SaveChangesAsync();
+
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task AssignDeliveriesToTechnician(int orderId)
+        {
+            try
+            {
+                var order = await _db.Orders.FirstOrDefaultAsync(x =&gt; x.OrderId == orderId);
+
+                if (order == null)
+                {
+                    throw new Exception(&quot;No Order found&quot;);
+                }
+                var technician = await _db.Technicians.Where(x =&gt; x.Specialization == &quot;Installer&quot; &amp;&amp; x.IsAvailable==true)
+                    .OrderBy(x=&gt;x.IsActiveDeliveries).ThenBy(x=&gt;x.TechnicianId).FirstOrDefaultAsync();
+
+                Console.WriteLine(technician == null? &quot;NO TECHNICIAN FOUND&quot;: $&quot;TECH FOUND: {technician.TechnicianId}&quot;);
+
+                var delivery = new Delivery
+                {
+                    OrderId = orderId,
+                    AssignedToTechId = technician?.TechnicianId,
+                    DeliveryAt = DateTimeOffset.UtcNow.AddDays(_assignmentSettings.AssignedDelivery),
+                    Status = technician == null ? &quot;Pending&quot; : &quot;Assigned&quot;,
+                    AssignedAt = TimeUtility.NowIST(),
+                    AssignedBy=&quot;Admin&quot;,
+                };
+                
+
+                    await _db.Deliveries.AddAsync(delivery);
+
+                    if (technician!=null)
+                    {
+                        technician.IsActiveDeliveries += 1;
+                        if (technician.IsActiveDeliveries &gt;= 5)
+                        {
+                            technician.IsAvailable = false;
+                        }
+                    }
+
+                    await _db.SaveChangesAsync();
+                
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+      
+        
+
+        
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,9,27,132,1],[28,9,28,10,1],[29,13,29,22,1],[30,13,30,49,1],[31,13,31,56,1],[32,9,32,10,1],[35,9,35,10,1],[36,13,36,81,1],[38,13,38,14,1],[40,17,41,66,1],[43,17,43,35,1],[44,17,44,18,1],[45,21,45,72,1],[48,17,48,64,1],[48,64,48,92,1],[48,92,48,94,1],[50,17,58,19,1],[60,17,60,48,1],[61,17,61,18,1],[62,21,62,55,1],[64,17,64,18,1],[66,17,66,18,1],[67,21,67,55,1],[69,17,69,18,1],[70,17,70,62,1],[71,17,71,63,1],[73,17,73,54,1],[75,17,75,42,1],[77,17,77,46,1],[79,17,79,65,1],[80,17,80,52,1],[81,17,88,19,1],[90,17,90,71,1],[91,17,91,97,1],[93,17,102,19,1],[104,17,104,92,1],[108,17,108,50,1],[109,17,115,19,1],[119,13,119,30,1],[120,13,120,14,1],[121,17,121,52,1],[122,17,122,23,1],[123,13,123,14,0],[124,9,124,10,1],[127,9,127,10,1],[129,13,129,14,1],[130,17,130,128,1],[131,17,131,35,1],[132,17,132,18,0],[133,21,133,59,0],[135,17,135,64,1],[135,64,135,77,1],[135,77,135,96,1],[136,17,148,19,1],[150,17,150,54,1],[151,17,151,46,1],[152,13,152,14,1],[153,13,153,30,0],[154,13,154,14,0],[155,17,155,23,0],[157,9,157,10,1],[160,9,160,10,0],[162,13,162,78,0],[163,13,163,31,0],[164,13,164,14,0],[165,17,165,62,0],[168,13,168,59,0],[171,13,171,67,0],[174,13,174,104,0],[178,13,178,59,0],[181,13,181,54,0],[184,13,184,47,0],[188,13,188,69,0],[191,13,191,63,0],[193,13,196,15,0],[198,13,198,48,0],[202,9,202,10,0],[205,9,205,10,1],[206,13,206,84,1],[207,9,207,10,1],[210,9,210,10,0],[212,13,212,14,0],[213,17,213,24,0],[213,25,213,33,0],[213,34,213,36,0],[213,37,213,53,0],[214,17,214,18,0],[215,21,215,48,0],[216,21,216,55,0],[217,25,217,85,0],[219,21,219,52,0],[220,21,220,50,0],[222,17,222,18,0],[223,17,223,46,0],[224,13,224,14,0],[225,13,225,30,0],[226,13,226,14,0],[227,17,227,23,0],[229,9,229,10,0],[233,9,233,10,0],[234,13,234,125,0],[236,13,236,30,0],[237,13,237,14,0],[238,17,238,40,0],[239,13,239,14,0],[240,9,240,10,0],[243,9,243,10,0],[244,13,244,20,0],[244,23,244,31,0],[244,32,244,34,0],[244,35,244,50,0],[245,13,245,14,0],[246,17,246,53,0],[247,13,247,14,0],[248,9,248,10,0],[251,9,251,10,1],[254,13,254,14,1],[255,17,255,141,1],[256,17,256,35,1],[257,17,257,18,0],[258,21,258,81,0],[261,17,261,63,1],[261,63,261,87,1],[261,87,261,89,1],[268,17,268,24,1],[268,26,268,34,1],[268,35,268,37,1],[268,38,268,53,1],[269,17,269,18,1],[270,21,270,80,1],[271,21,271,41,1],[272,21,272,22,0],[273,25,273,65,0],[276,21,276,52,1],[277,21,277,50,1],[280,17,280,18,1],[282,17,282,54,1],[283,17,283,42,1],[285,17,285,127,1],[286,17,286,46,1],[289,13,289,14,1],[290,13,290,30,0],[291,13,291,14,0],[292,17,292,23,0],[294,9,294,10,1],[297,9,297,10,1],[299,13,299,14,1],[300,17,300,93,1],[302,17,302,35,1],[303,17,303,18,0],[304,21,304,59,0],[306,17,307,103,1],[309,17,309,120,1],[311,17,319,19,1],[322,21,322,61,1],[324,21,324,42,1],[325,21,325,22,1],[326,25,326,60,1],[327,25,327,64,1],[328,25,328,26,0],[329,29,329,60,0],[330,25,330,26,0],[331,21,331,22,1],[333,21,333,50,1],[335,13,335,14,1],[336,13,336,30,0],[337,13,337,14,0],[338,17,338,23,0],[340,9,340,10,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\ApplicationDbContext.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using static iText.IO.Util.IntHashtable;
+
+namespace CoreModels
+{
+    public class ApplicationDbContext:DbContext
+    {
+        private readonly IHttpContextAccessor httpContextAccessor;
+       
+        public ApplicationDbContext(DbContextOptions&lt;ApplicationDbContext&gt;options,IHttpContextAccessor httpContextAccessor):base(options)
+        {
+            this.httpContextAccessor = httpContextAccessor; 
+        }
+
+        public virtual DbSet&lt;Roles&gt; Roles { get; set; }
+
+        public virtual DbSet&lt;Users&gt;Users { get; set; }
+
+        public virtual DbSet&lt;Technicians&gt; Technicians{get;set;}
+        public virtual DbSet&lt;Products&gt; Products { get; set; }
+
+        public virtual DbSet&lt;ProductImage&gt; ProductImages { get; set; }
+
+        public virtual DbSet&lt;Cart&gt; Carts { get; set; }
+
+        public virtual DbSet&lt;CartItem&gt; CartItems { get; set; }
+
+        public virtual DbSet&lt;Orders&gt; Orders { get; set; }
+
+        public virtual DbSet&lt;OrderItems&gt; OrderItems { get; set; }
+
+        public virtual DbSet&lt;Payments&gt; Payments { get; set; }
+
+        public virtual DbSet&lt;Delivery&gt; Deliveries { get; set; }
+
+        public virtual DbSet&lt;Installations&gt; Installations { get; set; }
+
+        public virtual DbSet&lt;InstallationTechnician&gt; InstallationTechnicians { get; set; }
+
+        public virtual DbSet&lt;InstallationReports&gt; InstallationReports { get; set; }
+
+        public virtual DbSet&lt;MaintenanceRequests&gt; MaintenanceRequests { get; set; }
+
+        public virtual DbSet&lt;MaintenanceTechnicians&gt; MaintenanceTechnicians { get; set; }
+
+        public virtual DbSet&lt;MaintenanceReports&gt; MaintenanceReports { get; set; }
+
+        public virtual DbSet&lt;Notifications&gt; Notifications { get; set; }
+
+        public virtual DbSet&lt;SolarPerformance&gt; SolarPerformances { get; set; }
+
+        public virtual DbSet&lt;Invoices&gt; Invoices { get; set; }
+
+        public virtual DbSet&lt;OtpManager&gt; OtpManagers { get; set; }
+
+        public virtual DbSet&lt;Category&gt; Categories { get; set; }
+
+        public virtual DbSet&lt;ProductReview&gt; ProductReviews { get; set; }
+
+        public virtual DbSet&lt;Panel&gt; Panels { get; set; }
+
+        public virtual DbSet&lt;AuditLog&gt; AuditLog { get; set; }
+
+        public bool DisableAudit { get; set; } = false;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity&lt;Users&gt;().HasKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;Users&gt;().HasOne(u =&gt; u.Role).WithMany(u =&gt; u.Users).HasForeignKey(u =&gt; u.RoleId);
+
+            modelBuilder.Entity&lt;Technicians&gt;().HasOne(t =&gt; t.User).WithOne(u =&gt; u.Technician).HasForeignKey&lt;Technicians&gt;(t =&gt; t.UserId).HasPrincipalKey&lt;Users&gt;(u =&gt; u.UserId); ;
+
+            modelBuilder.Entity&lt;ProductImage&gt;().HasOne(x =&gt; x.Product).WithMany(x =&gt; x.ProductImages).HasForeignKey(x =&gt; x.ProductId);
+
+            modelBuilder.Entity&lt;Cart&gt;().HasOne(x =&gt; x.Users).WithMany(x =&gt; x.Cart).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;CartItem&gt;().HasKey(ci =&gt; ci.CartItemId);
+
+            modelBuilder.Entity&lt;CartItem&gt;().HasOne(x =&gt; x.Cart).WithMany(x =&gt; x.CartItems).HasForeignKey(x =&gt; x.CartId);
+
+            modelBuilder.Entity&lt;CartItem&gt;().HasOne(x =&gt; x.Product).WithMany(c =&gt; c.CartItem).HasForeignKey(x =&gt; x.ProductId);
+
+            modelBuilder.Entity&lt;Orders&gt;().HasOne(x =&gt; x.User).WithMany(x =&gt; x.Order).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;OrderItems&gt;().HasOne(x =&gt; x.Order).WithMany(x =&gt; x.OrderItem).HasForeignKey(x =&gt; x.OrderId);
+
+            modelBuilder.Entity&lt;OrderItems&gt;().HasOne(x =&gt; x.Product).WithMany(c =&gt; c.OrderItem).HasForeignKey(x =&gt; x.ProductId);
+
+            modelBuilder.Entity&lt;Payments&gt;().HasOne(x =&gt; x.Order).WithMany(c =&gt; c.Payment).HasForeignKey(x =&gt; x.OrderId);
+
+            modelBuilder.Entity&lt;Delivery&gt;().HasOne(x =&gt; x.Order).WithOne(c =&gt; c.Delivery).HasForeignKey&lt;Delivery&gt;(x =&gt; x.OrderId);
+
+            modelBuilder.Entity&lt;Delivery&gt;().HasOne(x =&gt; x.AssignedToTech).WithMany(c =&gt; c.Deliveries).HasForeignKey(x =&gt; x.AssignedToTechId);
+
+            modelBuilder.Entity&lt;Installations&gt;().HasOne(x =&gt; x.Order).WithMany(c =&gt; c.Installation).HasForeignKey(x =&gt; x.OrderId);
+
+            modelBuilder.Entity&lt;Installations&gt;().HasOne(x =&gt; x.delivery).WithMany(x =&gt; x.Installations).HasForeignKey(x =&gt; x.DeliveryId);
+
+            modelBuilder.Entity&lt;InstallationTechnician&gt;().HasOne(x =&gt; x.Technician).WithMany(c =&gt; c.Installations).HasForeignKey(x =&gt; x.TechnicianId);
+
+            modelBuilder.Entity&lt;InstallationReports&gt;().HasOne(x =&gt; x.Installation).WithMany(c =&gt; c.Reports).HasForeignKey(x =&gt; x.InstallationId);
+
+            modelBuilder.Entity&lt;MaintenanceRequests&gt;().HasOne(x =&gt; x.User).WithMany(c =&gt; c.MaintenanceRequest).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;MaintenanceRequests&gt;().HasOne(x =&gt; x.Installation).WithMany(c =&gt; c.MaintenanceRequest).HasForeignKey(x =&gt; x.InstallationId);
+
+            modelBuilder.Entity&lt;MaintenanceTechnicians&gt;().HasOne(x =&gt; x.Technician).WithMany(c =&gt; c.Maintenance).HasForeignKey(x =&gt; x.TechnicianId);
+
+            modelBuilder.Entity&lt;MaintenanceReports&gt;().HasOne(x =&gt; x.Request).WithMany(c =&gt; c.MaintenanceReports).HasForeignKey(x =&gt; x.RequestId);
+
+            modelBuilder.Entity&lt;Notifications&gt;().HasOne(x =&gt; x.User).WithMany(c =&gt; c.Notifications).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;SolarPerformance&gt;().HasOne(x =&gt; x.User).WithMany(c =&gt; c.solarPerformances).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;Invoices&gt;().HasOne(x =&gt; x.Order).WithMany(c =&gt; c.Invoices).HasForeignKey(x =&gt; x.OrderId);
+
+            modelBuilder.Entity&lt;Notifications&gt;().Property(n =&gt; n.Type).HasConversion&lt;string&gt;().HasMaxLength(50);
+
+            modelBuilder.Entity&lt;Technicians&gt;().Property(x=&gt;x.Qualification).HasConversion&lt;string&gt;().HasMaxLength(50);
+
+            modelBuilder.Entity&lt;Technicians&gt;().Property(x=&gt;x.Specialization).HasConversion&lt;string&gt;().HasMaxLength(50);
+
+            modelBuilder.Entity&lt;Technicians&gt;().Property(x=&gt;x.Descipline).HasConversion&lt;string&gt;().HasMaxLength(50);
+
+            modelBuilder.Entity&lt;Orders&gt;().Property(x =&gt; x.Status).HasConversion&lt;string&gt;().HasMaxLength(100);
+
+            modelBuilder.Entity&lt;Category&gt;().HasOne(x =&gt; x.ParentCategory).WithMany(x =&gt; x.SubCategories).HasForeignKey(x =&gt; x.ParentCategoryId);
+
+            //modelBuilder.Entity&lt;Products&gt;().HasOne(c=&gt;c.Category).WithMany(x=&gt;x.Products).HasForeignKey(x =&gt; x.ProductId);
+
+            modelBuilder.Entity&lt;ProductReview&gt;().HasOne(c=&gt;c.Product).WithMany(x=&gt;x.ProductReviews).HasForeignKey(x =&gt; x.ProductId);
+
+            modelBuilder.Entity&lt;ProductReview&gt;().HasOne(c =&gt; c.Users).WithMany(x =&gt; x.ProductReviews).HasForeignKey(x =&gt; x.UserId);
+
+            modelBuilder.Entity&lt;Payments&gt;().Property(x =&gt; x.PaymentDate).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;ProductImage&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Products&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;ProductReview&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Orders&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Notifications&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Invoices&gt;().Property(x =&gt;x.InvoiceDate).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Delivery&gt;().Property(x =&gt; x.AssignedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Category&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;InstallationReports&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Installations&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;MaintenanceReports&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;MaintenanceRequests&gt;().Property(x =&gt; x.CreatedAt).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity&lt;Payments&gt;().HasIndex(p =&gt; p.OrderId).IsUnique();
+
+            modelBuilder.Entity&lt;Delivery&gt;().HasIndex(x =&gt; x.OrderId).IsUnique();
+
+            
+
+
+        }
+
+        public override async Task&lt;int&gt; SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            if (DisableAudit)
+                return await base.SaveChangesAsync(cancellationToken);
+            ChangeTracker.DetectChanges();
+
+            var auditEntries = new List&lt;AuditLog&gt;();
+
+            var userId = httpContextAccessor?.HttpContext?.User?.FindFirst(&quot;UserId&quot;)?.Value ?? &quot;System&quot;;
+            var userRole = httpContextAccessor?.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value ?? &quot;Unknown&quot;;
+
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (entry.Entity is AuditLog ||
+                    entry.State == EntityState.Detached ||
+                    entry.State == EntityState.Unchanged)
+                    continue;
+
+                var audit = new AuditLog
+                {
+                    TableName = entry.Metadata.GetTableName(),
+                    Action = entry.State.ToString(),
+                    UserId = userId,
+                    UserRole = userRole,
+                    ChangedAt = DateTime.UtcNow
+                };
+
+                var oldValues = new Dictionary&lt;string, object&gt;();
+                var newValues = new Dictionary&lt;string, object&gt;();
+
+                foreach (var property in entry.Properties)
+                {
+                    if (property.Metadata.IsPrimaryKey())
+                        continue;
+
+                    string propertyName = property.Metadata.Name;
+
+                    switch (entry.State)
+                    {
+                        case EntityState.Added:
+                            newValues[propertyName] = property.CurrentValue ?? string.Empty;
+                            break;
+
+                        case EntityState.Deleted:
+                            oldValues[propertyName] = property.OriginalValue ?? string.Empty;
+                            break;
+
+                        case EntityState.Modified:
+                            if (property.IsModified)
+                            {
+                                oldValues[propertyName] = property.OriginalValue ?? string.Empty;
+                                newValues[propertyName] = property.CurrentValue ?? string.Empty;
+                            }
+                            break;
+                    }
+                }
+
+                audit.OldValues = oldValues.Count == 0 ? null : JsonSerializer.Serialize(oldValues);
+                audit.NewValues = newValues.Count == 0 ? null : JsonSerializer.Serialize(newValues);
+
+                auditEntries.Add(audit);
+            }
+
+            // Add audit logs BEFORE saving so everything is in one transaction
+            if (auditEntries.Any())
+                AuditLog.AddRange(auditEntries);
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+    }
+       
+
+
+
+    
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,125,20,138,1],[21,9,21,10,1],[22,13,22,60,1],[23,9,23,10,1],[25,45,25,49,1],[25,50,25,54,1],[27,44,27,48,1],[27,49,27,53,1],[29,55,29,59,1],[29,59,29,63,1],[30,51,30,55,1],[30,56,30,60,1],[32,60,32,64,0],[32,65,32,69,1],[34,44,34,48,1],[34,49,34,53,1],[36,52,36,56,0],[36,57,36,61,1],[38,47,38,51,1],[38,52,38,56,1],[40,55,40,59,0],[40,60,40,64,1],[42,51,42,55,1],[42,56,42,60,1],[44,53,44,57,1],[44,58,44,62,1],[46,61,46,65,0],[46,66,46,70,1],[48,80,48,84,0],[48,85,48,89,1],[50,73,50,77,0],[50,78,50,82,1],[52,73,52,77,0],[52,78,52,82,1],[54,79,54,83,0],[54,84,54,88,1],[56,71,56,75,0],[56,76,56,80,1],[58,61,58,65,0],[58,66,58,70,1],[60,68,60,72,0],[60,73,60,77,1],[62,51,62,55,1],[62,56,62,60,1],[64,56,64,60,0],[64,61,64,65,1],[66,53,66,57,1],[66,58,66,62,1],[68,62,68,66,0],[68,67,68,71,1],[70,46,70,50,0],[70,51,70,55,1],[72,51,72,55,0],[72,56,72,60,1],[74,36,74,40,1],[74,41,74,45,1],[74,50,74,55,1],[77,9,77,10,1],[78,13,78,48,1],[80,13,80,64,1],[82,13,82,114,1],[84,13,84,175,1],[84,176,84,177,1],[86,13,86,135,1],[88,13,88,113,1],[90,13,90,73,1],[92,13,92,121,1],[94,13,94,126,1],[96,13,96,115,1],[98,13,98,125,1],[100,13,100,129,1],[102,13,102,121,1],[104,13,104,131,1],[106,13,106,142,1],[108,13,108,131,1],[110,13,110,138,1],[112,13,112,151,1],[114,13,114,146,1],[116,13,116,141,1],[118,13,118,157,1],[120,13,120,149,1],[122,13,122,146,1],[124,13,124,130,1],[126,13,126,137,1],[128,13,128,122,1],[130,13,130,113,1],[132,13,132,118,1],[134,13,134,119,1],[136,13,136,115,1],[138,13,138,109,1],[140,13,140,145,1],[144,13,144,133,1],[146,13,146,132,1],[148,13,148,96,1],[150,13,150,98,1],[152,13,152,94,1],[154,13,154,99,1],[156,13,156,92,1],[158,13,158,99,1],[160,13,160,95,1],[162,13,162,95,1],[164,13,164,94,1],[166,13,166,105,1],[168,13,168,99,1],[170,13,170,104,1],[172,13,172,105,1],[174,13,174,81,1],[176,13,176,81,1],[181,9,181,10,1],[184,9,184,10,1],[185,13,185,30,1],[186,17,186,71,1],[187,13,187,43,0],[189,13,189,53,0],[191,13,191,105,0],[192,13,192,115,0],[194,13,194,20,0],[194,22,194,31,0],[194,32,194,34,0],[194,35,194,58,0],[195,13,195,14,0],[196,17,198,58,0],[199,21,199,30,0],[201,17,208,19,0],[210,17,210,66,0],[211,17,211,66,0],[213,17,213,24,0],[213,26,213,38,0],[213,39,213,41,0],[213,42,213,58,0],[214,17,214,18,0],[215,21,215,58,0],[216,25,216,34,0],[218,21,218,66,0],[220,21,220,41,0],[223,29,223,93,0],[224,29,224,35,0],[227,29,227,94,0],[228,29,228,35,0],[231,29,231,53,0],[232,29,232,30,0],[233,33,233,98,0],[234,33,234,97,0],[235,29,235,30,0],[236,29,236,35,0],[238,17,238,18,0],[240,17,240,101,0],[241,17,241,101,0],[243,17,243,41,0],[244,13,244,14,0],[247,13,247,36,0],[248,17,248,49,0],[250,13,250,67,0],[251,9,251,10,1]]);
+    </script>
+  </body>
+</html>

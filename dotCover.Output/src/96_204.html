@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\InstallationTechnician.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;InstallationTechnicians&quot;)]
+    public class InstallationTechnician
+    {
+        [Key]
+        [Column(&quot;Installation_Tech_Id&quot;)]
+        public int Installation_Tech_Id { get; set; }  
+
+        [Required,StringLength(18)]
+        [Column(&quot;InstallationId&quot;)]
+        public required string InstallationId { get; set; }
+
+        [Required]
+        [Column(&quot;TechnicianId&quot;)]
+        public int TechnicianId { get; set; }
+
+        [Required]
+        [Column(&quot;Service_Price_At_Time&quot;)]
+        public decimal ServicePrice { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive { get; set; }=true;
+
+
+        [ForeignKey(&quot;InstallationId&quot;)]
+        public Installations Installation { get; set; } = null!;
+
+        [ForeignKey(&quot;TechnicianId&quot;)]
+        public Technicians Technician { get; set; }=null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,43,16,47,0],[16,48,16,52,0],[20,49,20,53,0],[20,54,20,58,0],[24,35,24,39,0],[24,40,24,44,0],[28,39,28,43,0],[28,44,28,48,0],[32,32,32,36,0],[32,37,32,41,0],[32,44,32,48,0],[36,45,36,49,0],[36,50,36,54,0],[36,59,36,64,0],[39,41,39,45,0],[39,46,39,50,0],[39,53,39,58,0]]);
+    </script>
+  </body>
+</html>

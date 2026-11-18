@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\DTO'S\OrderCreateDto.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.DTO_S
+{
+    public class OrderCreateDto
+    {
+        public string UserId { get; set; } = null!;
+
+    
+        public bool IsBuyNow { get; set; }
+        public int? ProductId { get; set; }
+        public int? Quantity { get; set; }
+
+        public string DeliveryAddress { get; set; } = null!;
+        public string DeliveryName { get; set; } = null!;
+        public string DeliveryPhone { get; set; } = null!;
+
+        public DateTimeOffset? CreatedAt { get; set; } 
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,32,11,36,1],[11,37,11,41,1],[11,46,11,51,1],[14,32,14,36,1],[14,37,14,41,1],[15,33,15,37,1],[15,38,15,42,1],[16,32,16,36,1],[16,37,16,41,1],[18,41,18,45,1],[18,46,18,50,1],[18,55,18,60,1],[19,38,19,42,1],[19,43,19,47,1],[19,52,19,57,1],[20,39,20,43,1],[20,44,20,48,1],[20,53,20,58,1],[22,44,22,48,0],[22,49,22,53,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\CategoryRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using DbAccessaLayer.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class CategoryRepository : ICategoryRepository
+    {
+        private readonly ApplicationDbContext _db;
+        public CategoryRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+
+        public async Task&lt;IEnumerable&lt;CategoryDto&gt;&gt; GetAllCategories()
+        {
+            try
+            {
+                return await _db.Set&lt;Category&gt;().Where(x =&gt; x.ParentCategoryId == null)
+                    .Select(x =&gt; new CategoryDto
+                    {
+                        CategoryId = x.CategoryId,
+                        Name = x.CategoryName,
+                        Slug = x.Slug,
+                        IsActive = x.IsActive,
+                        Description = x.Description,
+                        DeletedReason = x.DeletedReason,
+
+                        Children = x.SubCategories.Select(c =&gt; new CategoryDto
+                        {
+                            CategoryId = c.CategoryId,
+                            Name = c.CategoryName,
+                            IsActive = c.IsActive,
+                            DeletedReason = c.DeletedReason,
+                            Description = c.Description
+                        }).ToList()
+
+                    }).ToListAsync();
+                    
+                
+
+            }
+            catch(Exception )
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;CategoryDto&gt; GetCategoryListById(int id)
+        {
+            try
+            {
+                var existCategoryId=await _db.Categories.Include(x=&gt;x.SubCategories).FirstOrDefaultAsync(x=&gt;x.CategoryId== id &amp;&amp;x.IsActive);
+                if (existCategoryId == null)
+                {
+                    throw new Exception($&quot;no existing CategoryId {id} was found &quot;);
+                }
+                else
+                {
+                    return new CategoryDto
+                    {
+                        CategoryId = existCategoryId.CategoryId,
+                        Name = existCategoryId.CategoryName,
+                        Slug = existCategoryId.Slug,
+                        Description=existCategoryId.Description,
+                        ParentId=existCategoryId.ParentCategoryId
+
+                    };
+
+                }
+
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        private static string GenerateSlug(string name)
+        {
+            return Regex.Replace(name.ToLower().Trim(), @&quot;[^a-z0-9]+&quot;,&quot;-&quot;).Trim(&#39;-&#39;);
+        }
+
+
+        public async Task&lt;CreateUpdateCategoryDto&gt; CreateCategory(CategoryDto categoryDto)
+        {
+            try
+            {
+                int? parentId = categoryDto.ParentId == 0? null: categoryDto.ParentId;
+                var slug=GenerateSlug(categoryDto.Name);
+                var slugExists = await _db.Categories.Include(x=&gt;x.SubCategories).AnyAsync(x =&gt; x.Slug == slug &amp;&amp; x.IsActive);
+
+                if (slugExists)
+                    throw new DataExistsException(MessageHelper.Get(&quot;Categories&quot;, &quot;Slug&quot;));
+
+                if (categoryDto.ParentId != null)
+                {
+                    var parentExists = await _db.Categories
+                        .AnyAsync(x =&gt; x.CategoryId == categoryDto.ParentId &amp;&amp; x.IsActive);
+
+                    if (!parentExists)
+                        throw new DataExistsException(MessageHelper.Get(&quot;Categories&quot;, &quot;Parent&quot;));
+                }
+                var details = new Category
+                {
+                    CategoryName = categoryDto.Name,
+                    Slug =slug,
+                    Description = categoryDto.Description,
+                    ParentCategoryId = categoryDto.ParentId,
+                    CreatedAt=TimeUtility.NowIST()
+
+                };
+
+                await _db.Categories.AddAsync(details);
+                await _db.SaveChangesAsync();
+                return new CreateUpdateCategoryDto
+                {
+                    Name = details.CategoryName,
+                    Slug = slug,
+                    Description = details.Description,
+                    ParentId = details.ParentCategoryId
+                };
+                
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;CreateUpdateCategoryDto&gt; UpdateCategory(int id,CreateUpdateCategoryDto dto)
+        {
+            try
+            {
+                var existId = await _db.Categories.FirstOrDefaultAsync(x =&gt; x.CategoryId==id);
+                if (existId==null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Categories&quot;, &quot;NotFoundCategories&quot;));
+                }
+                else
+                {
+                   var slug= GenerateSlug(dto.Name);
+                    var slugExists = await _db.Categories.AnyAsync(x =&gt; x.Slug == slug &amp;&amp; x.CategoryId != id &amp;&amp; x.IsActive);
+
+                    if (slugExists)
+                        throw new DataExistsException(MessageHelper.Get(&quot;Categories&quot;, &quot;Slug&quot;));
+                    existId.CategoryName=dto.Name.Trim();
+                   existId.Slug=slug;
+                   existId.Description= dto.Description;
+                   existId.ParentCategoryId = dto.ParentId;
+                   existId.IsActive=true;
+                   existId.UpdatedAt = TimeUtility.NowIST();
+
+                   await _db.SaveChangesAsync();
+
+                    return new CreateUpdateCategoryDto
+                    {
+                        ParentId = dto.ParentId,
+                        Name = dto.Name,
+                        Slug = slug,
+                        Description = dto.Description
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;string&gt; DeleteCategory(int id)
+        {
+            try
+            {
+                var existId= await _db.Categories.FindAsync(id);
+                if (existId == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Categories&quot;, &quot;NotFoundCategories&quot;));
+                }
+                else
+                {
+                    existId.IsActive=false;
+                    existId.UpdatedAt = TimeUtility.NowIST();
+                    await _db.SaveChangesAsync();
+                    return $&quot;Successfully decativated if having id {id}&quot;;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        //public async Task&lt;List&lt;CategoryDto&gt;&gt; GetCategoryTree()
+        //{
+        //    try
+        //    {
+        //        //get flat data
+        //        var categories = await _db.Categories.Where(x =&gt; x.IsActive).Select(x =&gt; new CategoryDto
+        //        {
+        //            CategoryId = x.CategoryId,
+        //            Name = x.CategoryName,
+        //            Slug = x.Slug,
+        //            ParentId = x.ParentCategoryId,
+
+        //        }).ToListAsync();
+
+        //        //dictonary for fast look up
+        //        var lookup = categories.ToDictionary(x =&gt; x.CategoryId);   //id as key
+
+        //        //build tree
+        //        List&lt;CategoryDto&gt; roots = new();
+
+        //        foreach(var category in categories)
+        //        {
+        //            if (category.ParentId == null)
+        //            {
+        //                roots.Add(category);  //it looks like Residential (Children = [])
+
+        //            }
+        //            else if (lookup.ContainsKey(category.ParentId.Value))
+        //            {
+        //                lookup[category.ParentId.Value].Children.Add(category);  //returns [1] like Residential CategoryDto
+        //                                                                         //after becomes Residential.Children.Add(Monocrystalline)
+        //            }
+        //        }
+        //        return roots;
+        //    }
+        //    catch(Exception)
+        //    {
+        //        throw;
+        //    }
+        //}
+
+        public async Task SoftDeleteCategory(SoftDeleteCategoryDto dto)
+        {
+            try
+            {
+                var category = await _db.Categories.FirstOrDefaultAsync(x =&gt; x.CategoryId == dto.CategoryId &amp;&amp; x.IsActive);
+
+                if (category == null)
+                {
+                    throw new InActiveModeExceptions(MessageHelper.Get(&quot;Categories&quot;, &quot;Mode&quot;));
+                }
+                else
+                {
+                    category.DeletedReason = dto.Reason;
+                    category.DeletedAt = TimeUtility.NowIST();
+                    category.IsActive = false;
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task RestoreCategory(int id)
+        {
+            try
+            {
+                var existCategory=await _db.Categories.FirstOrDefaultAsync(x=&gt;x.CategoryId== id&amp;&amp;!x.IsActive);
+                if(existCategory == null)
+                {
+                    throw new DataExistsException(MessageHelper.Get(&quot;Categories&quot;, &quot;Active&quot;));
+                }
+                else
+                {
+                    existCategory.IsActive = true;
+                    existCategory.UpdatedAt= TimeUtility.NowIST();
+                    existCategory.DeletedReason = null;
+                    existCategory.DeletedAt = null;
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateParentCategory(int categoryId, CreateUpdateCategoryDto dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    throw new ArgumentNullException(MessageHelper.Get(&quot;Categories&quot;, &quot;fill&quot;));
+                }
+                var slug =  GenerateSlug(dto.Name.Trim());
+                var existCategory=await _db.Categories.FirstOrDefaultAsync(x=&gt;x.CategoryId== categoryId&amp;&amp;x.IsActive&amp;&amp;x.ParentCategoryId==null);
+                if(existCategory == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Categories&quot;, &quot;NotFoundCategories&quot;));
+                }
+                else
+                {
+                    existCategory.CategoryName = dto.Name.Trim();
+                    existCategory.Slug= slug;
+                    existCategory.IsActive = true;
+                    existCategory.UpdatedAt = TimeUtility.NowIST(); 
+                    await _db.SaveChangesAsync();
+
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task DeleteParentCategory(SoftDeleteCategoryDto dto)
+        {
+            try
+            {
+                var category=await _db.Categories.Include(x=&gt;x.SubCategories).FirstOrDefaultAsync(x=&gt;x.CategoryId==dto.CategoryId&amp;&amp;
+                x.ParentCategoryId==null&amp;&amp;x.IsActive);
+                if(category == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Categories&quot;, &quot;NotFoundCategories&quot;));
+                }
+                else
+                {
+                    if (category.SubCategories.Any(x =&gt; x.IsActive))
+                    {
+                        throw new DataExistsException(MessageHelper.Get(&quot;Categories&quot;, &quot;DeactiveP&quot;));
+                    }
+                    else
+                    {
+                        //category.SubCategories.Clear();
+                        category.IsActive= false;
+                        category.DeletedReason=dto.Reason.Trim();
+                        category.DeletedAt = TimeUtility.NowIST();
+                        await _db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task RestoreParentCategory(int categoryId)
+        {
+            try
+            {
+                var category=await _db.Categories.FirstOrDefaultAsync(x=&gt;x.CategoryId==categoryId&amp;&amp;x.ParentCategoryId==null&amp;&amp;!x.IsActive);
+                if(category == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Categories&quot;, &quot;NotFoundCategories&quot;));
+                }
+                else
+                {
+                    category.IsActive = true;
+                    category.UpdatedAt = TimeUtility.NowIST();
+                    category.DeletedReason = null;
+                    category.DeletedAt = null;
+                    await _db.SaveChangesAsync();   
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[21,9,21,59,1],[22,9,22,10,1],[23,13,23,22,1],[24,9,24,10,1],[28,9,28,10,1],[30,13,30,14,1],[31,17,50,38,1],[55,13,55,30,1],[56,13,56,14,1],[57,17,57,23,1],[59,9,59,10,1],[62,9,62,10,1],[64,13,64,14,1],[65,17,65,141,1],[66,17,66,45,1],[67,17,67,18,1],[68,21,68,84,1],[71,17,71,18,1],[72,21,80,23,1],[85,13,85,29,1],[86,13,86,14,1],[87,17,87,23,1],[89,9,89,10,1],[92,9,92,10,1],[93,13,93,86,1],[94,9,94,10,1],[98,9,98,10,1],[100,13,100,14,1],[101,17,101,87,1],[102,17,102,57,1],[103,17,103,127,1],[105,17,105,32,1],[106,21,106,92,1],[108,17,108,50,1],[109,17,109,18,1],[110,21,111,92,1],[113,21,113,39,1],[114,25,114,98,1],[115,17,115,18,0],[116,17,124,19,1],[126,17,126,56,1],[127,17,127,46,1],[128,17,134,19,1],[137,13,137,30,1],[138,13,138,14,1],[139,17,139,23,1],[141,9,141,10,1],[144,9,144,10,1],[146,13,146,14,1],[147,17,147,95,1],[148,17,148,35,1],[149,17,149,18,1],[150,21,150,104,1],[153,17,153,18,1],[154,20,154,53,1],[155,21,155,125,1],[157,21,157,36,1],[158,25,158,96,1],[159,21,159,58,1],[160,20,160,38,1],[161,20,161,57,1],[162,20,162,60,1],[163,20,163,42,1],[164,20,164,61,1],[166,20,166,49,1],[168,21,174,23,1],[177,13,177,30,1],[178,13,178,14,1],[179,17,179,23,1],[181,9,181,10,1],[184,9,184,10,1],[186,13,186,14,1],[187,17,187,65,1],[188,17,188,37,1],[189,17,189,18,1],[190,21,190,104,1],[193,17,193,18,1],[194,21,194,44,1],[195,21,195,62,1],[196,21,196,50,1],[197,21,197,74,1],[200,13,200,30,1],[201,13,201,14,1],[202,17,202,23,1],[204,9,204,10,1],[248,9,248,10,1],[250,13,250,14,1],[251,17,251,124,1],[253,17,253,38,1],[254,17,254,18,1],[255,21,255,95,1],[258,17,258,18,1],[259,21,259,57,1],[260,21,260,63,1],[261,21,261,47,1],[262,21,262,50,1],[263,17,263,18,1],[264,13,264,14,1],[265,13,265,30,1],[266,13,266,14,1],[267,17,267,23,1],[269,9,269,10,1],[272,9,272,10,1],[274,13,274,14,1],[275,17,275,111,1],[276,17,276,42,1],[277,17,277,18,1],[278,21,278,94,1],[281,17,281,18,1],[282,21,282,51,1],[283,21,283,67,1],[284,21,284,56,1],[285,21,285,52,1],[286,21,286,50,1],[287,17,287,18,1],[288,13,288,14,1],[289,13,289,30,1],[290,13,290,14,1],[291,17,291,23,1],[293,9,293,10,1],[296,9,296,10,1],[298,13,298,14,1],[299,17,299,33,1],[300,17,300,18,1],[301,21,301,94,1],[303,17,303,59,1],[304,17,304,144,1],[305,17,305,42,1],[306,17,306,18,1],[307,21,307,104,1],[310,17,310,18,1],[311,21,311,66,1],[312,21,312,46,1],[313,21,313,51,1],[314,21,314,68,1],[315,21,315,50,1],[317,17,317,18,1],[318,13,318,14,1],[319,13,319,30,1],[320,13,320,14,1],[321,17,321,23,1],[323,9,323,10,1],[326,9,326,10,1],[328,13,328,14,1],[329,17,330,55,1],[331,17,331,37,1],[332,17,332,18,1],[333,21,333,104,1],[336,17,336,18,1],[337,21,337,57,1],[337,57,337,67,1],[337,67,337,69,1],[338,21,338,22,1],[339,25,339,101,1],[342,21,342,22,1],[344,25,344,50,1],[345,25,345,66,1],[346,25,346,67,1],[347,25,347,54,1],[348,21,348,22,1],[349,17,349,18,1],[350,13,350,14,1],[351,13,351,30,1],[352,13,352,14,1],[353,17,353,23,1],[355,9,355,10,1],[358,9,358,10,1],[360,13,360,14,1],[361,17,361,139,1],[362,17,362,37,1],[363,17,363,18,1],[364,21,364,104,1],[367,17,367,18,1],[368,21,368,46,1],[369,21,369,63,1],[370,21,370,51,1],[371,21,371,47,1],[372,21,372,50,1],[373,17,373,18,1],[374,13,374,14,1],[375,13,375,30,1],[376,13,376,14,1],[377,17,377,23,1],[379,9,379,10,1]]);
+    </script>
+  </body>
+</html>

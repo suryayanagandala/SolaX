@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\ProductRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using DbAccessaLayer.Helpers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class ProductRepository : IProductsRepository
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly IWebHostEnvironment webHostEnvironment;
+
+        public ProductRepository(ApplicationDbContext db, IWebHostEnvironment webHostEnvironment)
+        {
+            _db = db;
+            this.webHostEnvironment = webHostEnvironment;
+        }
+
+        public async Task&lt;IEnumerable&lt;ProductDto&gt;&gt; GetAllPrducts()
+        {
+            try
+            {
+                return await _db.Products.AsNoTracking().Select(x =&gt; new ProductDto
+                {
+                    ProductId = x.ProductId,
+                    ProductName = x.ProductName,
+                    Price = x.Price,
+                    Type = x.Type,
+                    CapacityValue = x.CapacityValue,
+                    Stock = x.Stock,
+                    IsActive = x.IsActive,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                    DeletedReason = x.DeletedReason,
+                    Description = x.Description,
+                    CategoryId =(int) x.CategoryId,
+                    Brand=x.Brand,
+                    Capacity=x.Capacity,
+                    Category = x.Category == null ? null : new CategoryDto
+                    {
+                        CategoryId = x.Category.CategoryId,
+                        Name = x.Category.CategoryName,
+                        Slug = x.Category.Slug,
+                        Description = x.Category.Description,
+                        IsActive = x.Category.IsActive
+                    },
+                    ProductImages = x.ProductImages
+                    .Select(img =&gt; new ProductImageResponseDto
+                    {
+                        ImageId = img.ImageId,
+                        ImageUrl = img.ImageUrl,
+                        IsActive = img.IsActive,
+                    })
+                    .ToList()
+
+                }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    throw new Exception(ex.InnerException.Message);
+                }
+                else
+                {
+                    throw new Exception(ex.Message);
+                }
+            }
+        }
+
+        //AddProduct
+        public async Task AddProduct(ProductResponse dto)
+        {
+            try
+            {
+                if (dto == null)
+                {
+                    throw new ArgumentNullException(nameof(dto), &quot;Please fill all the details&quot;);
+                }
+
+                var existData = await _db.Categories.FirstOrDefaultAsync(x =&gt; x.CategoryId == dto.CategoryId &amp;&amp; x.IsActive);
+
+                if (existData == null)
+                {
+                    throw new NotFoundException(&quot;Invalid category Id or category is not active mode&quot;);
+                }
+
+
+                var productDetails = new Products
+                {
+                    ProductName = dto.ProductName,
+                    Brand = dto.Brand,
+                    Type = dto.Type.ToString(),
+                    CapacityValue = dto.CapacityValue,
+                    Capacity = dto.Capacity,
+                    Price = dto.Price,
+                    Warranty_Years = dto.Warranty_Years,
+                    Stock = dto.Stock,
+                    Description = dto.Description,
+                    CreatedAt = TimeUtility.NowIST(),
+                    CategoryId = dto.CategoryId,
+                    IsActive=true,
+                };
+                _db.Products.Add(productDetails);
+                await _db.SaveChangesAsync();
+              
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;ProductDto&gt; GetProductById(int productId)
+        {
+            
+                var checkExistId = await _db.Products.FirstOrDefaultAsync(x=&gt;x.ProductId==productId);
+                if (checkExistId==null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+                }
+                else
+                {
+                    return new ProductDto
+                    {
+                        ProductName = checkExistId.ProductName,
+                        Brand = checkExistId.Brand,
+                        Type = checkExistId.Type,
+                        CapacityValue = checkExistId.CapacityValue,
+                        Capacity = checkExistId.Capacity,
+                        Price = checkExistId.Price,
+                        Description = checkExistId.Description,
+                        Stock = checkExistId.Stock,
+                        Warranty_Years = checkExistId.Warranty_Years,
+                        CategoryId= checkExistId.CategoryId,
+                    };
+                } 
+            
+            
+        }
+
+
+        //soft delete
+        public async Task SoftDeleteProduct(SoftDeleteProductDto dto)
+        {
+            var product = await _db.Products.FirstOrDefaultAsync(x =&gt; x.ProductId == dto.ProductId &amp;&amp; x.IsActive);
+
+            if (product == null)
+                throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+
+            product.IsActive = false;
+            product.DeletedReason = dto.Reason;
+            product.DeletedAt = DateTimeOffset.UtcNow;
+
+            await _db.SaveChangesAsync();
+        }
+
+        //restore
+
+        public async Task RestoreProduct(int productId)
+        {
+            var product = await _db.Products.FirstOrDefaultAsync(x =&gt; x.ProductId == productId &amp;&amp; !x.IsActive);
+
+            if (product == null)
+                throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+
+            product.IsActive = true;
+            product.DeletedReason = null;
+            product.DeletedAt = null;
+            product.UpdatedAt = DateTimeOffset.UtcNow;
+            await _db.SaveChangesAsync();
+        }
+
+        //AddProductIamges
+        public async Task AddImage(int productId, List&lt;IFormFile&gt; images)
+        {
+            try
+            {
+                var productExists = await _db.Products.AnyAsync(x =&gt; x.ProductId == productId &amp;&amp;x.IsActive);
+                if (!productExists)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+
+                }
+                if (images == null)
+                    throw new ArgumentNullException(nameof(images));
+
+                if (!images.Any())
+                    throw new ArgumentException(&quot;Please upload at least one image&quot;, nameof(images));
+
+
+                foreach (var image in images)
+                {
+                    var path = await ImageHelper.SaveProductIamges(image, this.webHostEnvironment);
+
+                    var productImage = new ProductImage
+                    {
+                        ProductId = productId,
+                        ImageUrl = path,
+                        CreatedAt=TimeUtility.NowIST()
+                    };
+
+                    await _db.ProductImages.AddAsync(productImage);
+                    
+                }
+               await  _db.SaveChangesAsync();
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateProduct(int productId, ProductResponse dto)
+        {
+                var existProduct = await _db.Products.FindAsync(productId);
+                if (existProduct == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+                }
+                var exists = await _db.Products.AnyAsync(x =&gt; x.ProductName == dto.ProductName &amp;&amp; x.ProductId != productId);
+
+                if (exists)
+                {
+                    throw new DataExistsException(MessageHelper.Get(&quot;Products&quot;, &quot;Match&quot;));
+                }
+               
+
+                else
+                {
+                    existProduct.Capacity = dto.Capacity;
+                    existProduct.UpdatedAt = TimeUtility.NowIST();
+                    existProduct.Price = dto.Price;
+                    existProduct.ProductName = dto.ProductName;
+                    existProduct.Type = dto.Type.ToString();
+                    existProduct.Brand = dto.Brand;
+                    existProduct.Stock= dto.Stock;
+                    existProduct.Warranty_Years = dto.Warranty_Years;
+                    existProduct.CapacityValue = dto.CapacityValue;
+                    existProduct.IsActive = true;
+                    existProduct.CategoryId=dto.CategoryId;
+
+                    await _db.SaveChangesAsync();
+                }
+            
+            
+        }
+
+        public async Task DeleteProductById(int productId)
+        {
+            
+                var existProductId = await _db.Products.FirstOrDefaultAsync(x=&gt;x.ProductId==productId);
+                if (existProductId == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+                }
+                else
+                {
+                    existProductId.IsActive = false;
+                    await _db.SaveChangesAsync();
+                }
+           
+        }
+
+        public async Task UpdateProductImage(int imageId, IFormFile image)
+        {
+            
+
+                var existingId = await _db.ProductImages.FirstOrDefaultAsync(x =&gt; x.ImageId == imageId &amp;&amp;x.IsActive);
+                if (existingId==null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NoImage&quot;));
+                }
+                else
+                {
+                    string newPath = await ImageHelper.UpdateProductImages(image, webHostEnvironment, existingId.ImageUrl);
+                    existingId.ImageUrl = newPath;
+                    existingId.UpdatedAt = TimeUtility.NowIST();
+                    existingId.IsActive = true;
+                    await _db.SaveChangesAsync();
+                }
+           
+        }
+        
+        public async Task&lt;IEnumerable&lt;ProductImageResponseDto&gt;&gt; GetIamges(int productId)
+        {
+           
+                var existProductId = await _db.Products.Include(x =&gt; x.ProductImages).FirstOrDefaultAsync(x =&gt; x.ProductId == productId&amp;&amp;x.IsActive);
+                if (existProductId == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+
+                }
+                else
+                {
+                    return existProductId.ProductImages.Where(x =&gt; x.IsActive).Select(x =&gt; new ProductImageResponseDto
+                    {
+                        ImageId=x.ImageId,
+                        ImageUrl=x.ImageUrl,
+                        CreatedAt=x.CreatedAt,
+                        UpdatedAt=x.UpdatedAt
+                    }).ToList();
+                }
+            
+        }
+
+        public async Task DeleteImage(int imageId)
+        {
+            try
+            {
+                var existDataId = await _db.ProductImages.FirstOrDefaultAsync(x =&gt; x.ImageId == imageId);
+                if (existDataId == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get(&quot;Products&quot;,&quot;NoImage&quot;));
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(existDataId.ImageUrl))
+                    {
+                        string existingPath = Path.Combine(webHostEnvironment.WebRootPath, existDataId.ImageUrl.TrimStart(&#39;/&#39;));
+                        if (File.Exists(existingPath))
+                        {
+                            File.Delete(existingPath);
+                        }
+                    }
+                    existDataId.IsActive = false;
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,98,1],[25,9,25,10,1],[26,13,26,22,1],[27,13,27,58,1],[28,9,28,10,1],[31,9,31,10,1],[33,13,33,14,1],[34,17,67,34,1],[69,13,69,33,0],[70,13,70,14,0],[71,17,71,47,0],[72,17,72,18,0],[73,21,73,68,0],[76,17,76,18,0],[77,21,77,53,0],[80,9,80,10,1],[84,9,84,10,1],[86,13,86,14,1],[87,17,87,33,1],[88,17,88,18,1],[89,21,89,97,1],[92,17,92,125,1],[94,17,94,39,1],[95,17,95,18,1],[96,21,96,103,1],[100,17,114,19,1],[115,17,115,50,1],[116,17,116,46,1],[118,13,118,14,1],[119,13,119,30,1],[120,13,120,14,1],[121,17,121,23,1],[123,9,123,10,1],[127,9,127,10,1],[129,17,129,102,1],[130,17,130,40,1],[131,17,131,18,1],[132,21,132,92,1],[135,17,135,18,1],[136,21,148,23,1],[152,9,152,10,1],[157,9,157,10,1],[158,13,158,115,1],[160,13,160,33,1],[161,17,161,88,1],[163,13,163,38,1],[164,13,164,48,1],[165,13,165,55,1],[167,13,167,42,1],[168,9,168,10,1],[173,9,173,10,1],[174,13,174,112,1],[176,13,176,33,1],[177,17,177,88,1],[179,13,179,37,1],[180,13,180,42,1],[181,13,181,38,1],[182,13,182,55,1],[183,13,183,42,1],[184,9,184,10,1],[188,9,188,10,1],[190,13,190,14,1],[191,17,191,109,1],[192,17,192,36,1],[193,17,193,18,1],[194,21,194,92,1],[197,17,197,36,1],[198,21,198,69,1],[200,17,200,35,1],[201,21,201,101,1],[204,17,204,24,1],[204,26,204,35,1],[204,36,204,38,1],[204,39,204,45,1],[205,17,205,18,1],[206,21,206,100,1],[208,21,213,23,1],[215,21,215,68,1],[217,17,217,18,1],[218,16,218,46,1],[219,13,219,14,1],[220,13,220,29,1],[221,13,221,14,1],[222,17,222,23,1],[224,9,224,10,1],[227,9,227,10,1],[228,17,228,76,1],[229,17,229,42,1],[230,17,230,18,1],[231,21,231,92,1],[233,17,233,125,1],[235,17,235,28,1],[236,17,236,18,1],[237,21,237,91,1],[242,17,242,18,1],[243,21,243,58,1],[244,21,244,67,1],[245,21,245,52,1],[246,21,246,64,1],[247,21,247,61,1],[248,21,248,52,1],[249,21,249,51,1],[250,21,250,70,1],[251,21,251,68,1],[252,21,252,50,1],[253,21,253,60,1],[255,21,255,50,1],[256,17,256,18,1],[259,9,259,10,1],[262,9,262,10,1],[264,17,264,104,1],[265,17,265,44,1],[266,17,266,18,1],[267,21,267,92,1],[270,17,270,18,1],[271,21,271,53,1],[272,21,272,50,1],[273,17,273,18,1],[275,9,275,10,1],[278,9,278,10,1],[281,17,281,118,1],[282,17,282,38,1],[283,17,283,18,1],[284,21,284,91,1],[287,17,287,18,1],[288,21,288,124,1],[289,21,289,51,1],[290,21,290,65,1],[291,21,291,48,1],[292,21,292,50,1],[293,17,293,18,1],[295,9,295,10,1],[298,9,298,10,1],[300,17,300,150,1],[301,17,301,44,1],[302,17,302,18,1],[303,21,303,92,1],[307,17,307,18,1],[308,21,308,68,1],[308,68,308,78,1],[308,78,308,92,1],[308,92,314,22,1],[314,22,314,33,1],[317,9,317,10,1],[320,9,320,10,1],[322,13,322,14,1],[323,17,323,106,1],[324,17,324,41,1],[325,17,325,18,1],[326,21,326,90,1],[329,17,329,18,1],[330,21,330,69,1],[331,21,331,22,1],[332,25,332,129,1],[333,25,333,55,1],[334,25,334,26,0],[335,29,335,55,0],[336,25,336,26,0],[337,21,337,22,1],[338,21,338,50,1],[339,21,339,50,1],[340,17,340,18,1],[341,13,341,14,1],[342,13,342,30,1],[343,13,343,14,1],[344,17,344,23,1],[346,9,346,10,1]]);
+    </script>
+  </body>
+</html>

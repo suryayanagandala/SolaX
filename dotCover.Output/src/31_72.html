@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\HelperMethods\TestAsyncEnumerator.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Microsoft.VisualStudio.TestPlatform.Common.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.HelperMethods
+{
+    public class TestAsyncEnumerator&lt;T&gt; : IAsyncEnumerator&lt;T&gt;
+    {
+        private readonly IEnumerator&lt;T&gt; enumerator;
+
+        public TestAsyncEnumerator(IEnumerator&lt;T&gt; enumerator)
+        {
+            this.enumerator = enumerator;
+        }
+      
+
+        public ValueTask DisposeAsync()
+        {
+           return ValueTask.CompletedTask;
+        }
+
+        public ValueTask&lt;bool&gt; MoveNextAsync()
+        {
+            return new ValueTask&lt;bool&gt;(enumerator.MoveNext());
+        }
+        public T Current =&gt; enumerator.Current;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[14,9,14,62,1],[15,9,15,10,1],[16,13,16,42,1],[17,9,17,10,1],[21,9,21,10,1],[22,12,22,43,1],[23,9,23,10,1],[26,9,26,10,1],[27,13,27,63,1],[28,9,28,10,1],[29,29,29,47,1]]);
+    </script>
+  </body>
+</html>

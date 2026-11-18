@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\GenericResponse.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels
+{
+    public class GenericResponse&lt;T&gt;
+    {
+        public bool Status {  get; set; }
+        public object? Data {  get; set; }
+        public string? Error { get; set; }
+
+        public string? Message { get; set; }
+    }
+
+
+    public class OutputResponse
+    {
+        public bool? Status { get; set; }
+
+        public object? Data {  get; set; }
+
+        public string? Error { get; set; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,31,11,35,0],[11,36,11,40,0],[12,32,12,36,0],[12,37,12,41,0],[13,32,13,36,0],[13,37,13,41,0],[15,34,15,38,0],[15,39,15,43,0],[21,31,21,35,0],[21,36,21,40,0],[23,32,23,36,0],[23,37,23,41,0],[25,32,25,36,0],[25,37,25,41,0]]);
+    </script>
+  </body>
+</html>

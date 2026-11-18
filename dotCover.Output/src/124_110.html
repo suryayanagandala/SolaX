@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Helpers\MessageHelper.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Helpers
+{
+    public static class MessageHelper
+    {
+        private static Dictionary&lt;string, Dictionary&lt;string, string&gt;&gt; _messages;
+
+        public static void Initialize(IConfiguration _config)
+        {
+            _messages = _config.Get&lt;Dictionary&lt;string, Dictionary&lt;string, string&gt;&gt;&gt;();
+        }
+
+        public static string Get(string category,string key)
+        {
+            if(_messages.TryGetValue(category,out var group)&amp;&amp; group.TryGetValue(key,out var value)) return value;
+            return $&quot;Messages not found:{category}.{key}&quot;;
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,10,1],[16,13,16,87,1],[17,9,17,10,1],[20,9,20,10,1],[21,13,21,101,1],[21,102,21,115,1],[22,13,22,59,1],[23,9,23,10,1]]);
+    </script>
+  </body>
+</html>

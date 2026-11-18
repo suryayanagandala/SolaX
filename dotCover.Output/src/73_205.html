@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\Utilities\DataInitializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.Utilities
+{
+    public class DataInitializer
+    {
+        public static IQueryable&lt;Users&gt; UsersData()
+        {
+            var users = new List&lt;Users&gt;
+    {
+        new Users{
+            UserId=&quot;ERCXET&quot;,
+            FullName=&quot;Surya&quot;,
+            EmailId=&quot;surya@gmail.com&quot;,
+            Password = BCrypt.Net.BCrypt.HashPassword(&quot;Surya@2003&quot;),
+            PhoneNumber=&quot;987654321&quot;,
+            RoleId=3,
+            IsActive=true,
+            Address=&quot;vijaywada kondapalli&quot;,
+            CreatedBy=&quot;Admin&quot;,
+            CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+        },
+
+        new Users{
+            UserId=&quot;ABX123&quot;,
+            FullName=&quot;Priya Sharma&quot;,
+            EmailId=&quot;priya.sharma@example.com&quot;,
+            Password = BCrypt.Net.BCrypt.HashPassword(&quot;Priya@123&quot;),
+            PhoneNumber=&quot;9123456780&quot;,
+            RoleId=2,
+            IsActive=true,
+            Address=&quot;Hyderabad Banjara Hills&quot;,
+            CreatedBy=&quot;Admin&quot;,
+            CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+        },
+
+        new Users{
+            UserId=&quot;LMN456&quot;,
+            FullName=&quot;Rahul Verma&quot;,
+            EmailId=&quot;rahul.verma@example.com&quot;,
+            Password = BCrypt.Net.BCrypt.HashPassword(&quot;Rahul@2025&quot;),
+            PhoneNumber=&quot;9988776655&quot;,
+            RoleId=1,
+            IsActive=true,
+            Address=&quot;Bengaluru Whitefield&quot;,
+            CreatedBy=&quot;Admin&quot;,
+            CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+        },
+
+        new Users{
+            UserId=&quot;XYZ789&quot;,
+            FullName=&quot;Anita Reddy&quot;,
+            EmailId=&quot;anita.reddy@example.com&quot;,
+            Password = BCrypt.Net.BCrypt.HashPassword(&quot;Anita@2026&quot;),
+            PhoneNumber=&quot;9876501234&quot;,
+            RoleId=3,
+            IsActive=false,
+            Address=&quot;Chennai Anna Nagar&quot;,
+            CreatedBy=&quot;Admin&quot;,
+            CreatedDate=new DateTimeOffset(2025,01,01,10,00,00,TimeSpan.Zero)
+        }
+    };
+
+            return users.AsQueryable();
+        }
+
+        public static IQueryable&lt;OtpManager&gt; OtpManagers()
+        {
+            var data = new List&lt;OtpManager&gt;
+            {
+                new OtpManager{Id=1,Email=&quot;surya@gmail.com&quot;,Otptext=&quot;800354&quot;,Otptype=&quot;Forgot Password&quot;,
+                CreatedDate=TimeUtility.NowIST(),IsUsed=false,Expiration=TimeUtility.NowIST().AddMinutes(5),token=Guid.Parse(&quot;EA007833-178D-4C11-8A78-C4BA6D897F12&quot;)}
+            };
+            return data.AsQueryable();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,10,1],[16,13,69,7,1],[71,13,71,40,1],[72,9,72,10,1],[75,9,75,10,1],[76,13,80,15,1],[81,13,81,39,1],[82,9,82,10,1]]);
+    </script>
+  </body>
+</html>

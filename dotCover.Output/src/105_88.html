@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\OrderRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using MailKit.Search;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class OrderRepository : IOrderRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public OrderRepository(ApplicationDbContext db)
+        {
+           _db=db;   
+        }
+
+        public async Task&lt;IEnumerable&lt;OrderDto&gt;&gt; GetOrderHistory(string userId)
+        {
+            try
+            {
+                var result= await _db.Orders.Where(x =&gt; x.UserId == userId &amp;&amp; x.Payment.Any()).OrderByDescending(x =&gt; x.CreatedAt).
+                Select(x =&gt; new OrderDto
+                {
+                    OrderId = x.OrderId,
+                    UserId = x.UserId,
+
+                    TotalAmount = x.TotalAmount,
+                    Status = x.Status.ToString(),
+                    DeliveryDate=x.Delivery!.DeliveryAt,
+                    Items = x.OrderItem.Select(i =&gt; new OrderItemCreateDto
+                    {
+                        ProductId = i.ProductId,
+                        ProductName = i.Product.ProductName,
+                        Price = i.Product.Price,
+                        Product = new ProductDto
+                        {
+                            Price = i.Product.Price,
+                            Brand = i.Product.Brand,
+                            Type = i.Product.Type,
+                            Capacity = i.Product.Capacity,
+                            CategoryName = i.Product.Category.CategoryName,
+                            Description = i.Product.Description,
+                            ImageUrl = i.Product.ProductImages.Select(x =&gt; x.ImageUrl).First()
+                        }
+
+                    }).ToList(),
+
+                    Payment = x.Payment.Select(x =&gt; new PaymentDto
+                    {
+                        PaymentMethod = x.PaymentMethod,
+                        PaymentStatus = x.PaymentStatus,
+                        PaymentDate = x.PaymentDate.DateTime,
+
+                    }).ToList(),
+
+                }).ToListAsync();
+
+                return result;
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;CreateOrderResponse&gt; PlaceOrder(OrderCreateDto dto)
+        {
+            try
+            {
+                decimal totalAmount = 0;
+
+                var orderItems = new List&lt;OrderItems&gt;();
+
+                if (dto.IsBuyNow)
+                {
+                    if (dto.Quantity &lt;= 0)
+                        throw new Exception(&quot;Quantity must be greater than zero&quot;);
+                    var product = await _db.Products.FirstOrDefaultAsync(x =&gt; x.ProductId == dto.ProductId &amp;&amp; x.IsActive);
+
+                    if (product == null)
+                    {
+                        throw new Exception(&quot;No product found based on id or proudct is in active&quot;);
+                    }
+
+                    else
+                    {
+                        totalAmount = product.Price * dto.Quantity!.Value;
+                        orderItems.Add(new OrderItems
+                        {
+                            ProductId = product.ProductId,
+                            Quantity=dto.Quantity!.Value,
+                            UnitPrice=product.Price,
+
+
+                        });
+                    }
+                }
+
+                else
+                {
+                    var cart = await _db.Carts.Include(x =&gt; x.CartItems).ThenInclude(x =&gt; x.Product).FirstOrDefaultAsync(x =&gt; x.UserId == dto.UserId &amp;&amp; x.IsActive);
+
+                    if (cart == null || !cart.CartItems.Any())
+                    {
+                        throw new Exception(&quot;Cart is empty&quot;);
+                    }
+
+                    totalAmount = cart.CartItems.Sum(x =&gt; x.Quantity * x.Product.Price);
+
+                    foreach (var item in cart.CartItems)
+                    {
+                        orderItems.Add(new OrderItems
+                        {
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            UnitPrice = item.Product.Price
+                        });
+                    }
+
+                    
+                }
+
+
+                var order = new Orders
+                {
+                    UserId = dto.UserId,
+                    DeliveryAddress = dto.DeliveryAddress,
+                    FullName = dto.DeliveryName,
+                    PhoneNumber = dto.DeliveryPhone,
+                    Status = OrderStatus.PAYMENT_PENDING,
+                    TotalAmount = totalAmount,
+                    IsActive = true
+                };
+
+                await _db.Orders.AddAsync(order);
+                await _db.SaveChangesAsync();
+
+                foreach (var item in orderItems)
+                {
+                    item.OrderId = order.OrderId;
+                    await _db.OrderItems.AddAsync(item);
+                }
+
+                await _db.SaveChangesAsync();
+
+                return new CreateOrderResponse
+                {
+                    OrderId = order.OrderId,
+                    OrderStatus=order.Status.ToString(),
+                };
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;OrderDto&gt; GetOrderDetails(string userId, int orderId)
+        {
+            try
+            {
+                var details=await _db.Orders.Include(x=&gt;x.OrderItem).ThenInclude(x=&gt;x.Product).FirstOrDefaultAsync(x=&gt;x.UserId == userId&amp;&amp;x.OrderId==orderId);
+                if (details == null)
+                {
+                    throw new Exception($&quot;Invalid UserId or Invalid OrderId&quot;);
+                }
+                else
+                {
+                    return  new OrderDto
+                    {
+                        OrderId = details.OrderId,
+                        UserId=details.UserId,
+                        Status = details.Status.ToString(),
+                        TotalAmount = details.TotalAmount,
+                        Items = details.OrderItem.Select(i =&gt; new OrderItemCreateDto
+                        {
+                            ProductId = i.ProductId,
+                            ProductName = i.Product.ProductName,
+                            Quantity = i.Quantity,
+                            Price = i.UnitPrice
+                        }).ToList()
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task CancelOrder(int orderId, string userId)
+        {
+            var transcations = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var order = await _db.Orders.Include(x =&gt; x.OrderItem).FirstOrDefaultAsync(x =&gt; x.OrderId == orderId &amp;&amp; x.UserId == userId);
+                if (order == null)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Order&quot;, &quot;OrderNotFound&quot;));
+                }
+
+                if (order.Status == OrderStatus.CONFIRMED)
+                {
+                    foreach (var item in order.OrderItem)
+                    {
+                        var product = await _db.Products.FindAsync(item.ProductId);
+                        if (product == null)
+                        {
+                            throw new Exception(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+                        }
+                        product.Stock += item.Quantity;
+                        _db.Products.Update(product);
+
+                    }
+                }
+                order.Status = OrderStatus.CANCELLED;
+                order.UpdatedAt = TimeUtility.NowIST();
+                order.IsActive = false;
+                _db.Orders.Update(order);
+
+                await _db.SaveChangesAsync();
+                await transcations.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transcations.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task&lt;UserCheckOutDto&gt; GetUserDetails(string userId)
+        {
+            try
+            {
+                var user = await _db.Users.Where(x =&gt; x.UserId == userId).Select(x =&gt; new UserCheckOutDto
+                {
+                    FullName = x.FullName,
+                    PhoneNumber = x.PhoneNumber
+                }).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    throw new Exception($&quot;No UserId Found of {user}&quot;);
+                }
+                else
+                {
+                    return user;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;List&lt;TackDelivery&gt;&gt; GetTrackDelivery(int orderId)
+        {
+            try
+            {
+                var delivery = await _db.Set&lt;Delivery&gt;().Include(x=&gt;x.Order).Where(x=&gt;x.Order.OrderId==orderId&amp;&amp;x.OrderId==orderId).FirstOrDefaultAsync();
+
+                if(delivery == null)
+                {
+                    throw new Exception(&quot;No orderId found&quot;);
+                }
+                var list =new List&lt;TackDelivery&gt;();
+
+                
+
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Confirmed&quot;,
+                    Status = &quot;Completed&quot;,
+                });
+
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Shipped&quot;,
+                    Status = delivery.Order.Status==OrderStatus.SHIPPED?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;OutofDelivery&quot;,
+                    Status = delivery.Status==DeliveryStatus.OutForDelivery.ToString()?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Delievered&quot;,
+                    Status = delivery.Status==DeliveryStatus.Delivered.ToString()?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+
+
+
+
+
+
+                return list;
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,56,0],[23,9,23,10,0],[24,12,24,19,0],[25,9,25,10,0],[28,9,28,10,0],[30,13,30,14,0],[31,17,66,34,0],[68,17,68,31,0],[70,13,70,29,0],[71,13,71,14,0],[72,17,72,23,0],[74,9,74,10,0],[77,9,77,10,0],[79,13,79,14,0],[80,17,80,41,0],[82,17,82,57,0],[84,17,84,34,0],[85,17,85,18,0],[86,21,86,43,0],[87,25,87,83,0],[88,21,88,123,0],[90,21,90,41,0],[91,21,91,22,0],[92,25,92,101,0],[96,21,96,22,0],[97,25,97,75,0],[98,25,105,28,0],[106,21,106,22,0],[107,17,107,18,0],[110,17,110,18,0],[111,21,111,165,0],[113,21,113,63,0],[114,21,114,22,0],[115,25,115,62,0],[118,21,118,59,0],[118,59,118,87,0],[118,87,118,89,0],[120,21,120,28,0],[120,30,120,38,0],[120,39,120,41,0],[120,42,120,56,0],[121,21,121,22,0],[122,25,127,28,0],[128,21,128,22,0],[131,17,131,18,0],[134,17,143,19,0],[145,17,145,50,0],[146,17,146,46,0],[148,17,148,24,0],[148,26,148,34,0],[148,35,148,37,0],[148,38,148,48,0],[149,17,149,18,0],[150,21,150,50,0],[151,21,151,57,0],[152,17,152,18,0],[154,17,154,46,0],[156,17,160,19,0],[163,13,163,30,0],[164,13,164,14,0],[165,17,165,23,0],[167,9,167,10,0],[171,9,171,10,0],[173,13,173,14,0],[174,17,174,159,0],[175,17,175,37,0],[176,17,176,18,0],[177,21,177,79,0],[180,17,180,18,0],[181,21,187,63,0],[187,63,193,26,0],[193,26,194,23,0],[197,13,197,30,0],[198,13,198,14,0],[199,17,199,23,0],[201,9,201,10,0],[204,9,204,10,0],[205,13,205,75,0],[207,13,207,14,0],[208,17,208,141,0],[209,17,209,35,0],[210,17,210,18,0],[211,21,211,86,0],[214,17,214,59,0],[215,17,215,18,0],[216,21,216,28,0],[216,30,216,38,0],[216,39,216,41,0],[216,42,216,57,0],[217,21,217,22,0],[218,25,218,84,0],[219,25,219,45,0],[220,25,220,26,0],[221,29,221,92,0],[223,25,223,56,0],[224,25,224,54,0],[226,21,226,22,0],[227,17,227,18,0],[228,17,228,54,0],[229,17,229,56,0],[230,17,230,40,0],[231,17,231,42,0],[233,17,233,46,0],[234,17,234,50,0],[235,13,235,14,0],[236,13,236,30,0],[237,13,237,14,0],[238,17,238,52,0],[239,17,239,23,0],[240,13,240,14,0],[241,9,241,10,0],[244,9,244,10,0],[246,13,246,14,0],[247,17,251,42,0],[253,17,253,34,0],[254,17,254,18,0],[255,21,255,71,0],[258,17,258,18,0],[259,21,259,33,0],[262,13,262,30,0],[263,13,263,14,0],[264,17,264,23,0],[266,9,266,10,0],[270,9,270,10,0],[272,13,272,14,0],[273,17,273,155,0],[275,17,275,37,0],[276,17,276,18,0],[277,21,277,61,0],[279,17,279,52,0],[283,17,287,20,0],[289,17,293,20,0],[294,17,298,20,0],[299,17,303,20,0],[310,17,310,29,0],[313,13,313,30,0],[314,13,314,14,0],[315,17,315,23,0],[317,9,317,10,0]]);
+    </script>
+  </body>
+</html>

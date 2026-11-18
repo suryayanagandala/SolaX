@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\InstallRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using iText.Kernel.Pdf.Tagutils;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class InstallRepository : IInstallRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        private readonly IWebHostEnvironment _env;
+
+        public InstallRepository(ApplicationDbContext db,IWebHostEnvironment env)
+        {
+            _db = db;
+            _env = env;
+
+        }
+
+        public async Task&lt;List&lt;InstallationCreateDto&gt;&gt; GetInstallationStatus(string userId)
+        {
+            try
+            {
+                var installations =await  (from d in _db.Deliveries join t in _db.Technicians on d.AssignedToTechId equals t.TechnicianId
+                                     join i in _db.Installations on d.DeliveryId equals i.DeliveryId join it in _db.InstallationTechnicians
+                                     on i.InstallationId equals it.InstallationId where t.User.UserId == userId &amp;&amp; d.AssignedToTechId == it.TechnicianId &amp;&amp;
+                                     (i.Status == &quot;Assigned&quot; || i.Status == &quot;InProgress&quot;)
+                                     select new InstallationCreateDto
+                                     {
+                                         OrderId=d.OrderId,
+                                         DeliveryId=d.DeliveryId,
+                                         DeliveredDate = d.DeliveryAt??DateTimeOffset.Now,
+                                         InstallationPrice=it.ServicePrice,
+                                         InstallationId=i.InstallationId,
+                                         InstallationStatus=i.Status,
+
+
+                                     }).OrderBy(x=&gt;x.DeliveredDate).ToListAsync();
+                foreach(var installation in installations)
+                {
+                    if (installation.InstallationStatus == &quot;InProgress&quot;)
+                    {
+                        installation.Actions = &quot;Mark as Completed&quot;;
+                    }
+
+                    else if(installation.InstallationStatus == &quot;Assigned&quot;)
+                    {
+                        installation.Actions = &quot;InProgress&quot;;
+                    }
+
+                    else
+                    {
+                        installation.Actions = &quot;Completed&quot;;
+                    }
+                }
+
+                return installations;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task MarkasProgress(string id)
+        {
+            try
+            {
+                var reports = await _db.Set&lt;Installations&gt;().Include(x =&gt; x.installationTechnicians).ThenInclude(x =&gt; x.Technician).Where(x =&gt; x.InstallationId == id).FirstOrDefaultAsync();
+                if (reports == null)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Installation&quot;, &quot;NotFound&quot;));
+                }
+
+                else
+                {
+                    reports.Status = reports.Status == InstallationStatus.Assigned.ToString() ?
+                         InstallationStatus.InProgress.ToString() : reports.Status == InstallationStatus.InProgress.ToString() ?
+                         InstallationStatus.Completed.ToString() : reports.Status;
+                    await _db.SaveChangesAsync();
+
+                    var messages = new Notifications
+                    {
+                        UserId = reports.installationTechnicians.First().Technician.UserId,
+                        Message = &quot;Updated status&quot;,
+                        Type = NotificationType.System,
+
+                    };
+                    await _db.Notifications.AddAsync(messages);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;string&gt; UploadInstallationReports(InstallationReportDto dto)
+        {
+            using var transcations = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                
+                var installation = await _db.Set&lt;Installations&gt;().Include(x=&gt;x.installationTechnicians).ThenInclude(x=&gt;x.Technician).Where(x =&gt; x.InstallationId == dto.InstallationId).FirstOrDefaultAsync();
+
+                if (installation == null)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Installation&quot;, &quot;NotFound&quot;));
+                }
+
+              
+
+                if (!dto.Images.Any() || dto.Images.Count == 0)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Installation&quot;, &quot;None&quot;));
+                }
+
+                var images = await UploadInstallationReportsImages(dto.Images);
+                var imageUrls = JsonSerializer.Serialize(images);
+
+                installation.Status = InstallationStatus.Completed.ToString();
+                installation.CompletedDate = TimeUtility.NowIST();
+                _db.Installations.Update(installation);
+
+
+                var reports = new InstallationReports
+                {
+                    InstallationId = dto.InstallationId,
+                    Notes = dto.Notes,
+                    CheckList = dto.CheckList,
+                    Image_Url = imageUrls,
+
+                };
+
+                await _db.InstallationReports.AddAsync(reports);
+                await _db.SaveChangesAsync();
+                await transcations.CommitAsync();
+               
+
+                return $&quot;{installation.installationTechnicians.First().Technician.UserId}&quot;;
+            }
+            catch (Exception)
+            {
+                await transcations.RollbackAsync();
+                throw;
+            }
+        }
+
+
+       
+
+        private async Task&lt;List&lt;string&gt;&gt;UploadInstallationReportsImages(List&lt;IFormFile&gt; files)
+        {
+            try
+            {
+
+                if (files == null || files.Count == 0)
+                    throw new Exception(&quot;No files uploaded&quot;);
+
+                var uploadPaths = new List&lt;string&gt;();
+
+                var folderPath = Path.Combine(_env.WebRootPath, &quot;uploads&quot;, &quot;installations&quot;);
+
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                foreach (var file in files)
+                {
+                    var fileName = $&quot;{Guid.NewGuid()}{Path.GetExtension(file.FileName)}&quot;;
+                    var filePath = Path.Combine(folderPath, fileName);
+
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+
+                    uploadPaths.Add($&quot;/uploads/installations/{fileName}&quot;);
+                }
+
+                return uploadPaths;
+            }
+
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        
+        
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,9,27,82,0],[28,9,28,10,0],[29,13,29,22,0],[30,13,30,24,0],[32,9,32,10,0],[35,9,35,10,0],[37,13,37,14,0],[38,17,52,83,0],[53,17,53,24,0],[53,25,53,41,0],[53,42,53,44,0],[53,45,53,58,0],[54,17,54,18,0],[55,21,55,73,0],[56,21,56,22,0],[57,25,57,68,0],[58,21,58,22,0],[60,26,60,75,0],[61,21,61,22,0],[62,25,62,61,0],[63,21,63,22,0],[66,21,66,22,0],[67,25,67,60,0],[68,21,68,22,0],[69,17,69,18,0],[71,17,71,38,0],[73,13,73,30,0],[74,13,74,14,0],[75,17,75,23,0],[77,9,77,10,0],[80,9,80,10,0],[82,13,82,14,0],[83,17,83,190,0],[84,17,84,37,0],[85,17,85,18,0],[86,21,86,88,0],[90,17,90,18,0],[91,21,93,83,0],[94,21,94,50,0],[96,21,102,23,0],[103,21,103,64,0],[104,17,104,18,0],[105,13,105,14,0],[106,13,106,30,0],[107,13,107,14,0],[108,17,108,23,0],[110,9,110,10,0],[114,9,114,10,0],[115,13,115,81,0],[117,13,117,14,0],[119,17,119,207,0],[121,17,121,42,0],[122,17,122,18,0],[123,21,123,88,0],[128,17,128,64,0],[129,17,129,18,0],[130,21,130,84,0],[133,17,133,80,0],[134,17,134,66,0],[136,17,136,79,0],[137,17,137,67,0],[138,17,138,56,0],[141,17,148,19,0],[150,17,150,65,0],[151,17,151,46,0],[152,17,152,50,0],[155,17,155,92,0],[157,13,157,30,0],[158,13,158,14,0],[159,17,159,52,0],[160,17,160,23,0],[161,13,161,14,0],[162,9,162,10,0],[168,9,168,10,0],[170,13,170,14,0],[172,17,172,55,0],[173,21,173,62,0],[175,17,175,54,0],[177,17,177,93,0],[179,17,179,51,0],[180,21,180,59,0],[182,17,182,24,0],[182,26,182,34,0],[182,35,182,37,0],[182,38,182,43,0],[183,17,183,18,0],[184,21,184,90,0],[185,21,185,71,0],[187,21,187,82,0],[188,21,188,52,0],[190,21,190,75,0],[191,17,191,18,0],[193,17,193,36,0],[197,13,197,30,0],[198,13,198,14,0],[199,17,199,23,0],[201,9,201,10,0]]);
+    </script>
+  </body>
+</html>

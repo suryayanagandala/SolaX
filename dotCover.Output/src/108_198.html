@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\AdminRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class AdminRepository : IAdminRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public AdminRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+        public async Task&lt;AdminDashboardStatsDto&gt; GetStats()
+        {
+            return new AdminDashboardStatsDto
+            {
+                Users = await _db.Users.CountAsync(),
+
+                Employees = await _db.Users.CountAsync(x =&gt; x.RoleId == (int)RoleIds.Technician),
+
+                Orders = await _db.Orders.CountAsync(),
+
+                Products = await _db.Products.CountAsync(),
+
+                TotalEmployess = await _db.Technicians.Where(x =&gt; x.IsActive).CountAsync(),
+
+                PanlesCount = await _db.Panels.Where(x =&gt; x.IsActive).CountAsync(),
+
+                Installation = await _db.Installations.Where(x =&gt; x.Status == InstallationStatus.Completed.ToString()).CountAsync(),
+
+                Delieveries = await _db.Deliveries.Where(x =&gt; x.Status == DeliveryStatus.Delivered.ToString()).CountAsync()
+            };
+
+        }
+
+        public async Task&lt;IEnumerable&lt;Users&gt;&gt; GetAllUsers()
+        {
+            try
+            {
+                var customersData = await _db.Users.Where(x =&gt; x.RoleId == 3).OrderByDescending(x =&gt; x.CreatedDate).ToListAsync();
+                return customersData;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task&lt;object&gt; GetGlobalProduction()
+        {
+            try
+            {
+                var now = TimeUtility.NowIST();
+
+                var currentYear = now.Year;
+                var currentMonth = now.Month;
+
+                var startOfYear = new DateTime(currentYear, 1, 1);
+                var endOfYear = startOfYear.AddYears(1);
+
+                var startOfDay = now.Date;
+                var endOfDay = startOfDay.AddDays(1);
+
+                var previousMonthDate = now.AddMonths(-1);
+                var previousMonth = previousMonthDate.Month;
+
+           
+                var yearlyData = await _db.SolarPerformances
+                    .Where(x =&gt; x.Generated_at &gt;= startOfYear &amp;&amp;
+                                x.Generated_at &lt; endOfYear)
+                    .ToListAsync();  
+
+               
+                var monthlyTrend = yearlyData
+                    .GroupBy(x =&gt; x.Generated_at.Month)
+                    .Select(k =&gt; new
+                    {
+                        Month = k.Key,
+                        TotalPower = k.Sum(x =&gt; x.Power)
+                    })
+                    .OrderBy(x =&gt; x.Month)
+                    .ToList();
+
+                var todayData = await _db.SolarPerformances
+                    .Where(x =&gt; x.Generated_at &gt;= startOfDay &amp;&amp;
+                                x.Generated_at &lt; endOfDay)
+                    .ToListAsync();   
+
+               
+                var dailyTrend = todayData
+                    .GroupBy(x =&gt; x.Generated_at.Hour)
+                    .Select(x =&gt; new
+                    {
+                        Hour = x.Key,
+                        TotalPower = x.Sum(x =&gt; x.Power)
+                    })
+                    .OrderBy(x =&gt; x.Hour)
+                    .ToList();
+
+                var currentMonthTotal = monthlyTrend
+                    .Where(x =&gt; x.Month == currentMonth)
+                    .Select(x =&gt; x.TotalPower)
+                    .FirstOrDefault();
+
+                var previousMonthTotal = monthlyTrend.Where(x =&gt; x.Month == previousMonth).Select(x =&gt; x.TotalPower)
+                               .FirstOrDefault();
+
+                decimal growthPercent = 0m;
+
+                if (previousMonthTotal &gt; 0)
+                {
+                    growthPercent =(decimal)((currentMonthTotal - previousMonthTotal)/ previousMonthTotal) * 100m;
+                }
+
+                return new
+                {
+                    monthlyTrend,
+                    dailyTrend,
+                    changePercent = growthPercent
+                };
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;object&gt; ProductionTrend()
+        {
+            try
+            {
+                var now = TimeUtility.NowIST();
+
+                var currentMonthStart = new DateOnly(now.Year, now.Month, 1);
+                var nextMonthStart = currentMonthStart.AddMonths(1);
+
+                var previousMonthStart = currentMonthStart.AddMonths(-1);
+                var previousMonthEnd = currentMonthStart;
+
+               
+                var currentMonthData = await _db.OrderItems
+                    .Where(x =&gt; x.Order.Status == OrderStatus.DELIVERED &amp;&amp;
+                                x.Order.OrderDate &gt;= currentMonthStart &amp;&amp;
+                                x.Order.OrderDate &lt; nextMonthStart)
+                    .Include(x =&gt; x.Product)
+                        .ThenInclude(p =&gt; p.ProductImages)
+                    .ToListAsync(); 
+
+                var previousMonthData = await _db.OrderItems
+                    .Where(x =&gt; x.Order.Status == OrderStatus.DELIVERED &amp;&amp;
+                                x.Order.OrderDate &gt;= previousMonthStart &amp;&amp;
+                                x.Order.OrderDate &lt; previousMonthEnd)
+                    .Include(x =&gt; x.Product)
+                        .ThenInclude(p =&gt; p.ProductImages)
+                    .ToListAsync(); 
+
+              
+                var currentSales = currentMonthData
+                    .GroupBy(x =&gt; new
+                    {
+                        x.ProductId,
+                        x.Product.ProductName,
+                        ImageUrl = x.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                    })
+                    .Select(g =&gt; new
+                    {
+                        g.Key.ProductId,
+                        g.Key.ProductName,
+                        g.Key.ImageUrl,
+                        TotalQuantity = g.Sum(x =&gt; x.Quantity)
+                    })
+                    .ToList();
+
+                var previousSales = previousMonthData
+                    .GroupBy(x =&gt; new
+                    {
+                        x.ProductId,
+                        x.Product.ProductName,
+                        ImageUrl = x.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                    })
+                    .Select(g =&gt; new
+                    {
+                        g.Key.ProductId,
+                        TotalQuantity = g.Sum(x =&gt; x.Quantity)
+                    })
+                    .ToList();
+
+                var result = currentSales.Select(current =&gt;
+                {
+                    var previous = previousSales
+                        .FirstOrDefault(p =&gt; p.ProductId == current.ProductId);
+
+                    double percent = 0;
+
+                    if (previous != null &amp;&amp; previous.TotalQuantity &gt; 0)
+                    {
+                        percent = ((double)(current.TotalQuantity - previous.TotalQuantity)
+                                  / previous.TotalQuantity) * 100;
+                    }
+
+                    return new
+                    {
+                        current.ImageUrl,
+                        current.ProductId,
+                        current.ProductName,
+                        current.TotalQuantity,
+                        changePercentage = percent
+                    };
+                })
+                .OrderByDescending(x =&gt; x.changePercentage)
+                .ToList();
+
+                return result;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;object&gt; GetProductionUpdate()
+        {
+            try
+            {
+                var now = TimeUtility.NowIST();
+                var startOfDay = now.Date;
+                var endOfDay = startOfDay.AddDays(1);
+
+             
+                var offlinePanels = await _db.SolarPerformances
+                    .Include(x =&gt; x.Panel)
+                    .Where(x =&gt; x.Generated_at &gt;= startOfDay &amp;&amp;
+                                x.Generated_at &lt; endOfDay &amp;&amp;
+                                x.PanelId != x.Panel.PanelId)
+                    .CountAsync();
+
+               
+                var activePerformances = await _db.SolarPerformances
+                    .Where(x =&gt; x.IsActive)
+                    .ToListAsync();
+
+                var lowProductionPanels = activePerformances
+                    .GroupBy(x =&gt; x.PanelId)  
+                    .Select(g =&gt; new
+                    {
+                        PanelId = g.Key,
+                        TotalPower = g.Sum(x =&gt; x.Power)
+                    })
+                    .Count(x =&gt; x.TotalPower &lt; 500);
+
+              
+                var lowProductStock = await _db.Products
+                    .Where(x =&gt; x.Stock &lt;= 20 &amp;&amp; x.IsActive)
+                    .Select(x =&gt; new
+                    {
+                        x.ProductId,
+                        x.ProductName,
+                        x.Stock
+                    })
+                    .ToListAsync();
+
+                return new
+                {
+                    offlinePanels,
+                    lowProductionPanels,
+                    lowProductStock
+                };
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;List&lt;object&gt;&gt; SoldProducts()
+        {
+            try
+            {
+                var soldProducts = await _db.OrderItems.Where(x =&gt; x.Order.Status == OrderStatus.DELIVERED).
+                                 GroupBy(x =&gt; new
+                                 {
+                                     x.ProductId,
+                                     x.Product.ProductName,
+                                     x.Product.ProductImages.First().ImageUrl,
+                                 }).Select(x =&gt; new
+                                 {
+                                     x.Key.ProductId,
+                                     x.Key.ProductName,
+                                     x.Key.ImageUrl,
+                                     Quantity = x.Sum(x =&gt; x.Quantity)
+                                 }).ToListAsync();
+                return new List&lt;object&gt;
+                {
+                    soldProducts
+                };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,9,20,56,1],[21,9,21,10,1],[22,13,22,22,1],[23,9,23,10,1],[25,9,25,10,1],[26,13,43,15,1],[45,9,45,10,1],[48,9,48,10,1],[50,13,50,14,1],[51,17,51,131,1],[52,17,52,38,1],[54,13,54,33,1],[55,13,55,14,1],[56,17,56,49,1],[58,9,58,10,1],[61,9,61,10,1],[63,13,63,14,1],[64,17,64,48,1],[66,17,66,44,1],[67,17,67,46,1],[69,17,69,67,1],[70,17,70,57,1],[72,17,72,43,1],[73,17,73,54,1],[75,17,75,59,1],[76,17,76,61,1],[79,17,82,36,1],[85,17,86,35,1],[86,35,86,55,1],[86,55,87,34,1],[87,34,90,49,1],[90,49,90,56,1],[90,56,91,22,1],[91,22,92,35,1],[92,35,92,42,1],[92,42,93,31,1],[95,17,98,36,1],[101,17,102,35,1],[102,35,102,54,1],[102,54,103,34,1],[103,34,106,49,1],[106,49,106,56,1],[106,56,107,22,1],[107,22,108,35,1],[108,35,108,41,1],[108,41,109,31,1],[111,17,112,33,1],[112,33,112,56,1],[112,56,113,34,1],[113,34,113,46,1],[113,46,114,39,1],[116,17,116,66,1],[116,66,116,90,1],[116,90,116,104,1],[116,104,116,116,1],[116,116,117,50,1],[119,17,119,44,1],[121,17,121,44,1],[122,17,122,18,1],[123,21,123,115,1],[124,17,124,18,1],[126,17,131,19,1],[133,13,133,18,0],[134,13,134,14,0],[135,17,135,23,0],[137,9,137,10,1],[140,9,140,10,1],[142,13,142,14,1],[143,17,143,48,1],[145,17,145,78,1],[146,17,146,69,1],[148,17,148,74,1],[149,17,149,58,1],[152,17,158,36,1],[160,17,166,36,1],[169,17,170,35,1],[170,35,175,22,0],[175,22,176,34,1],[176,34,181,52,0],[181,52,181,62,0],[181,62,182,22,0],[182,22,183,31,1],[185,17,186,35,1],[186,35,191,22,0],[191,22,192,34,1],[192,34,195,52,0],[195,52,195,62,0],[195,62,196,22,0],[196,22,197,31,1],[199,17,200,17,1],[200,17,200,18,0],[200,18,201,21,1],[201,21,202,46,0],[202,46,202,78,0],[202,78,202,80,0],[202,80,204,21,1],[204,21,204,40,0],[204,40,206,21,1],[206,21,206,72,0],[206,72,207,21,1],[207,21,207,22,0],[207,22,208,25,1],[208,25,209,67,0],[209,67,210,21,1],[210,21,210,22,0],[210,22,212,21,1],[212,21,219,23,0],[219,23,220,17,1],[220,17,220,18,0],[220,18,221,41,1],[221,41,221,59,0],[221,59,222,27,1],[224,17,224,31,1],[226,13,226,18,0],[227,13,227,14,0],[228,17,228,23,0],[230,9,230,10,1],[233,9,233,10,1],[235,13,235,14,1],[236,17,236,48,1],[237,17,237,43,1],[238,17,238,54,1],[241,17,246,35,1],[249,17,251,36,1],[253,17,254,35,1],[254,35,254,44,1],[254,44,255,34,1],[255,34,258,49,1],[258,49,258,56,1],[258,56,259,22,1],[259,22,260,33,1],[260,33,260,51,1],[260,51,260,53,1],[263,17,271,36,1],[273,17,278,19,1],[280,13,280,18,0],[281,13,281,14,0],[282,17,282,23,0],[284,9,284,10,1],[288,9,288,10,1],[290,13,290,14,1],[291,17,303,51,1],[304,17,307,19,1],[309,13,309,30,0],[310,13,310,14,0],[311,17,311,23,0],[313,9,313,10,1]]);
+    </script>
+  </body>
+</html>

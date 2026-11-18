@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Categories.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    [Table(&quot;Categories&quot;)]
+    public class Category
+    {
+        [Key]
+        public int CategoryId { get; set; }
+
+        [Required, MaxLength(100)]
+        public string CategoryName { get; set; } = null!;
+
+        [Required]
+        public required string Slug { get; set; }
+
+        public string? Description { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset? UpdatedAt { get; set; }
+
+        public int? ParentCategoryId { get; set; }
+
+        public string? DeletedReason {  get; set; }
+
+        public DateTimeOffset? DeletedAt {  get; set; }
+
+        [ForeignKey(nameof(ParentCategoryId))]
+        public Category? ParentCategory { get; set; }
+
+
+
+        public ICollection&lt;Category&gt; SubCategories { get; set; } = new List&lt;Category&gt;();
+
+        public ICollection&lt;Products&gt; Products { get; set; }= new List&lt;Products&gt;();
+
+        public bool IsActive { get; set; } = true;
+    }
+
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,33,15,37,0],[15,38,15,42,0],[18,38,18,42,0],[18,43,18,47,0],[18,52,18,57,0],[21,39,21,43,0],[21,44,21,48,0],[23,38,23,42,0],[23,43,23,47,0],[25,43,25,47,0],[25,48,25,52,0],[27,44,27,48,0],[27,49,27,53,0],[29,40,29,44,0],[29,45,29,49,0],[31,41,31,45,0],[31,46,31,50,0],[33,45,33,49,0],[33,50,33,54,0],[36,43,36,47,0],[36,48,36,52,0],[40,54,40,58,0],[40,59,40,63,0],[40,68,40,88,0],[42,49,42,53,0],[42,54,42,58,0],[42,62,42,82,0],[44,32,44,36,0],[44,37,44,41,0],[44,46,44,50,0]]);
+    </script>
+  </body>
+</html>

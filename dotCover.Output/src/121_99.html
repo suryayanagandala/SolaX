@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\BusinessLayer\CartRepositoryService.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.DTO_S;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BusinessLayer
+{
+    public class CartRepositoryService
+    {
+        private readonly IUnitOfWork unitOfWork;
+
+        public CartRepositoryService(IUnitOfWork unitOfWork)
+        {
+            this.unitOfWork = unitOfWork;   
+        }
+
+        public async Task AddToCartAsync(AddToCartDto dto)
+        {
+            await this.unitOfWork.cartRepository.AddToCart(dto);
+        }
+
+        public async Task UpdateCartAsync(UpdateCartItemDto dto)
+        {
+            await this.unitOfWork.cartRepository.UpdateCart(dto);
+        }
+
+        public async Task RemoveCartItem(int id)
+        {
+            await this.unitOfWork.cartRepository.DeleteCartItem(id);
+        }
+
+        public async Task&lt;CartResponseDto&gt; GetUserCart(string userId)
+        {
+            return await  this.unitOfWork.cartRepository.GetCartResponse(userId);
+        }
+
+        public async Task&lt;int&gt; GetCountOfCartItems(string userId)
+        {
+            return await this.unitOfWork.cartRepository.CountCartItems(userId);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,9,15,61,0],[16,9,16,10,0],[17,13,17,42,0],[18,9,18,10,0],[21,9,21,10,0],[22,13,22,65,0],[23,9,23,10,0],[26,9,26,10,0],[27,13,27,66,0],[28,9,28,10,0],[31,9,31,10,0],[32,13,32,69,0],[33,9,33,10,0],[36,9,36,10,0],[37,13,37,82,0],[38,9,38,10,0],[41,9,41,10,0],[42,13,42,80,0],[43,9,43,10,0]]);
+    </script>
+  </body>
+</html>

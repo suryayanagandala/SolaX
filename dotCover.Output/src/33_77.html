@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Orders.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.Enums;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+   
+
+    [Table(&quot;Orders&quot;)]
+    public class Orders
+    {
+        [Key]
+        [Column(&quot;OrderId&quot;)]
+        public int OrderId {  get; set; }
+
+        [Required,StringLength(6)]
+        [Column(&quot;UserId&quot;)]
+        public required string UserId {  get; set; }
+
+        [Column(&quot;OrderDate&quot;)]
+        public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+        [Required,MaxLength(50)]
+        [Column(&quot;Status&quot;)]
+        public required OrderStatus Status {  get; set; }
+
+        [Required]
+        [Column(&quot;TotalAmount&quot;)]
+        public decimal TotalAmount {  get; set; }
+
+        [Required,MaxLength(1000)]
+        [Column(&quot;DeliveryAddress&quot;)]
+        public required string DeliveryAddress {  get; set; }
+
+        [Required]
+        public required string PhoneNumber { get; set; }
+
+        [Required]
+
+        public required string FullName { get; set; }
+
+        [Required]
+        [Column(&quot;IsActive&quot;)]
+        public bool IsActive {  get; set; }
+
+        [Column(&quot;CreatedAt&quot;)]
+        public DateTimeOffset CreatedAt { get; set; }
+
+        [Column(&quot;UpdatedAt&quot;)]
+        public DateTimeOffset? UpdatedAt { get; set; }
+
+        [ForeignKey(&quot;UserId&quot;)]
+        public Users User { get; set; } = null!;
+
+
+        public ICollection&lt;OrderItems&gt; OrderItem { get; set; } = new List&lt;OrderItems&gt;();
+
+        public ICollection&lt;Payments&gt; Payment { get; set; } = new List&lt;Payments&gt;();
+
+        //public ICollection&lt;Delivery&gt; Deliveries { get; set; } = new List&lt;Delivery&gt;();
+        public Delivery? Delivery { get; set; }
+
+        public ICollection&lt;Installations&gt; Installation { get; set; } = new List&lt;Installations&gt;();
+
+        public ICollection&lt;Invoices&gt; Invoices { get; set; }= new List&lt;Invoices&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,31,20,35,0],[20,36,20,40,0],[24,42,24,46,0],[24,47,24,51,0],[27,37,27,41,0],[27,42,27,46,0],[27,51,27,86,0],[31,47,31,51,0],[31,52,31,56,0],[35,39,35,43,0],[35,44,35,48,0],[39,51,39,55,0],[39,56,39,60,0],[42,46,42,50,0],[42,51,42,55,0],[46,43,46,47,0],[46,48,46,52,0],[50,33,50,37,0],[50,38,50,42,0],[53,43,53,47,0],[53,48,53,52,0],[56,44,56,48,0],[56,49,56,53,0],[59,29,59,33,0],[59,34,59,38,0],[59,43,59,48,0],[62,52,62,56,0],[62,57,62,61,0],[62,66,62,88,0],[64,48,64,52,0],[64,53,64,57,0],[64,62,64,82,0],[67,37,67,41,0],[67,42,67,46,0],[69,58,69,62,0],[69,63,69,67,0],[69,72,69,97,0],[71,49,71,53,0],[71,54,71,58,0],[71,62,71,82,0]]);
+    </script>
+  </body>
+</html>

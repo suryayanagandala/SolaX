@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\UnitOfWork.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using Microsoft.EntityFrameworkCore.Storage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class UnitOfWork : IUnitOfWork
+    {
+        public IRoleRepository RoleRepository { get; }
+
+        public IUserRepository UserRepository {  get; }
+
+        public ITechnicianRepository TechnicianRepository { get; }
+
+        public IAdminRepository AdminRepository { get; }
+
+        public IProductsRepository ProductsRepository { get; }
+
+     
+
+        public ICategoryRepository category { get; }
+
+        public IProductReviewRepository productReviewRepository { get; }
+
+        public ICartRepository cartRepository { get; }
+
+        public IOrderRepository orderRepository {  get; }
+
+        public IHomeRepository homeRepository { get; }
+
+        public IPaymentRepository paymentRepository { get; }
+
+        public IDeliveryInterface deliveryInterface { get; }
+
+        public IInvoiceRepository invoiceRepository { get; }
+
+        public IInstallRepository installRepository { get; }
+
+        public INoticationRepositry noticationRepositry { get; }
+
+        public IMaintenanceRepository maintenanceRepository {  get; }
+
+        //public ISignalRRepository signalRRepository { get; }
+
+        public ISolarPerformaceRepository solarPerformaceRepository { get; }
+        private IDbContextTransaction? _transaction;
+
+        public ApplicationDbContext _db;
+
+        public UnitOfWork(ApplicationDbContext db,IRoleRepository roleRepository, IUserRepository userRepository, 
+            ITechnicianRepository technicianRepository, IAdminRepository adminRepository, IProductsRepository productsRepository,
+           ICategoryRepository category,IProductReviewRepository productReviewRepository,
+            ICartRepository cartRepository,IOrderRepository orderRepository,IHomeRepository homeRepository,IPaymentRepository paymentRepository,
+            IDeliveryInterface deliveryInterface, IInvoiceRepository invoiceRepository, IInstallRepository installRepository,INoticationRepositry noticationRepositry,
+            IMaintenanceRepository maintenanceRepository, ISolarPerformaceRepository solarPerformaceRepository)
+        {
+            _db = db;
+            RoleRepository = roleRepository;
+            UserRepository = userRepository;
+            TechnicianRepository = technicianRepository;
+            AdminRepository = adminRepository;
+            ProductsRepository = productsRepository;
+            this.category = category;
+            this.productReviewRepository = productReviewRepository;
+            this.cartRepository = cartRepository;
+            this.orderRepository = orderRepository;
+            this.homeRepository = homeRepository;
+            this.paymentRepository = paymentRepository;
+            this.deliveryInterface = deliveryInterface;
+            this.invoiceRepository = invoiceRepository;
+            this.installRepository = installRepository;
+            this.noticationRepositry=noticationRepositry;
+            this.maintenanceRepository = maintenanceRepository;
+            //this.signalRRepository = signalRRepository;
+            this.solarPerformaceRepository = solarPerformaceRepository;
+        }
+
+
+        public async Task&lt;int&gt; SaveAsync()
+        {
+            return await _db.SaveChangesAsync();
+        }
+
+        public async Task BeginTransactionAsync()
+        {
+            _transaction = await _db.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitAsync()
+        {
+            if (_transaction != null)
+            {
+                await _db.SaveChangesAsync();
+                await _transaction.CommitAsync();
+                await _transaction.DisposeAsync();
+            }
+        }
+
+        public async Task RollbackAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.RollbackAsync();
+                await _transaction.DisposeAsync();
+            }
+        }
+
+        public void Dispose()
+        {
+            _db.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[14,49,14,53,0],[16,50,16,54,0],[18,61,18,65,0],[20,51,20,55,0],[22,57,22,61,0],[26,47,26,51,0],[28,67,28,71,0],[30,49,30,53,0],[32,52,32,56,0],[34,49,34,53,0],[36,55,36,59,0],[38,55,38,59,0],[40,55,40,59,0],[42,55,42,59,0],[44,59,44,63,0],[46,64,46,68,0],[50,71,50,75,0],[55,9,60,112,0],[61,9,61,10,0],[62,13,62,22,0],[63,13,63,45,0],[64,13,64,45,0],[65,13,65,57,0],[66,13,66,47,0],[67,13,67,53,0],[68,13,68,38,0],[69,13,69,68,0],[70,13,70,50,0],[71,13,71,52,0],[72,13,72,50,0],[73,13,73,56,0],[74,13,74,56,0],[75,13,75,56,0],[76,13,76,56,0],[77,13,77,58,0],[78,13,78,64,0],[80,13,80,72,0],[81,9,81,10,0],[85,9,85,10,0],[86,13,86,49,0],[87,9,87,10,0],[90,9,90,10,0],[91,13,91,71,0],[92,9,92,10,0],[95,9,95,10,0],[96,13,96,38,0],[97,13,97,14,0],[98,17,98,46,0],[99,17,99,50,0],[100,17,100,51,0],[101,13,101,14,0],[102,9,102,10,0],[105,9,105,10,0],[106,13,106,38,0],[107,13,107,14,0],[108,17,108,52,0],[109,17,109,51,0],[110,13,110,14,0],[111,9,111,10,0],[114,9,114,10,0],[115,13,115,27,0],[116,13,116,39,0],[117,9,117,10,0]]);
+    </script>
+  </body>
+</html>

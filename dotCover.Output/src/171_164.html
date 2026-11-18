@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\HomeRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class HomeRepository : IHomeRepository
+    {
+        private readonly ApplicationDbContext _db;
+        public HomeRepository(ApplicationDbContext db)
+        {
+            _db=db;
+        }
+
+        public async Task&lt;List&lt;CategoryDto&gt;&gt; GetHomeCategories()
+        {
+            try
+            {
+                return await _db.Categories.Where(x =&gt; x.ParentCategoryId == null &amp; x.IsActive)
+                    .Select(x =&gt; new CategoryDto
+                    {
+                        CategoryId = x.CategoryId,
+                        Name = x.CategoryName,
+                        Description = x.Description,
+                        Slug = x.Slug,
+                        Children = x.SubCategories.Where(c=&gt;c.IsActive).Select(c =&gt; new CategoryDto
+                        {
+                            CategoryId = c.CategoryId,
+                            Name = c.CategoryName,
+                            Description = c.Description,
+                            Slug = c.Slug,
+                            ParentId = x.ParentCategoryId,
+                        }).ToList()
+                    }).ToListAsync();
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;CategoryDto&gt;&gt; GetHomePackage()
+        {
+            try
+            {
+                var categories = await _db.Categories.Include(x =&gt; x.SubCategories.Where(sc =&gt; sc.IsActive)).ThenInclude(x =&gt; x.Products.Where(pc =&gt; pc.IsActive))
+                    .ThenInclude(x =&gt; x.ProductImages.Where(pi =&gt; pi.IsActive)).Include(x =&gt; x.Products.Where(pc =&gt; pc.IsActive))
+                    .ThenInclude(i =&gt; i.ProductImages.Where(pi =&gt; pi.IsActive)).Where(x=&gt;x.IsActive&amp;&amp;x.ParentCategoryId==null).ToListAsync();
+                if (categories == null)
+                {
+                    throw new Exception(&quot;No Catagories&quot;);
+                }
+                else
+                {
+                    var result = categories.Select(c =&gt; new CategoryDto
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.CategoryName,
+                        Description = c.Description,
+                        Slug = c.Slug,
+                        IsActive=c.IsActive,
+                        ParentId=c.ParentCategoryId,
+
+                        // CHILD CATEGORIES
+                        Children = c.SubCategories.Select(x =&gt; new CategoryDto
+                        {
+                            CategoryId = x.CategoryId,
+                            Name = x.CategoryName,
+                            Description = x.Description,
+                            Slug = x.Slug,
+                            IsActive=x.IsActive,
+                            ParentId=x.ParentCategoryId,
+
+                            // CHILD PRODUCTS
+                            ProductsDto = x.Products.Select(p =&gt; new ProductDto
+                            {
+                                ProductId = p.ProductId,
+                                ProductName = p.ProductName,
+                                Price = p.Price,
+                                Brand = p.Brand,
+                                Type = p.Type,
+                                Capacity = p.Capacity,
+                                CapacityValue = p.CapacityValue,
+                                Description = p.Description,
+                                Stock = p.Stock,
+                                CategoryId = p.CategoryId,
+                                IsActive=p.IsActive,
+                                ProductImages = p.ProductImages.Select(i =&gt; new ProductImageResponseDto
+                                {
+                                    ImageId = i.ImageId,
+                                    ImageUrl = i.ImageUrl,
+                                    IsActive=i.IsActive,
+                                }).ToList()
+                            }).ToList()
+                        }).ToList(),
+
+                        ProductsDto = c.Products.Select(p =&gt; new ProductDto
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            Price = p.Price,
+                            Brand = p.Brand,
+                            Type = p.Type,
+                            Capacity = p.Capacity,
+                            CapacityValue = p.CapacityValue,
+                            Description = p.Description,
+                            Stock = p.Stock,
+                            CategoryId = p.CategoryId,
+                            ProductImages = p.ProductImages.Select(i =&gt; new ProductImageResponseDto
+                            {
+                                ImageId = i.ImageId,
+                                ImageUrl = i.ImageUrl
+                            }).ToList()
+                        }).ToList()
+
+                    }).ToList();
+                    return result;
+                }
+
+                }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;CategoryDto&gt; GetProductBySlug(string slug)
+        {
+            try
+            {
+               
+                var category = await _db.Categories.AsNoTracking().Include(c =&gt; c.SubCategories.Where(sc =&gt; sc.IsActive))
+                        .ThenInclude(sc =&gt; sc.Products.Where(p =&gt; p.IsActive)).ThenInclude(p =&gt; p.ProductImages.Where(pi =&gt; pi.IsActive))
+                        .Include(c =&gt; c.Products.Where(p =&gt; p.IsActive))
+                        .ThenInclude(p =&gt; p.ProductImages.Where(pi =&gt; pi.IsActive))
+                        .FirstOrDefaultAsync(c =&gt; c.Slug == slug  &amp;&amp; c.IsActive);
+
+                if (category == null)
+                    throw new Exception(&quot;No category found with this slug.&quot;);
+
+              
+                var categoryDto = new CategoryDto
+                {
+                    CategoryId = category.CategoryId,
+                    Name = category.CategoryName,
+                    Slug = category.Slug,
+                    Description = category.Description,
+
+                    
+                    Children = category.SubCategories.Select(sc =&gt; new CategoryDto
+                    {
+                        CategoryId = sc.CategoryId,
+                        Name = sc.CategoryName,
+                        Slug = sc.Slug,
+                        Description = sc.Description,
+                        ProductsDto = sc.Products.Select(p =&gt; new ProductDto
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            CategoryId=p.CategoryId,
+                            Brand = p.Brand,
+                            Type = p.Type,
+                            Capacity = p.Capacity,
+                            CapacityValue = p.CapacityValue,
+                            Price = p.Price,
+                            Stock = p.Stock,
+                            Warranty_Years = p.Warranty_Years,
+                            Description = p.Description,
+                            IsActive = p.IsActive,
+                            ProductImages = p.ProductImages.Select(pi =&gt; new ProductImageResponseDto
+                            {
+                                ImageId = pi.ImageId,
+                                ImageUrl = pi.ImageUrl
+                            }).ToList()
+                        }).ToList()
+                    }).ToList(),
+
+                   
+                    ProductsDto = !category.SubCategories.Any()
+                        ? category.Products.Select(p =&gt; new ProductDto
+                        {
+                            ProductId = p.ProductId,
+                            ProductName = p.ProductName,
+                            Brand = p.Brand,
+                            Type = p.Type,
+                            Capacity = p.Capacity,
+                            CapacityValue = p.CapacityValue,
+                            Price = p.Price,
+                            Stock = p.Stock,
+                            Warranty_Years = p.Warranty_Years,
+                            Description = p.Description,
+                            IsActive = p.IsActive,
+                            ProductImages = p.ProductImages.Select(pi =&gt; new ProductImageResponseDto
+                            {
+                                ImageId = pi.ImageId,
+                                ImageUrl = pi.ImageUrl
+                            }).ToList()
+                        }).ToList()
+                        : new List&lt;ProductDto&gt;()
+                };
+
+                return categoryDto;
+            }
+            catch (Exception ex)
+            {
+                
+                throw new Exception(&quot;Error fetching category by slug: &quot; + ex.Message);
+            }
+        }
+
+        public async Task&lt;ProductDto&gt; ViewProductDetails(int productId)
+        {
+            try
+            {
+                var product = await _db.Products.Include(r=&gt;r.ProductReviews).Include(x =&gt; x.ProductImages).Include(x=&gt;x.Category)
+                    .FirstOrDefaultAsync(x =&gt; x.ProductId == productId &amp;&amp; x.IsActive);
+                if (product == null)
+                {
+                    throw new Exception($&quot;Np productId of {productId} found&quot;);
+                }
+                else
+                {
+                    var result = new ProductDto
+                    {
+                        ProductId = product.ProductId,
+                        ProductName = product.ProductName,
+                        Price = product.Price,
+                        Type = product.Type,
+                        Brand = product.Brand,
+                        CapacityValue = product.CapacityValue,
+                        Description = product.Description,
+                        Capacity=product.Capacity,
+                        Stock=product.Stock,
+                        AverageRating=product.AverageRating,
+                        RatingCount=product.RatingCount,
+                        CategoryName=product.Category.CategoryName,
+                        CategoryId=product.Category.CategoryId,
+                        Warranty_Years=product.Warranty_Years,
+                        IsActive=product.IsActive,
+                        ProductImages = product.ProductImages.Where(x=&gt;x.IsActive).Select(x =&gt; new ProductImageResponseDto
+                        {
+                            ProductId = x.ProductId,
+                            ImageId = x.ImageId,
+                            ImageUrl = x.ImageUrl
+                        }).ToList(),
+                        productReviews=product.ProductReviews.Select(r=&gt; new ProductReviewResponseDto
+                        {
+                            Comment=r.Comment,
+                            Rating=r.Rating,
+                            UserId=r.UserId
+                        }).ToList()
+                    };
+                    return result;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,9,17,55,0],[18,9,18,10,0],[19,13,19,20,0],[20,9,20,10,0],[23,9,23,10,0],[25,13,25,14,0],[26,17,41,38,0],[43,13,43,29,0],[44,13,44,14,0],[45,17,45,23,0],[47,9,47,10,0],[50,9,50,10,0],[52,13,52,14,0],[53,17,55,142,0],[56,17,56,40,0],[57,17,57,18,0],[58,21,58,58,0],[61,17,61,18,0],[62,21,62,57,0],[62,57,72,64,0],[72,64,82,66,0],[82,66,95,77,0],[95,77,100,34,0],[100,34,101,30,0],[101,30,102,26,0],[102,26,104,62,0],[104,62,116,73,0],[116,73,120,30,0],[120,30,121,26,0],[121,26,123,22,0],[123,22,123,33,0],[124,21,124,35,0],[128,13,128,30,0],[129,13,129,14,0],[130,17,130,23,0],[132,9,132,10,0],[135,9,135,10,0],[137,13,137,14,0],[139,17,143,82,0],[145,17,145,38,0],[146,21,146,78,0],[149,17,157,68,0],[157,68,163,63,0],[163,63,177,74,0],[177,74,181,30,0],[181,30,182,26,0],[182,26,183,22,0],[183,22,187,57,0],[187,57,200,74,0],[200,74,204,30,0],[204,30,205,26,0],[205,26,207,19,0],[209,17,209,36,0],[211,13,211,33,0],[212,13,212,14,0],[214,17,214,87,0],[216,9,216,10,0],[219,9,219,10,0],[221,13,221,14,0],[222,17,223,87,0],[224,17,224,37,0],[225,17,225,18,0],[226,21,226,79,0],[229,17,229,18,0],[230,21,247,72,0],[247,72,247,82,0],[247,82,247,96,0],[247,96,252,26,0],[252,26,253,74,0],[253,74,258,26,0],[258,26,259,23,0],[260,21,260,35,0],[263,13,263,30,0],[264,13,264,14,0],[265,17,265,23,0],[267,9,267,10,0]]);
+    </script>
+  </body>
+</html>

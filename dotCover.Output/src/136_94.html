@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\RoleRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class RoleRepository : IRoleRepository
+    {
+        public ApplicationDbContext _db;
+        public RoleRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+        public async Task&lt;IEnumerable&lt;Roles&gt;&gt; GetAllRoles()
+        {
+            try
+            {
+                var data = await _db.Roles.ToListAsync();
+                return data;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public List&lt;User&gt; GetUsersFromUser(string role)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(role))
+                    throw new ArgumentException(&quot;Role name is required&quot;);
+                var user=(from r in _db.Set&lt;Roles&gt;() join u in _db.Set&lt;Users&gt;() on r.RoleId equals u.RoleId
+                          where r.RoleName==role &amp;&amp; r.IsActive select new User
+                          {
+                              UserId=u.UserId,
+                              RoleId=r.RoleId,
+                              FullName=u.FullName,
+                              EmailId=u.EmailId,
+                          }).ToList();
+                if (!user.Any())
+                    throw new Exception(&quot;No users found for this role&quot;);
+
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
+            }   
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[18,9,18,55,1],[19,9,19,10,1],[20,13,20,22,1],[21,9,21,10,1],[23,9,23,10,1],[25,13,25,14,1],[26,17,26,58,1],[27,17,27,29,1],[29,13,29,32,0],[30,13,30,14,0],[31,17,31,49,0],[33,9,33,10,1],[36,9,36,10,1],[38,13,38,14,1],[39,17,39,53,1],[40,21,40,74,1],[41,17,48,39,1],[49,17,49,33,1],[50,21,50,73,1],[52,17,52,29,1],[54,13,54,30,1],[55,13,55,14,1],[56,17,56,23,1],[58,9,58,10,1]]);
+    </script>
+  </body>
+</html>

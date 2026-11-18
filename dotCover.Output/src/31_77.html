@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\Entities\Notifications.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.Enums;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.Entities
+{
+    
+
+    [Table(&quot;Notifications&quot;)]
+    public class Notifications
+    {
+      
+
+        [Key]
+        [Required]
+        public int  NotificationId { get; set; }
+
+        [Required,StringLength(6)]
+        public required string UserId { get; set; }
+        public required string Message { get; set; }
+
+        public string? Title { get; set; }
+        public NotificationType? Type { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public bool IsRead { get; set; } = false;
+        public bool IsActive { get; set; } = true;
+
+        [ForeignKey(&quot;UserId&quot;)]
+        public Users User { get; set; } = null!;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,38,22,42,1],[22,43,22,47,0],[25,41,25,45,1],[25,46,25,50,1],[26,42,26,46,1],[26,47,26,51,1],[28,32,28,36,1],[28,37,28,41,1],[29,41,29,45,1],[29,46,29,50,1],[30,43,30,47,1],[30,48,30,52,0],[31,30,31,34,0],[31,35,31,39,0],[31,44,31,49,1],[32,32,32,36,0],[32,37,32,41,1],[32,46,32,50,1],[35,29,35,33,0],[35,34,35,38,0],[35,43,35,48,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\ProductRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using DbAccessaLayer.Infrastructure;
+using iText.Bouncycastle.Crypto;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrastructure
+{
+    public class ProductRepositoryTest:SqliteTestBase
+    {
+        private ProductRepository productRepository;
+
+        private IFormFile CreateFakeFile(string fileName)
+        {
+            var content = &quot;Dummy file content&quot;;
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+
+            return new FormFile(stream, 0, stream.Length, &quot;Data&quot;, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = &quot;image/png&quot;
+            };
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            var mockEnv = new Mock&lt;IWebHostEnvironment&gt;();
+            mockEnv.Setup(x =&gt; x.WebRootPath).Returns(Path.GetTempPath());
+
+            productRepository=new ProductRepository(_db,mockEnv.Object);
+        }
+
+
+        [Test]
+        public async Task GetAllProducts_Success()
+        {
+            var result=await productRepository.GetAllPrducts();
+            Assert.IsNotEmpty(result);
+            foreach (var item in result)
+            {
+                Assert.IsNotEmpty(item.ProductName);
+            }
+        }
+
+        //AddProducts
+        [Test]
+        public void AddProducts_Invalid_CategoryId()
+        {
+         
+            var dto = new ProductResponse
+            {
+                ProductName=&quot;Product1&quot;,
+                CategoryId = 6,
+                Brand = &quot;Tata&quot;,
+                Type = &quot;Panel&quot;,
+                CapacityValue = 500,
+                Capacity = &quot;500W&quot;,
+                Price = 15000,
+                Warranty_Years = 5,
+                Stock = 10,
+                Description = &quot;High efficiency solar panel&quot;,
+            
+               
+            };
+
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await productRepository.AddProduct(dto));
+        }
+
+        [Test]
+        public void AddProducts_SqlException()
+        {
+            var ex=Assert.ThrowsAsync&lt;ArgumentNullException&gt;(async () =&gt; await productRepository.AddProduct(null));
+            
+        }
+
+        [Test]
+        public async Task AddToProducts_Success()
+        {
+            var dto = new ProductResponse
+            {
+                ProductName = &quot;Product1&quot;,
+                CategoryId = 1,
+                Brand = &quot;Tata&quot;,
+                Type = &quot;Panel&quot;,
+                CapacityValue = 500,
+                Capacity = &quot;500W&quot;,
+                Price = 15000,
+                Warranty_Years = 5,
+                Stock = 10,
+                Description = &quot;High efficiency solar panel&quot;,
+
+
+            };
+
+            await productRepository.AddProduct(dto);    
+
+
+        }
+
+        //getProductsById
+        [Test]
+        public void GetByProductById_FailureId()
+        {
+            int id = 10;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await productRepository.GetProductById(id));
+        }
+
+        [Test]
+        public async Task GetProductById_Success()
+        {
+            int id = 1;
+            var result=await productRepository.GetProductById(id);
+            Assert.IsNotEmpty(result.Capacity);
+        }
+
+        //softDelete
+        [Test]
+        public void DeleteProducts_Failure_Case()
+        {
+            var dto = new SoftDeleteProductDto
+            {
+                ProductId = 10,
+                Reason=&quot;Low stock&quot;
+            };
+
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await productRepository.SoftDeleteProduct(dto));
+        }
+
+        [Test]
+        public async Task DeleteProducts_Success()
+        {
+            var dto = new SoftDeleteProductDto
+            {
+                ProductId = 1,
+                Reason = &quot;Low stock&quot;
+            };
+
+            await productRepository.SoftDeleteProduct(dto);
+
+            var updatedProduct = await _db.Products.FirstAsync(x =&gt; x.ProductId == dto.ProductId);
+            Assert.That(updatedProduct.IsActive, Is.EqualTo(false));
+        }
+
+        //RestoreProduct
+        [Test]
+        public void RestoreProduct_Failure()
+        {
+            int id=10;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await productRepository.RestoreProduct(id));
+        }
+
+
+        [Test]
+        public async Task RestoreProduct_Success()
+        {
+            int id = 4;
+            await productRepository.RestoreProduct(id);
+            var updatedProducts=await _db.Products.FirstAsync(x=&gt;x.ProductId == id);    
+            Assert.That(updatedProducts.IsActive, Is.EqualTo(true));
+        }
+
+        //AddImage
+        [Test]
+        public async Task AddImage_Success()
+        {
+            int productId = 3;
+
+            var images = new List&lt;IFormFile&gt;
+            {
+                CreateFakeFile(&quot;test1.png&quot;),
+                CreateFakeFile(&quot;test2.png&quot;)
+            };
+
+            await productRepository.AddImage(productId, images);
+
+            Assert.Pass();
+        }
+
+        [Test]
+        public void AddImage_InavlidId()
+        {
+
+            int productId = 10;
+
+            var images = new List&lt;IFormFile&gt;
+            {
+                CreateFakeFile(&quot;test1.png&quot;),
+                CreateFakeFile(&quot;test2.png&quot;)
+            };
+
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await productRepository.AddImage(productId, images));
+        }
+
+        [Test]
+        public void AddImage_NoImages_ThrowException()
+        {
+            int productId = 1;
+
+            Assert.ThrowsAsync&lt;ArgumentNullException&gt;(async () =&gt; await productRepository.AddImage(productId, null));
+        }
+
+
+        [Test]
+        public void AddImage_AnyImages_ThrowException()
+        {
+            int productId = 1;
+            var images = new List&lt;IFormFile&gt;
+            {
+
+            };
+
+            Assert.ThrowsAsync&lt;ArgumentException&gt;(async () =&gt; await productRepository.AddImage(productId, images));
+        }
+
+
+        [Test]
+        public void UpdateImage_Fails_InvalidId()
+        {
+            int id = 10;
+            var dto = new ProductResponse
+            {
+                ProductName = &quot;Product1&quot;,
+                CategoryId = 1,
+                Brand = &quot;Tata&quot;,
+                Type = &quot;Panel&quot;,
+                CapacityValue = 500,
+                Capacity = &quot;500W&quot;,
+                Price = 15000,
+                Warranty_Years = 5,
+                Stock = 10,
+                Description = &quot;High efficiency solar panel&quot;,
+
+
+            };
+
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await productRepository.UpdateProduct(id, dto));
+
+        }
+
+        [Test]
+        public void UpdateProduct_SameProductName_Exception()
+        {
+            int id = 1;
+            var dto = new ProductResponse
+            {
+                ProductName = &quot;Solar Panel 300W&quot;,
+                CategoryId = 1,
+                Brand = &quot;Tata&quot;,
+                Type = &quot;Panel&quot;,
+                CapacityValue = 500,
+                Capacity = &quot;500W&quot;,
+                Price = 15000,
+                Warranty_Years = 5,
+                Stock = 10,
+                Description = &quot;High efficiency solar panel&quot;,
+
+
+            };
+
+            Assert.ThrowsAsync&lt;DataExistsException&gt;(async () =&gt; await productRepository.UpdateProduct(id, dto));
+
+        }
+
+        [Test]
+        public async Task UpdateProduct_Success()
+        {
+            int id = 1;
+            var dto = new ProductResponse
+            {
+                ProductName = &quot;Solar Panel 900W&quot;,
+                CategoryId = 1,
+                Brand = &quot;Tata&quot;,
+                Type = &quot;Panel&quot;,
+                CapacityValue = 500,
+                Capacity = &quot;500W&quot;,
+                Price = 10000,
+                Warranty_Years = 5,
+                Stock = 10,
+                Description = &quot;High efficiency solar panel&quot;,
+
+
+            };
+
+            await productRepository.UpdateProduct(id, dto);
+
+            var updatedProduct = await _db.Products.FirstAsync(x =&gt; x.ProductId == id);
+            Assert.That(updatedProduct.Price,Is.EqualTo(10000));
+        }
+
+
+        //DeleteProductById
+        [Test]
+        public void DeleteProductById_FailureId()
+        {
+            Assert.ThrowsAsync&lt;NotFoundException&gt; (async () =&gt; await productRepository.DeleteProductById(10));
+        }
+
+        [Test]
+        public async Task DeleteProductById_Success()
+        {
+            int id = 1;
+            await productRepository.DeleteProductById(id);
+            var updatedProduct = await _db.Products.FirstAsync(x =&gt; x.ProductId == id);
+            Assert.That(updatedProduct.IsActive, Is.EqualTo(false));
+        }
+
+
+        //UpdateImage
+        [Test]
+        public void UpdateProductImage_Failure()
+        {
+            int imageId = 101;
+            var image = CreateFakeFile(&quot;test.png&quot;);
+
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await productRepository.UpdateProductImage(imageId, image));
+        }
+
+        [Test]
+        public async Task UpdateProductImage_Success()
+        {
+
+            int imageId = 1;
+            var image = CreateFakeFile(&quot;test.png&quot;);
+            await productRepository.UpdateProductImage(imageId,image);
+
+            
+            
+            Assert.Pass();
+        }
+
+
+        //GetImage
+        [Test]
+        public void GetImage_Falure_Id()
+        {
+            var productId = 10;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async () =&gt; await productRepository.GetIamges(productId));
+        }
+
+        [Test]
+        public async Task GetImage_Success()
+        {
+            int id = 1;
+            var result=await productRepository.GetIamges(id);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result);
+                Assert.That(result.First().ImageId, Is.EqualTo(1));
+            });
+        }
+
+        //DeleteImage
+        [Test]
+        public void DeleteImage_Failure_Id()
+        {
+            int imageId = 10;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await productRepository.DeleteImage(imageId));
+        }
+
+        [Test]
+        public async Task DeleteImage_Failure_Success()
+        {
+            int imageId = 1;
+            await productRepository.DeleteImage(imageId);
+
+            var updatedImage=await _db.ProductImages.FindAsync(imageId);
+            if(updatedImage != null)
+            {
+                Assert.That(updatedImage.IsActive, Is.EqualTo(false));
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,10,1],[24,13,24,48,1],[25,13,25,76,1],[27,13,31,15,1],[32,9,32,10,1],[36,9,36,10,1],[37,13,37,59,1],[38,13,38,75,1],[40,13,40,73,1],[41,9,41,10,1],[46,9,46,10,1],[47,13,47,64,1],[48,13,48,39,1],[49,13,49,20,1],[49,22,49,30,1],[49,31,49,33,1],[49,34,49,40,1],[50,13,50,14,1],[51,17,51,53,1],[52,13,52,14,1],[53,9,53,10,1],[58,9,58,10,1],[60,13,74,15,1],[76,13,76,60,1],[76,60,76,99,1],[76,99,76,101,1],[77,9,77,10,1],[81,9,81,10,1],[82,13,82,74,1],[82,74,82,114,1],[82,114,82,116,1],[84,9,84,10,1],[88,9,88,10,1],[89,13,103,15,1],[105,13,105,53,1],[108,9,108,10,1],[113,9,113,10,1],[114,13,114,25,1],[115,13,115,60,1],[115,60,115,102,1],[115,102,115,104,1],[116,9,116,10,1],[120,9,120,10,1],[121,13,121,24,1],[122,13,122,67,1],[123,13,123,48,1],[124,9,124,10,1],[129,9,129,10,1],[130,13,134,15,1],[136,13,136,60,1],[136,60,136,106,1],[136,106,136,108,1],[137,9,137,10,1],[141,9,141,10,1],[142,13,146,15,1],[148,13,148,60,1],[150,13,150,99,1],[151,13,151,69,1],[152,9,152,10,1],[157,9,157,10,1],[158,13,158,23,1],[159,13,159,60,1],[159,60,159,102,1],[159,102,159,104,1],[160,9,160,10,1],[165,9,165,10,1],[166,13,166,24,1],[167,13,167,56,1],[168,13,168,85,1],[169,13,169,69,1],[170,9,170,10,1],[175,9,175,10,1],[176,13,176,31,1],[178,13,182,15,1],[184,13,184,65,1],[186,13,186,27,1],[187,9,187,10,0],[191,9,191,10,1],[193,13,193,32,1],[195,13,199,15,1],[201,13,201,63,1],[201,63,201,114,1],[201,114,201,116,1],[202,9,202,10,1],[206,9,206,10,1],[207,13,207,31,1],[209,13,209,67,1],[209,67,209,116,1],[209,116,209,118,1],[210,9,210,10,1],[215,9,215,10,1],[216,13,216,31,1],[217,13,220,15,1],[222,13,222,63,1],[222,63,222,114,1],[222,114,222,116,1],[223,9,223,10,1],[228,9,228,10,1],[229,13,229,25,1],[230,13,244,15,1],[246,13,246,63,1],[246,63,246,109,1],[246,109,246,111,1],[248,9,248,10,1],[252,9,252,10,1],[253,13,253,24,1],[254,13,268,15,1],[270,13,270,65,1],[270,65,270,111,1],[270,111,270,113,1],[272,9,272,10,1],[276,9,276,10,1],[277,13,277,24,1],[278,13,292,15,1],[294,13,294,60,1],[296,13,296,88,1],[297,13,297,65,1],[298,9,298,10,1],[304,9,304,10,1],[305,13,305,64,1],[305,64,305,109,1],[305,109,305,111,1],[306,9,306,10,1],[310,9,310,10,1],[311,13,311,24,1],[312,13,312,59,1],[313,13,313,88,1],[314,13,314,69,1],[315,9,315,10,1],[321,9,321,10,1],[322,13,322,31,1],[323,13,323,52,1],[325,13,325,63,1],[325,63,325,121,1],[325,121,325,123,1],[326,9,326,10,1],[330,9,330,10,1],[332,13,332,29,1],[333,13,333,52,1],[334,13,334,71,1],[338,13,338,27,1],[339,9,339,10,0],[345,9,345,10,1],[346,13,346,32,1],[347,13,347,63,1],[347,63,347,107,1],[347,107,347,109,1],[348,9,348,10,1],[352,9,352,10,1],[353,13,353,24,1],[354,13,354,62,1],[355,13,356,13,1],[356,13,356,14,1],[356,14,357,17,1],[357,17,357,43,1],[357,43,358,17,1],[358,17,358,68,1],[358,68,359,13,1],[359,13,359,14,1],[359,14,359,16,1],[360,9,360,10,1],[365,9,365,10,1],[366,13,366,30,1],[367,13,367,60,1],[367,60,367,104,1],[367,104,367,106,1],[368,9,368,10,1],[372,9,372,10,1],[373,13,373,29,1],[374,13,374,58,1],[376,13,376,73,1],[377,13,377,37,1],[378,13,378,14,1],[379,17,379,71,1],[380,13,380,14,1],[381,9,381,10,1]]);
+    </script>
+  </body>
+</html>

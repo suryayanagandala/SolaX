@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\OrderRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using MailKit.Search;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class OrderRepository : IOrderRepository
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly ISignalRRepository _signalRRepository;
+
+        public OrderRepository(ApplicationDbContext db,ISignalRRepository signalRRepository)
+        {
+           _db=db;   
+            _signalRRepository=signalRRepository;
+        }
+
+        public async Task&lt;IEnumerable&lt;OrderDto&gt;&gt; GetOrderHistory(string userId)
+        {
+            try
+            {
+                
+                var ordersList = await _db.Orders
+                    .Where(x =&gt; x.UserId == userId &amp;&amp; x.Payment.Any())
+                    .Include(x =&gt; x.Delivery)        
+                    .Include(x =&gt; x.OrderItem)
+                        .ThenInclude(i =&gt; i.Product)
+                            .ThenInclude(p =&gt; p.ProductImages)
+                    .Include(x =&gt; x.OrderItem)
+                        .ThenInclude(i =&gt; i.Product)
+                            .ThenInclude(p =&gt; p.Category)
+                    .Include(x =&gt; x.Payment)
+                    .AsNoTracking()
+                    .ToListAsync();
+                if (!ordersList.Any())
+                    throw new Exception(MessageHelper.Get(&quot;Order&quot;, &quot;OrderNotFound&quot;));
+
+                //  Order and project in memory
+                var result = ordersList
+                    .OrderByDescending(x =&gt; x.CreatedAt) 
+                    .Select(x =&gt; new OrderDto
+                    {
+                        OrderId = x.OrderId,
+                        UserId = x.UserId,
+                        TotalAmount = x.TotalAmount,
+                        Status = x.Status.ToString(),
+                        DeliveryDate = x.Delivery?.DeliveryAt,
+                        Items = x.OrderItem.Select(i =&gt; new OrderItemCreateDto
+                        {
+                            ProductId = i.ProductId,
+                            ProductName = i.Product.ProductName,
+                            Price = i.Product.Price,
+                            Product = new ProductDto
+                            {
+                                Price = i.Product.Price,
+                                Brand = i.Product.Brand,
+                                Type = i.Product.Type,
+                                Capacity = i.Product.Capacity,
+                                CategoryName = i.Product.Category.CategoryName,
+                                Description = i.Product.Description,
+                                ImageUrl = i.Product.ProductImages.Select(img =&gt; img.ImageUrl).FirstOrDefault()
+                            }
+                        }).ToList(),
+                        Payment = x.Payment.Select(p =&gt; new PaymentDto
+                        {
+                            PaymentMethod = p.PaymentMethod,
+                            PaymentStatus = p.PaymentStatus,
+                            PaymentDate = p.PaymentDate.DateTime
+                        }).ToList()
+                    })
+                    .ToList();
+
+                return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;CreateOrderResponse&gt; PlaceOrder(OrderCreateDto dto)
+        {
+            try
+            {
+                decimal totalAmount = 0;
+
+                var orderItems = new List&lt;OrderItems&gt;();
+
+                if (dto.IsBuyNow)
+                {
+                    if (dto.Quantity &lt;= 0)
+                        throw new Exception(&quot;Quantity must be greater than zero&quot;);
+                    var product = await _db.Products.FirstOrDefaultAsync(x =&gt; x.ProductId == dto.ProductId &amp;&amp; x.IsActive);
+
+                    if (product == null)
+                    {
+                        throw new Exception(&quot;No product found based on id or proudct is in active&quot;);
+                    }
+
+                    else
+                    {
+                        totalAmount = product.Price * dto.Quantity!.Value;
+                        orderItems.Add(new OrderItems
+                        {
+                            ProductId = product.ProductId,
+                            Quantity=dto.Quantity!.Value,
+                            UnitPrice=product.Price,
+
+
+                        });
+                    }
+                }
+
+                else
+                {
+                    var cart = await _db.Carts.Include(x =&gt; x.CartItems).ThenInclude(x =&gt; x.Product).FirstOrDefaultAsync(x =&gt; x.UserId == dto.UserId &amp;&amp; x.IsActive);
+
+                    if (cart == null || !cart.CartItems.Any())
+                    {
+                        throw new Exception(&quot;Cart is empty&quot;);
+                    }
+
+                    totalAmount = cart.CartItems.Sum(x =&gt; x.Quantity * x.Product.Price);
+
+                    foreach (var item in cart.CartItems)
+                    {
+                        orderItems.Add(new OrderItems
+                        {
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            UnitPrice = item.Product.Price
+                        });
+                    }
+
+                    
+                }
+
+
+                var order = new Orders
+                {
+                    UserId = dto.UserId,
+                    DeliveryAddress = dto.DeliveryAddress,
+                    FullName = dto.DeliveryName,
+                    PhoneNumber = dto.DeliveryPhone,
+                    Status = OrderStatus.PAYMENT_PENDING,
+                    TotalAmount = totalAmount,
+                    IsActive = true,
+                    CreatedAt=TimeUtility.NowIST()
+                };
+
+                await _db.Orders.AddAsync(order);
+                await _db.SaveChangesAsync();
+
+                foreach (var item in orderItems)
+                {
+                    item.OrderId = order.OrderId;
+                    await _db.OrderItems.AddAsync(item);
+                }
+
+                await _db.SaveChangesAsync();
+
+                var messages = new Notifications
+                {
+                    UserId = dto.UserId,
+                    Type = NotificationType.Order,
+                    Title = &quot;Place Order&quot;,
+                    Message = $&quot;Your Order {order.OrderId} has status of {order.Status}&quot;
+                };
+                await _db.Set&lt;Notifications&gt;().AddAsync(messages);
+
+                var notificationDto = new NotificationDto
+                {
+                    UserId = dto.UserId,
+                    NotificationId = messages.NotificationId,
+                    NotificationType = messages.Type.ToString()!,
+                    Title = messages.Title,
+                    Message = messages.Message,
+                    IsRead = false,
+                    CreatedAt = messages.CreatedAt,
+
+                };
+
+                await this._signalRRepository.SendAsyncNotification(dto.UserId, notificationDto);
+
+                return new CreateOrderResponse
+                {
+                    OrderId = order.OrderId,
+                    OrderStatus=order.Status.ToString(),
+                };
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;OrderDto&gt; GetOrderDetails(string userId, int orderId)
+        {
+            try
+            {
+                var details=await _db.Orders.Include(x=&gt;x.OrderItem).ThenInclude(x=&gt;x.Product).FirstOrDefaultAsync(x=&gt;x.UserId == userId&amp;&amp;x.OrderId==orderId);
+                if (details == null)
+                {
+                    throw new Exception($&quot;Invalid UserId or Invalid OrderId&quot;);
+                }
+                else
+                {
+                    return  new OrderDto
+                    {
+                        OrderId = details.OrderId,
+                        UserId=details.UserId,
+                        Status = details.Status.ToString(),
+                        TotalAmount = details.TotalAmount,
+                        Items = details.OrderItem.Select(i =&gt; new OrderItemCreateDto
+                        {
+                            ProductId = i.ProductId,
+                            ProductName = i.Product.ProductName,
+                            Quantity = i.Quantity,
+                            Price = i.UnitPrice
+                        }).ToList()
+                    };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task CancelOrder(int orderId, string userId)
+        {
+            var transcations = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var order = await _db.Orders.Include(x =&gt; x.OrderItem).FirstOrDefaultAsync(x =&gt; x.OrderId == orderId &amp;&amp; x.UserId == userId);
+                if (order == null)
+                {
+                    throw new Exception(MessageHelper.Get(&quot;Order&quot;, &quot;OrderNotFound&quot;));
+                }
+
+                if (order.Status == OrderStatus.CONFIRMED)
+                {
+                    foreach (var item in order.OrderItem)
+                    {
+                        var product = await _db.Products.FindAsync(item.ProductId);
+                        if (product == null)
+                        {
+                            throw new Exception(MessageHelper.Get(&quot;Products&quot;, &quot;NotFound&quot;));
+                        }
+                        product.Stock += item.Quantity;
+                        _db.Products.Update(product);
+
+                    }
+                }
+                order.Status = OrderStatus.CANCELLED;
+                order.UpdatedAt = TimeUtility.NowIST();
+                order.IsActive = false;
+                _db.Orders.Update(order);
+
+                var messages = new Notifications
+                {
+                    UserId = userId,
+                    Type = NotificationType.Order,
+                    Title = &quot;Cancel Order&quot;,
+                    Message = $&quot;Your orderId {orderId} has cancelled&quot;
+                };
+
+                await _db.Set&lt;Notifications&gt;().AddAsync(messages);
+
+                var dto = new NotificationDto
+                {
+                    UserId = userId,
+                    NotificationId = messages.NotificationId,
+                    NotificationType = messages.Type.ToString()!,
+                    Title = messages.Title,
+                    Message = messages.Message,
+                    IsRead = false,
+                    CreatedAt = messages.CreatedAt,
+                };
+
+                await this._signalRRepository.SendAsyncNotification(userId, dto);
+
+                await _db.SaveChangesAsync();
+                await transcations.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transcations.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task&lt;UserCheckOutDto&gt; GetUserDetails(string userId)
+        {
+            try
+            {
+                var user = await _db.Users.Where(x =&gt; x.UserId == userId).Select(x =&gt; new UserCheckOutDto
+                {
+                    FullName = x.FullName,
+                    PhoneNumber = x.PhoneNumber
+                }).FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    throw new Exception($&quot;No UserId Found of {user}&quot;);
+                }
+                else
+                {
+                    return user;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
+        public async Task&lt;List&lt;TackDelivery&gt;&gt; GetTrackDelivery(int orderId)
+        {
+            try
+            {
+                var delivery = await _db.Set&lt;Delivery&gt;().Include(x=&gt;x.Order).Where(x=&gt;x.Order.OrderId==orderId&amp;&amp;x.OrderId==orderId).FirstOrDefaultAsync();
+
+                if(delivery == null)
+                {
+                    throw new Exception(&quot;No orderId found&quot;);
+                }
+                var list =new List&lt;TackDelivery&gt;();
+
+                
+
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Confirmed&quot;,
+                    Status = &quot;Completed&quot;,
+                });
+
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Shipped&quot;,
+                    Status = delivery.Order.Status==OrderStatus.SHIPPED?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;OutofDelivery&quot;,
+                    Status = delivery.Status==DeliveryStatus.OutForDelivery.ToString()?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+                list.Add(new TackDelivery
+                {
+                    Stage = &quot;Delievered&quot;,
+                    Status = delivery.Status==DeliveryStatus.Delivered.ToString()?&quot;Active&quot;:&quot;Pending&quot;,
+                });
+
+
+
+
+
+
+                return list;
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,93,1],[26,9,26,10,1],[27,12,27,19,1],[28,13,28,50,1],[29,9,29,10,1],[32,9,32,10,1],[34,13,34,14,1],[36,17,47,36,1],[48,17,48,39,1],[49,21,49,86,1],[52,17,53,45,1],[53,45,53,56,1],[53,56,54,34,1],[54,34,61,57,1],[61,57,74,82,1],[74,82,74,94,1],[74,94,76,26,1],[76,26,77,57,1],[77,57,82,26,1],[82,26,83,22,1],[83,22,84,31,1],[86,17,86,31,1],[88,13,88,30,1],[89,13,89,14,1],[90,17,90,23,1],[92,9,92,10,1],[95,9,95,10,1],[97,13,97,14,1],[98,17,98,41,1],[100,17,100,57,1],[102,17,102,34,1],[103,17,103,18,1],[104,21,104,43,1],[105,25,105,83,0],[106,21,106,123,1],[108,21,108,41,1],[109,21,109,22,0],[110,25,110,101,0],[114,21,114,22,1],[115,25,115,75,1],[116,25,123,28,1],[124,21,124,22,1],[125,17,125,18,1],[128,17,128,18,0],[129,21,129,165,0],[131,21,131,63,0],[132,21,132,22,0],[133,25,133,62,0],[136,21,136,59,0],[136,59,136,87,0],[136,87,136,89,0],[138,21,138,28,0],[138,30,138,38,0],[138,39,138,41,0],[138,42,138,56,0],[139,21,139,22,0],[140,25,145,28,0],[146,21,146,22,0],[149,17,149,18,0],[152,17,162,19,1],[164,17,164,50,1],[165,17,165,46,1],[167,17,167,24,1],[167,26,167,34,1],[167,35,167,37,1],[167,38,167,48,1],[168,17,168,18,1],[169,21,169,50,1],[170,21,170,57,1],[171,17,171,18,1],[173,17,173,46,1],[175,17,181,19,1],[182,17,182,67,1],[184,17,194,19,1],[196,17,196,98,1],[198,17,202,19,1],[205,13,205,30,0],[206,13,206,14,0],[207,17,207,23,0],[209,9,209,10,1],[213,9,213,10,1],[215,13,215,14,1],[216,17,216,159,1],[217,17,217,37,1],[218,17,218,18,1],[219,21,219,79,1],[222,17,222,18,0],[223,21,229,63,0],[229,63,235,26,0],[235,26,236,23,0],[239,13,239,30,1],[240,13,240,14,1],[241,17,241,23,1],[243,9,243,10,0],[246,9,246,10,1],[247,13,247,75,1],[249,13,249,14,1],[250,17,250,141,1],[251,17,251,35,1],[252,17,252,18,0],[253,21,253,86,0],[256,17,256,59,1],[257,17,257,18,0],[258,21,258,28,0],[258,30,258,38,0],[258,39,258,41,0],[258,42,258,57,0],[259,21,259,22,0],[260,25,260,84,0],[261,25,261,45,0],[262,25,262,26,0],[263,29,263,92,0],[265,25,265,56,0],[266,25,266,54,0],[268,21,268,22,0],[269,17,269,18,0],[270,17,270,54,1],[271,17,271,56,1],[272,17,272,40,1],[273,17,273,42,1],[275,17,281,19,1],[283,17,283,67,1],[285,17,294,19,1],[296,17,296,82,1],[298,17,298,46,1],[299,17,299,50,0],[300,13,300,14,0],[301,13,301,30,1],[302,13,302,14,1],[303,17,303,52,1],[304,17,304,23,1],[305,13,305,14,0],[306,9,306,10,0],[309,9,309,10,1],[311,13,311,14,1],[312,17,316,42,1],[318,17,318,34,1],[319,17,319,18,1],[320,21,320,71,1],[323,17,323,18,1],[324,21,324,33,1],[327,13,327,30,1],[328,13,328,14,1],[329,17,329,23,1],[331,9,331,10,1],[335,9,335,10,1],[337,13,337,14,1],[338,17,338,155,1],[340,17,340,37,1],[341,17,341,18,1],[342,21,342,61,1],[344,17,344,52,1],[348,17,352,20,1],[354,17,358,20,1],[359,17,363,20,1],[364,17,368,20,1],[375,17,375,29,1],[378,13,378,30,1],[379,13,379,14,1],[380,17,380,23,1],[382,9,382,10,1]]);
+    </script>
+  </body>
+</html>

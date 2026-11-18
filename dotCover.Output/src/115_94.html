@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\MaintenanceRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.CustomMessages;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using CoreModels.Enums;
+using DbAccessaLayer.Helpers;
+using iText.Bouncycastle.Crypto;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class MaintenanceRepository : IMaintenanceRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        private readonly IWebHostEnvironment web;
+
+        private readonly ISignalRRepository signalRRepository;
+        public MaintenanceRepository(ApplicationDbContext db, IWebHostEnvironment web, ISignalRRepository signalRRepository)
+        {
+            _db = db;
+            this.web = web;
+            this.signalRRepository = signalRRepository;
+        }
+        public List&lt;DeliveryDto&gt; GetMaintenanceStatus(string userId)
+        {
+            try
+            {
+                var items = (from ir in _db.Set&lt;InstallationReports&gt;() join i in _db.Set&lt;Installations&gt;() on ir.InstallationId equals i.InstallationId
+                             join d in _db.Set&lt;Delivery&gt;() on i.DeliveryId equals d.DeliveryId join o in _db.Set&lt;OrderItems&gt;()
+                             on d.OrderId equals o.OrderId where d.Order.UserId==userId &amp;&amp; d.Status==DeliveryStatus.Delivered.ToString() &amp;&amp; i.Status==InstallationStatus.Completed.ToString()
+                             select new DeliveryDto
+                             {
+                                 DeliveryId= d.DeliveryId,
+                                 UserId= userId,
+                                 DeliveryAt=d.DeliveryAt??DateTime.Now,
+                                 ProductName=o.Product.ProductName,
+                                 ProductImage=o.Product.ProductImages.First().ImageUrl,
+                                 Price=o.UnitPrice,
+                                 Status=i.Status,
+                                 OrderId=d.OrderId,
+                                 IsActive=i.IsActive,
+                                 InstallationId=i.InstallationId,
+                             }).ToList();
+                return items;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task RaiseComplete(MaintenanceRequestCreateDto dto)
+        {
+            using var transactions = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var installation = await _db.Installations.Include(x=&gt;x.MaintenanceRequest).Include(x =&gt; x.delivery).ThenInclude(x =&gt; x.Order).ThenInclude(x=&gt;x.User).Where(x =&gt;x.InstallationId == dto.InstallationId &amp;&amp;x.Status == InstallationStatus.Completed.ToString() &amp;&amp;
+                                       x.delivery.Status == DeliveryStatus.Delivered.ToString() &amp;&amp;x.delivery.Order.User.UserId == dto.UserId).FirstOrDefaultAsync();
+
+
+                if (installation == null)
+                    throw new NotFoundException(MessageHelper.Get(&quot;Installation&quot;, &quot;NotFound&quot;));
+
+                if (!installation.IsActive)
+                    throw new DataExistsException(MessageHelper.Get(&quot;Maintenance&quot;,&quot;Exist&quot;));
+                installation.IsActive = false;
+
+              
+
+                var requestId = await GenerateRequestId();
+
+                var request = new MaintenanceRequests
+                {
+                    RequestId = requestId,
+                    InstallationId = dto.InstallationId,
+                    Status = MaintenanceStatus.Pending.ToString(),
+                    Description = dto.Description,
+                    UserId = dto.UserId,
+                    CreatedAt=TimeUtility.NowIST()
+                };
+                await _db.Set&lt;MaintenanceRequests&gt;().AddAsync(request);
+
+                await AssignMaintenance(request);
+
+                var messages = new Notifications
+                {
+                    UserId = dto.UserId,
+                    Type = NotificationType.Maintenance,
+                    Title = &quot;Raise a request&quot;,
+                    Message = $&quot;Your installationId {dto.InstallationId} has been sent request successfully&quot;,
+                    CreatedAt = TimeUtility.NowIST()
+                };
+
+                await _db.Notifications.AddAsync(messages);
+
+                var signal = new NotificationDto
+                {
+
+                    UserId = dto.UserId,
+                    NotificationId = messages.NotificationId,
+                    NotificationType = messages.Type.ToString()!,
+                    Title = messages.Title,
+                    Message = messages.Message,
+                    IsRead = false,
+                    CreatedAt = messages.CreatedAt,
+
+                };
+
+                await signalRRepository.SendAsyncNotification(dto.UserId, signal);
+                await _db.SaveChangesAsync();
+                await transactions.CommitAsync();
+
+
+            }
+            catch (Exception)
+            {
+                await transactions.RollbackAsync();
+                throw;
+            }
+        }
+
+
+
+        private Task&lt;string&gt; GenerateRequestId()
+        {
+            var random = new Random();
+
+            return Task.FromResult($&quot;R{random.Next(1000000, 9999999)}&quot;);
+        }
+
+
+
+        private async Task AssignMaintenance(MaintenanceRequests request)
+        {
+            var technician = await _db.Technicians
+                .Where(x =&gt;
+                    x.Specialization != TechnicianRoles.Installer.ToString() &amp;&amp;
+                    x.IsAvailable &amp;&amp;
+                    x.IsActiveDeliveries &lt; 5 &amp;&amp;
+                    x.IsActive)
+                .OrderBy(x =&gt; x.IsActiveDeliveries)
+                .ThenBy(x =&gt; x.TechnicianId)
+                .FirstOrDefaultAsync();
+
+            if (technician == null)
+                return; 
+
+            var maintenanceTechnician = new MaintenanceTechnicians
+            {
+                RequestId = request.RequestId,
+                TechnicianId = technician.TechnicianId,
+                ServicePrice = technician.Service_Price
+            };
+
+            await _db.MaintenanceTechnicians.AddAsync(maintenanceTechnician);
+
+            
+            request.Status = MaintenanceStatus.Assigned.ToString();
+
+      
+            technician.IsActiveDeliveries++;
+
+            if (technician.IsActiveDeliveries &gt;= 5)
+                technician.IsAvailable = false;
+        }
+
+
+        public async Task&lt;List&lt;MaintenanceRequestDto&gt;&gt; maintenanceRequestDtos(string userId)
+        {
+            
+                var assignedItems = await (from m in _db.Set&lt;MaintenanceRequests&gt;()
+                                     join i in _db.Set&lt;Installations&gt;() on m.InstallationId equals i.InstallationId
+                                     join or in _db.Set&lt;OrderItems&gt;() on i.OrderId equals or.OrderId
+                                     join o in _db.Set&lt;Orders&gt;() on or.OrderId equals o.OrderId
+                                     join mt in _db.Set&lt;MaintenanceTechnicians&gt;() on m.RequestId equals mt.RequestId
+                                     join t in _db.Set&lt;Technicians&gt;()
+                                     on mt.TechnicianId equals t.TechnicianId
+                                     where t.UserId == userId &amp;&amp; m.IsActive &amp;&amp; i.IsActive == false &amp;&amp; m.Status != MaintenanceStatus.Completed.ToString()
+                                     select new MaintenanceRequestDto
+                                     {
+                                         UserId = userId,
+                                         OrderId = or.OrderId,
+                                         CustomerAddress = o.DeliveryAddress,
+                                         CustomerPhoneNumber = o.PhoneNumber,
+                                         Status = m.Status,
+                                         AssignedDate = m.CreatedAt,
+                                         RequestId=m.RequestId,
+
+                                     }).ToListAsync();
+                return  assignedItems;                                
+                                   
+          
+        }
+
+        public async Task&lt;List&lt;string&gt;&gt;UploadMaintenanceImages(List&lt;IFormFile&gt; files)
+        {
+            try
+            {
+                if (files.Count == 0 || !files.Any())
+                {
+                    throw new Exception(&quot;Please uplaod ateast ome image&quot;);
+                }
+
+                var uploadPath = new List&lt;string&gt;();
+
+                var folderPath = Path.Combine(web.WebRootPath, &quot;uploads&quot;, &quot;maintenance&quot;);
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                foreach ( var file in files)
+                {
+                    var fileName = $&quot;{Guid.NewGuid()}{Path.GetExtension(file.FileName)}&quot;;
+                    var filePath = Path.Combine(folderPath, fileName);
+
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+
+                    uploadPath.Add($&quot;/uploads/installations/{fileName}&quot;);
+                }
+                return uploadPath;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;List&lt;string&gt;&gt; CompletedMaintenanceTask(MaintenanceReportDto dto)
+        {
+            if (dto == null)
+                throw new ArgumentNullException(nameof(dto));
+
+            if (string.IsNullOrWhiteSpace(dto.RequestId))
+                throw new ValidationException(&quot;RequestId is required.&quot;);
+
+            if (dto.Images == null || !dto.Images.Any())
+                throw new ValidationException(&quot;At least one image must be uploaded.&quot;);
+
+            var request = await _db.Set&lt;MaintenanceRequests&gt;()
+                .Include(x =&gt; x.Maintenances)
+                    .ThenInclude(x =&gt; x.Technician)
+                .Include(x =&gt; x.Installation)
+                .FirstOrDefaultAsync(x =&gt; x.RequestId == dto.RequestId);
+
+            if (request == null)
+                throw new NotFoundException(MessageHelper.Get(&quot;Maintenance&quot;, &quot;NotFound&quot;));
+
+            if (request.Status == MaintenanceStatus.Completed.ToString())
+                throw new DataExistsException(MessageHelper.Get(&quot;Maintenance&quot;,&quot;Completed&quot;));
+
+           
+            var uploadedImages = await UploadMaintenanceImages(dto.Images);
+            var imageUrlsJson = JsonSerializer.Serialize(uploadedImages);
+
+         
+            request.Status = MaintenanceStatus.Completed.ToString();
+            request.IsActive = false;
+
+            if (request.Installation != null)
+                request.Installation.IsActive = true;
+
+          
+            foreach (var maintenance in request.Maintenances)
+            {
+                var technician = maintenance.Technician;
+
+                if (technician != null &amp;&amp; technician.IsActiveDeliveries &gt; 0)
+                {
+                    technician.IsActiveDeliveries -= 1;
+                }
+            }
+
+          
+            var report = new MaintenanceReports
+            {
+                RequestId = request.RequestId,
+                ReplacedParts = dto.ReplacedParts,
+                Notes = dto.Notes,
+                Image_Url = imageUrlsJson,
+                CreatedAt=TimeUtility.NowIST()
+            };
+
+            await _db.Set&lt;MaintenanceReports&gt;().AddAsync(report);
+
+            await _db.SaveChangesAsync();
+
+           
+            var result = new List&lt;string&gt;();
+
+            var firstTechnician = request.Maintenances.FirstOrDefault()?.Technician;
+
+            if (firstTechnician != null)
+                result.Add(firstTechnician.UserId.ToString());
+
+            if (request.UserId != null)
+                result.Add(request.UserId.ToString());
+
+            if (request.Installation?.OrderId != null)
+                result.Add(request.Installation.OrderId.ToString());
+
+            result.Add(request.RequestId);
+
+            return result;
+        }
+
+        public async Task&lt;List&lt;object&gt;&gt; GetCompletedMaintenances(string userId)
+        {
+            
+                var maintenances = await (from m in _db.Set&lt;MaintenanceRequests&gt;() join mt in _db.Set&lt;MaintenanceTechnicians&gt;()
+                                       on m.RequestId equals mt.RequestId join t in _db.Set&lt;Technicians&gt;() on mt.TechnicianId equals t.TechnicianId
+                                          join mr in _db.Set&lt;MaintenanceReports&gt;() on mt.RequestId equals mr.RequestId join i in _db.Set&lt;Installations&gt;()
+                                          on m.InstallationId equals i.InstallationId 
+                                          join d in _db.Set&lt;Delivery&gt;() on i.DeliveryId equals d.DeliveryId join o in _db.Set&lt;Orders&gt;()
+                                          on d.OrderId equals o.OrderId
+                                          where m.Status == MaintenanceStatus.Completed.ToString() &amp;&amp; t.UserId == userId &amp;&amp; t.IsActive select new
+                                          {
+                                              RequestId=mt.RequestId,
+                                              CompleteDate=mr.CreatedAt,
+                                              Address=o.DeliveryAddress,
+                                              Status=i.Status,
+
+                                          }
+
+                                       ).OrderByDescending(x=&gt;x.CompleteDate).ToListAsync&lt;object&gt;();
+                return maintenances;
+        
+          
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,125,1],[33,9,33,10,1],[34,13,34,22,1],[35,13,35,28,1],[36,13,36,56,1],[37,9,37,10,1],[39,9,39,10,1],[41,13,41,14,1],[42,17,57,42,1],[58,17,58,30,1],[60,13,60,30,0],[61,13,61,14,0],[62,17,62,23,0],[64,9,64,10,1],[67,9,67,10,1],[68,13,68,81,1],[70,13,70,14,1],[71,17,72,165,1],[75,17,75,42,1],[76,21,76,96,1],[78,17,78,44,1],[79,21,79,93,0],[80,17,80,47,1],[84,17,84,59,1],[86,17,94,19,1],[95,17,95,72,1],[97,17,97,50,1],[99,17,106,19,1],[108,17,108,60,1],[110,17,121,19,1],[123,17,123,83,1],[124,17,124,46,1],[125,17,125,50,1],[128,13,128,14,1],[129,13,129,30,1],[130,13,130,14,1],[131,17,131,52,1],[132,17,132,23,1],[133,13,133,14,0],[134,9,134,10,1],[139,9,139,10,1],[140,13,140,39,1],[142,13,142,73,1],[143,9,143,10,1],[148,9,148,10,1],[149,13,157,40,1],[159,13,159,36,1],[160,17,160,24,0],[162,13,167,15,1],[169,13,169,78,1],[172,13,172,68,1],[175,13,175,45,1],[177,13,177,52,1],[178,17,178,48,0],[179,9,179,10,1],[183,9,183,10,1],[185,17,203,55,1],[204,17,204,39,1],[207,9,207,10,1],[210,9,210,10,1],[212,13,212,14,1],[213,17,213,54,1],[214,17,214,18,0],[215,21,215,75,0],[218,17,218,53,1],[220,17,220,90,1],[221,17,221,51,1],[222,17,222,18,0],[223,21,223,59,0],[224,17,224,18,0],[226,17,226,24,1],[226,27,226,35,1],[226,36,226,38,1],[226,39,226,44,1],[227,17,227,18,1],[228,21,228,90,1],[229,21,229,71,1],[231,21,231,82,1],[232,21,232,52,1],[234,21,234,74,1],[235,17,235,18,1],[236,17,236,35,1],[238,13,238,30,0],[239,13,239,14,0],[240,17,240,23,0],[242,9,242,10,1],[245,9,245,10,1],[246,13,246,29,1],[247,17,247,62,1],[249,13,249,58,1],[250,17,250,73,0],[252,13,252,57,1],[253,17,253,87,0],[255,13,259,73,1],[261,13,261,33,1],[262,17,262,91,1],[264,13,264,74,1],[265,17,265,93,0],[268,13,268,76,1],[269,13,269,74,1],[272,13,272,69,1],[273,13,273,38,1],[275,13,275,46,1],[276,17,276,54,1],[279,13,279,20,1],[279,22,279,37,0],[279,38,279,40,1],[279,41,279,61,1],[280,13,280,14,0],[281,17,281,57,0],[283,17,283,77,0],[284,17,284,18,0],[285,21,285,56,0],[286,17,286,18,0],[287,13,287,14,0],[290,13,297,15,1],[299,13,299,66,1],[301,13,301,42,1],[304,13,304,45,1],[306,13,306,85,1],[308,13,308,41,1],[309,17,309,63,0],[311,13,311,40,1],[312,17,312,55,1],[314,13,314,55,1],[315,17,315,69,1],[317,13,317,43,1],[319,13,319,27,1],[320,9,320,10,1],[323,9,323,10,1],[325,17,340,101,1],[341,17,341,37,1],[344,9,344,10,1]]);
+    </script>
+  </body>
+</html>

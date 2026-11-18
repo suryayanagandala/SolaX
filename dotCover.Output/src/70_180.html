@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\CoreModels\DTO'S\InvoiceDto.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CoreModels.DTO_S
+{
+    public class InvoiceDto
+    {
+        public int OrderId {  get; set; }
+
+        public string CustomerName { get; set; }= null!;
+
+        public string CustomerEmail { get; set; } = null!;
+
+        public string PhoneNumber { get; set; }=null!;
+
+        public string OrderStatus { get; set; }=null!;
+
+        public DateOnly InvoiceDate { get; set; }
+
+        public decimal Tax {  get; set; }
+
+        public PaymentDto? Payment { get; set; }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,31,11,35,1],[11,36,11,40,1],[13,38,13,42,1],[13,43,13,47,1],[13,51,13,56,1],[15,39,15,43,1],[15,44,15,48,1],[15,53,15,58,1],[17,37,17,41,0],[17,42,17,46,1],[17,49,17,54,1],[19,37,19,41,0],[19,42,19,46,1],[19,49,19,54,1],[21,39,21,43,1],[21,44,21,48,1],[23,31,23,35,1],[23,36,23,40,1],[25,38,25,42,1],[25,43,25,47,1]]);
+    </script>
+  </body>
+</html>

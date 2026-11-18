@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\InvoiceRepository.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using iText.IO.Font.Constants;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure
+{
+    public class InvoiceRepository : IInvoiceRepository
+    {
+        private readonly ApplicationDbContext _db;
+
+        public InvoiceRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+       
+
+        public async Task&lt;InvoiceDto&gt; GetInvoice(int orderId)
+        {
+            try
+            {
+                var order = await _db.Orders.Include(x =&gt; x.Payment.Where(x =&gt; x.OrderId == orderId)).Include(x =&gt; x.User).Include(x=&gt;x.Invoices)
+                    .FirstOrDefaultAsync(x =&gt; x.OrderId == orderId);
+                if(order == null)
+                {
+                    throw new Exception(&quot;Invalid Order or Order not found&quot;);
+                }
+
+                
+
+                var invoice = new InvoiceDto
+                {
+                    OrderId = orderId,
+                    OrderStatus = order.Status.ToString(),
+                    CustomerName = order.FullName,
+                    CustomerEmail = order.User.EmailId,
+                    PhoneNumber = order.User.PhoneNumber,
+                    Tax=order.Invoices.First().Tax,
+                    InvoiceDate=DateOnly.FromDateTime(order.Invoices.First().InvoiceDate.DateTime),
+                    Payment = order.Payment.Select(x =&gt; new PaymentDto
+                    {
+                        PaymentMethod = x.PaymentMethod,
+                        PaymentStatus = x.PaymentStatus,
+                        Amount=x.Amount,
+                    }).FirstOrDefault()
+                };
+
+                return invoice;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task&lt;byte[]&gt; GeneratePdf(int orderId)
+        {
+            var invoice = await GetInvoice(orderId);
+            if (invoice == null)
+                throw new Exception(&quot;Invalid order&quot;);
+
+            using var stream = new MemoryStream();
+            var writer = new PdfWriter(stream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf);
+
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            document.Add(new Paragraph(&quot;INVOICE&quot;).SetFontSize(20)
+                    .SetFont(boldFont)
+                    .SetTextAlignment(TextAlignment.CENTER)
+            );
+
+            document.Add(new Paragraph($&quot;Invoice Date: {invoice.InvoiceDate}&quot;));
+            document.Add(new Paragraph($&quot;Order Id: {invoice.OrderId}&quot;));
+
+            document.Add(new Paragraph(&quot;Customer Details&quot;).SetFont(boldFont));
+
+            document.Add(new Paragraph(invoice.CustomerName));
+            document.Add(new Paragraph(invoice.CustomerEmail));
+
+            Table table = new Table(2).UseAllAvailableWidth();
+
+            table.AddCell(&quot;Amount&quot;);
+            table.AddCell($&quot;{invoice.Payment?.Amount ?? 0}&quot;);
+
+            table.AddCell(&quot;Tax&quot;);
+            table.AddCell($&quot;{invoice.Tax}&quot;);
+
+            table.AddCell(&quot;Total&quot;);
+            table.AddCell($&quot;{invoice.Payment?.Amount}&quot;);
+
+            document.Add(table);
+
+            document.Add(new Paragraph()
+                    .Add(new Text(&quot;Payment Status: &quot;).SetFont(boldFont)).Add(invoice.Payment?.PaymentStatus ?? &quot;Pending&quot;)
+            );
+
+            document.Close();
+            return stream.ToArray();
+        }
+
+
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,58,0],[25,9,25,10,0],[26,13,26,22,0],[27,9,27,10,0],[32,9,32,10,0],[34,13,34,14,0],[35,17,36,69,0],[37,17,37,34,0],[38,17,38,18,0],[39,21,39,77,0],[44,17,53,57,0],[53,57,58,22,0],[58,22,59,19,0],[61,17,61,32,0],[63,13,63,30,0],[64,13,64,14,0],[65,17,65,23,0],[67,9,67,10,0],[70,9,70,10,0],[71,13,71,53,0],[72,13,72,33,0],[73,17,73,54,0],[75,13,75,51,0],[76,13,76,48,0],[77,13,77,47,0],[78,13,78,46,0],[80,13,80,84,0],[82,13,85,15,0],[87,13,87,81,0],[88,13,88,73,0],[90,13,90,79,0],[92,13,92,63,0],[93,13,93,64,0],[95,13,95,63,0],[97,13,97,37,0],[98,13,98,62,0],[100,13,100,34,0],[101,13,101,45,0],[103,13,103,36,0],[104,13,104,57,0],[106,13,106,33,0],[108,13,110,15,0],[112,13,112,30,0],[113,13,113,37,0],[114,9,114,10,0]]);
+    </script>
+  </body>
+</html>

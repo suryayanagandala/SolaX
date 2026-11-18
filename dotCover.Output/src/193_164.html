@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\DbAccessaLayer\Infrastructure\Background\DeliveryAssignmentWorker.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DbAccessaLayer.Infrastructure.Background
+{
+    public class DeliveryAssignmentWorker : BackgroundService
+    {
+        private readonly IServiceScopeFactory serviceScopeFactory;
+
+        public DeliveryAssignmentWorker(IServiceScopeFactory serviceScopeFactory)
+        {
+            this.serviceScopeFactory= serviceScopeFactory;
+        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                using var scope= serviceScopeFactory.CreateScope();
+
+                var deliveryRepository = scope.ServiceProvider.GetRequiredService&lt;IDeliveryInterface&gt;();
+
+                await deliveryRepository.AssignedRemainingDeliveries();
+
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,9,16,82,0],[17,9,17,10,0],[18,13,18,59,0],[19,9,19,10,0],[21,9,21,10,0],[22,13,22,59,0],[23,13,23,14,0],[24,17,24,68,0],[26,17,26,105,0],[28,17,28,72,0],[30,17,30,74,0],[31,13,31,14,0],[32,9,32,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\SqLite\Infrastructure\HomeRepositoryTest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels.CustomMessages;
+using CoreModels.Entities;
+using DbAccessaLayer.Infrastructure;
+using SolarXNUnit.SqLite.Base;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.SqLite.Infrastructure
+{
+    public class HomeRepositoryTest : SqliteTestBase
+    {
+        private HomeRepository homeRepository;
+
+        [SetUp]
+        public void SetUp()
+        {
+            homeRepository = new HomeRepository(_db);
+        }
+
+        //GetHomeCategories
+        [Test]
+        public async Task GetAllCategories_Success()
+        {
+
+            var result = await homeRepository.GetHomeCategories();
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotNull(result);
+
+            });
+        }
+
+        [Test]
+        public void GetAllCategories_ThrowException()
+        {
+            homeRepository = new HomeRepository(null);
+            Assert.ThrowsAsync&lt;NullReferenceException&gt;(async () =&gt; await homeRepository.GetHomeCategories());
+        }
+
+        //GetHomePackages
+        [Test]
+        public async Task GetHomePackes_Success()
+        {
+            var result = await homeRepository.GetHomePackage();
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result);
+                Assert.That(result.Count(),Is.EqualTo(2));
+                Assert.That(result[0].Children.SelectMany(x=&gt;x.ProductsDto).Count(), Is.EqualTo(1));
+            });
+        }
+
+        [Test]
+        public void GetHomePackage_Failure_ThrowException()
+        {
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await  homeRepository.GetHomePackage());
+        }
+
+        //GetProductBySlug
+
+        [Test]
+        public void GetProductBySlug_Failure_ThrowException()
+        {
+            string slug = &quot;fake slug&quot;;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await homeRepository.GetProductBySlug(slug));
+        }
+
+        [Test]
+        public async Task GetProductBySlug_Success()
+        {
+            string slug = &quot;solar-panels&quot;;
+            var result = await homeRepository.GetProductBySlug(slug);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result.Children);
+                Assert.That(result.Children.Count(), Is.EqualTo(1));
+                Assert.That(result.Children.SelectMany(x =&gt; x.ProductsDto).Count(), Is.EqualTo(1));
+              
+            });
+        }
+
+        [Test]
+        public async Task GetProductsBySlug_Success_Senario_NoSubCategories()
+        {
+            string slug = &quot;solarx&quot;;
+            var result = await homeRepository.GetProductBySlug(slug);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result.ProductsDto);
+            });
+        }
+
+        [Test]
+        public void ViewProducts_Failure_Case()
+        {
+            int productId = 77;
+            Assert.ThrowsAsync&lt;NotFoundException&gt;(async()=&gt;await homeRepository.ViewProductDetails(productId));
+        }
+
+        [Test]
+        public async Task ViewProducts_Success()
+        {
+            int productId = 1;
+            var result = await homeRepository.ViewProductDetails(productId);
+            Assert.Multiple(() =&gt;
+            {
+                Assert.IsNotEmpty(result.Brand);
+                Assert.That(result.productReviews.Count(),Is.EqualTo(0));
+            });
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,9,20,10,1],[21,13,21,54,1],[22,9,22,10,1],[27,9,27,10,1],[29,13,29,67,1],[30,13,31,13,1],[31,13,31,14,1],[31,14,32,17,1],[32,17,32,42,1],[32,42,34,13,1],[34,13,34,14,1],[34,14,34,16,1],[35,9,35,10,1],[39,9,39,10,1],[40,13,40,55,1],[41,13,41,68,1],[41,68,41,108,1],[41,108,41,110,1],[42,9,42,10,1],[47,9,47,10,1],[48,13,48,64,1],[49,13,50,13,1],[50,13,50,14,1],[50,14,51,17,1],[51,17,51,43,1],[51,43,52,17,1],[52,17,52,59,1],[52,59,53,17,1],[53,17,53,62,1],[53,62,53,75,1],[53,75,53,101,1],[53,101,54,13,1],[54,13,54,14,1],[54,14,54,16,1],[55,9,55,10,1],[59,9,59,10,1],[60,13,60,60,1],[60,60,60,98,1],[60,98,60,100,1],[61,9,61,10,0],[67,9,67,10,1],[68,13,68,39,1],[69,13,69,60,1],[69,60,69,103,1],[69,103,69,105,1],[70,9,70,10,1],[74,9,74,10,1],[75,13,75,42,1],[76,13,76,70,1],[77,13,78,13,1],[78,13,78,14,1],[78,14,79,17,1],[79,17,79,52,1],[79,52,80,17,1],[80,17,80,69,1],[80,69,81,17,1],[81,17,81,61,1],[81,61,81,74,1],[81,74,81,100,1],[81,100,83,13,1],[83,13,83,14,1],[83,14,83,16,1],[84,9,84,10,1],[88,9,88,10,1],[89,13,89,36,1],[90,13,90,70,1],[91,13,92,13,1],[92,13,92,14,1],[92,14,93,17,1],[93,17,93,55,1],[93,55,94,13,1],[94,13,94,14,1],[94,14,94,16,1],[95,9,95,10,1],[99,9,99,10,1],[100,13,100,32,1],[101,13,101,60,1],[101,60,101,110,1],[101,110,101,112,1],[102,9,102,10,1],[106,9,106,10,1],[107,13,107,31,1],[108,13,108,77,1],[109,13,110,13,1],[110,13,110,14,1],[110,14,111,17,1],[111,17,111,49,1],[111,49,112,17,1],[112,17,112,74,1],[112,74,113,13,1],[113,13,113,14,1],[113,14,113,16,1],[114,9,114,10,1]]);
+    </script>
+  </body>
+</html>

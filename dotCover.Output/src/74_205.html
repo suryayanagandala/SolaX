@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>C:\Users\syanagandala\source\repos\SolarProject\SolarXNUnit\Utilities\DbContextMock.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using ApplicationLayer.Interfaces;
+using CoreModels;
+using CoreModels.DTO_S;
+using CoreModels.Entities;
+using DbAccessaLayer.Helpers;
+using DbAccessaLayer.Infrastructure;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Configuration;
+using Moq;
+using NUnit.Framework;
+using SolarXNUnit.HelperMethods;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace SolarXNUnit.Utilities
+{
+    public class DbContextMock
+    {
+        protected Mock&lt;ApplicationDbContext&gt; _mockDb;
+        protected IQueryable&lt;Users&gt; _users;
+        protected UserRepository _userRepository;
+
+        protected Mock&lt;IEmailService&gt; _mockEmailService;
+        protected Mock&lt;ISignalRRepository&gt; _signalRRepository;
+        protected Mock&lt;IDbContextTransaction&gt; _mockTransaction;
+
+        protected List&lt;OtpManager&gt; _otpManager;
+        protected List&lt;Users&gt; users;
+
+        [OneTimeSetUp]
+        public void OneTimeSetup()
+        {
+            _users = DataInitializer.UsersData();
+            _otpManager = DataInitializer.OtpManagers().ToList();
+            users = DataInitializer.UsersData().ToList();
+        }
+
+        [SetUp]
+        public void Setup()
+        {
+         
+            // 1️ Initialize basic mocks FIRST
+
+            _mockEmailService = new Mock&lt;IEmailService&gt;();
+            _signalRRepository = new Mock&lt;ISignalRRepository&gt;();
+
+            var mockHttpContextAccessor = new Mock&lt;IHttpContextAccessor&gt;();
+
+            // 2️ Prepare Users DbSet Mock
+            
+
+            var mockSet = new Mock&lt;DbSet&lt;Users&gt;&gt;();
+             _mockTransaction = new Mock&lt;IDbContextTransaction&gt;();
+
+            _mockTransaction
+                .Setup(t =&gt; t.CommitAsync(It.IsAny&lt;CancellationToken&gt;()))
+                .Returns(Task.CompletedTask);
+
+            _mockTransaction
+                .Setup(t =&gt; t.RollbackAsync(It.IsAny&lt;CancellationToken&gt;()))
+                .Returns(Task.CompletedTask);
+
+            mockSet.As&lt;IAsyncEnumerable&lt;Users&gt;&gt;()
+                .Setup(m =&gt; m.GetAsyncEnumerator(It.IsAny&lt;CancellationToken&gt;()))
+                .Returns(new TestAsyncEnumerator&lt;Users&gt;(_users.GetEnumerator()));
+
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;()
+                .Setup(m =&gt; m.Provider)
+                .Returns(new TestAsyncQueryProvider&lt;Users&gt;(_users.Provider));
+
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.Expression).Returns(_users.Expression);
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.ElementType).Returns(_users.ElementType);
+
+            mockSet.As&lt;IQueryable&lt;Users&gt;&gt;().Setup(m =&gt; m.GetEnumerator()).Returns(()=&gt;users.GetEnumerator());
+
+      
+            // 3️ Create DbContext Options 
+         
+
+            var options = new DbContextOptionsBuilder&lt;ApplicationDbContext&gt;()
+                .Options;
+
+            _mockDb = new Mock&lt;ApplicationDbContext&gt;(
+                options,
+                mockHttpContextAccessor.Object
+            );
+
+            _mockDb.Setup(x =&gt; x.Users).Returns(mockSet.Object);
+            _mockDb.Setup(x =&gt; x.Set&lt;Users&gt;()).Returns(mockSet.Object);
+
+            _mockDb.Setup(x =&gt; x.SaveChangesAsync(It.IsAny&lt;CancellationToken&gt;()))
+                   .ReturnsAsync(1);
+
+       
+            // 4 Mock Database + Transaction
+        
+
+            var mockDatabase = new Mock&lt;DatabaseFacade&gt;(_mockDb.Object);
+
+            mockDatabase
+                .Setup(db =&gt; db.BeginTransactionAsync(It.IsAny&lt;CancellationToken&gt;()))
+                .ReturnsAsync(_mockTransaction.Object);
+
+            _mockDb.Setup(db =&gt; db.Database)
+                   .Returns(mockDatabase.Object);
+
+ 
+            // 5 Mock Notifications DbSet
+          
+
+            var mockNotificationSet = new Mock&lt;DbSet&lt;Notifications&gt;&gt;();
+
+            //If someone calls AddAsync() on Notifications table, don’t crash — just return something
+            mockNotificationSet
+                .Setup(m =&gt; m.AddAsync(It.IsAny&lt;Notifications&gt;(), It.IsAny&lt;CancellationToken&gt;()))
+                .ReturnsAsync((Notifications entity, CancellationToken token) =&gt; null);
+
+            _mockDb.Setup(x =&gt; x.Notifications)
+                   .Returns(mockNotificationSet.Object);
+
+            //mcok otpmanager
+            //var otpManager = new Mock&lt;OtpManager&gt;();
+            //otpManager.Setup(x =&gt; x.token).Returns(&quot;NewToken&quot;);
+
+       
+            //  Setup Real IConfiguration for MessageHelper
+         
+
+            var inMemorySettings = new Dictionary&lt;string, string&gt;
+            {
+                { &quot;User:Register&quot;, &quot;User registered successfully&quot; },
+                { &quot;User:UserAlreadyExists&quot;, &quot;User already exists&quot; },
+                 // JWT Settings 
+                { &quot;Jwt:Key&quot;, &quot;THIS_IS_MY_SUPER_SECRET_KEY_123456&quot; },
+                { &quot;Jwt:Issuer&quot;, &quot;TestIssuer&quot; },
+                { &quot;Jwt:Audience&quot;, &quot;TestAudience&quot; },
+                { &quot;Jwt:DurationInMinutes&quot;, &quot;60&quot; }
+            };
+
+            IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings)
+                .Build();
+
+            //  Initialize static dictionary
+            MessageHelper.Initialize(config);
+
+
+            //Mock OtpMnager
+            var mockSetForOtpManger = new Mock&lt;DbSet&lt;OtpManager&gt;&gt;();
+            var querableOtpmanger=_otpManager.AsQueryable();
+
+            mockSetForOtpManger.As&lt;IAsyncEnumerable&lt;OtpManager&gt;&gt;()
+                .Setup(m =&gt; m.GetAsyncEnumerator(It.IsAny&lt;CancellationToken&gt;()))
+                .Returns(new TestAsyncEnumerator&lt;OtpManager&gt;(querableOtpmanger.GetEnumerator()));
+
+            mockSetForOtpManger.As&lt;IQueryable&lt;OtpManager&gt;&gt;()
+                .Setup(m =&gt; m.Provider)
+                .Returns(new TestAsyncQueryProvider&lt;OtpManager&gt;(querableOtpmanger.Provider));
+
+            mockSetForOtpManger.As&lt;IQueryable&lt;OtpManager&gt;&gt;().Setup(m =&gt; m.Expression).Returns(querableOtpmanger.Expression);
+            mockSetForOtpManger.As&lt;IQueryable&lt;OtpManager&gt;&gt;().Setup(m =&gt; m.ElementType).Returns(querableOtpmanger.ElementType);
+            mockSetForOtpManger.As&lt;IQueryable&lt;OtpManager&gt;&gt;().Setup(m =&gt; m.GetEnumerator()).Returns(()=&gt;querableOtpmanger.GetEnumerator());
+
+            _mockDb.Setup(x =&gt; x.OtpManagers).Returns(mockSetForOtpManger.Object);
+
+
+            //  Create Repository
+            _userRepository = new UserRepository(
+                _mockDb.Object,
+                _mockEmailService.Object,
+                config,
+                _signalRRepository.Object
+            );
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,9,37,10,1],[38,13,38,50,1],[39,13,39,66,1],[40,13,40,58,1],[41,9,41,10,1],[45,9,45,10,1],[49,13,49,59,1],[50,13,50,65,1],[52,13,52,76,1],[57,13,57,52,1],[58,14,58,67,1],[60,13,62,46,1],[64,13,66,46,1],[68,13,70,82,1],[72,13,74,78,1],[76,13,76,97,1],[77,13,77,99,1],[79,13,79,87,1],[79,87,79,108,0],[79,108,79,110,1],[85,13,86,26,1],[88,13,91,15,1],[93,13,93,65,1],[94,13,94,72,1],[96,13,97,37,1],[103,13,103,73,1],[105,13,107,56,1],[109,13,110,50,1],[116,13,116,72,1],[119,13,121,82,1],[121,82,121,86,1],[121,86,121,88,1],[123,13,124,57,1],[134,13,143,15,1],[145,13,146,26,1],[149,13,149,46,1],[153,13,153,69,1],[154,13,154,61,1],[156,13,158,98,1],[160,13,162,94,1],[164,13,164,125,1],[165,13,165,127,1],[166,13,166,104,1],[166,104,166,137,0],[166,137,166,139,1],[168,13,168,83,1],[172,13,177,15,1],[178,9,178,10,1]]);
+    </script>
+  </body>
+</html>
