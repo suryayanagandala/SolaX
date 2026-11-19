@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -275,7 +275,7 @@ namespace DbAccessaLayer.Infrastructure
         {
             try
             { 
-                var deliveries=(from d in _db.Deliveries join t in _db.Technicians on d.AssignedToTechId equals
+                var deliveries=await (from d in _db.Deliveries join t in _db.Technicians on d.AssignedToTechId equals
                           t.TechnicianId join u in _db.Users on t.UserId equals u.UserId
                           where u.UserId == userId && d.Status== "Delivered"
                           select new DeliveryDto
@@ -287,9 +287,8 @@ namespace DbAccessaLayer.Infrastructure
                               Status=d.Status!,
                               OrderId=d.OrderId
                           }
-                          ).OrderByDescending(x=>x.DeliveryAt).ToListAsync();
-
-                return await  deliveries;
+                          ).ToListAsync();
+                return deliveries.OrderByDescending(x => x.DeliveryAt).ToList();
             }
             catch (Exception)
             {

@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -177,6 +177,7 @@ namespace DbAccessaLayer.Infrastructure
                     UserId = dto.UserId,
                     Type = NotificationType.Order,
                     Title = "Place Order",
+                    CreatedAt = TimeUtility.NowIST(),
                     Message = $"Your Order {order.OrderId} has status of {order.Status}"
                 };
                 await _db.Set<Notifications>().AddAsync(messages);
@@ -278,6 +279,7 @@ namespace DbAccessaLayer.Infrastructure
                     UserId = userId,
                     Type = NotificationType.Order,
                     Title = "Cancel Order",
+                    CreatedAt = TimeUtility.NowIST(),
                     Message = $"Your orderId {orderId} has cancelled"
                 };
 

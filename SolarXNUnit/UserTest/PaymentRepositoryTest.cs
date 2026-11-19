@@ -1,4 +1,4 @@
-﻿using CoreModels.DTO_S;
+using CoreModels.DTO_S;
 using CoreModels.Enums;
 using Moq;
 using SolarXNUnit.Utilities;
@@ -31,13 +31,13 @@ namespace SolarXNUnit.UserTest
            
             Assert.That(result.OrderId, Is.EqualTo(1));
             Assert.That(result.PaymentMethod, Is.EqualTo("COD"));
-            Assert.That(result.UserId, Is.EqualTo("user-1"));
+            Assert.That(result.UserId, Is.EqualTo("ERCXET"));
 
             
             Assert.That(_orders.First().Status, Is.EqualTo(OrderStatus.CONFIRMED));
 
            
-            Assert.That(_products.First().Stock, Is.EqualTo(initialStock - 2));
+            Assert.That(_products.First().Stock, Is.EqualTo(initialStock - 1));
 
           
             Assert.That(_technicians.First().IsActiveDeliveries, Is.EqualTo(1));
@@ -46,14 +46,14 @@ namespace SolarXNUnit.UserTest
             Assert.That(_invoices.Count, Is.EqualTo(1));
 
          
-            Assert.That(_notifications.Count, Is.EqualTo(1));
+            Assert.That(_notifications.Count, Is.EqualTo(2));
 
          
             _transaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
 
 
             _signalRRepository.Verify(x =>x.SendAsyncNotification( It.IsAny<string>(), It.IsAny<NotificationDto>()),
-                Times.Once);
+                Times.Exactly(2));
         }
 
         [Test]

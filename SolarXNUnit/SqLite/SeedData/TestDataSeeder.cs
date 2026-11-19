@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -34,11 +34,7 @@ namespace SolarXNUnit.SqLite.SeedData
                 var products = DataInitializer.GetProducts();
 
                 
-                foreach (var product in products)
-                {
-                    context.Products.AddRange(products);
-                    
-                }
+                context.Products.AddRange(products);
                 context.SaveChanges();
 
 

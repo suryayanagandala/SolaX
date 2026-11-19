@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -99,6 +99,7 @@ namespace DbAccessaLayer.Infrastructure
                         UserId = reports.installationTechnicians.First().Technician.UserId,
                         Message = "Updated status",
                         Type = NotificationType.System,
+                        CreatedAt = TimeUtility.NowIST(),
 
                     };
                     await _db.Notifications.AddAsync(messages);

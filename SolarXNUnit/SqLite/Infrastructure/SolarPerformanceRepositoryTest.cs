@@ -1,4 +1,5 @@
-﻿using CoreModels.CustomMessages;
+using CoreModels;
+using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
 using CoreModels.Enums;
@@ -35,7 +36,7 @@ namespace SolarXNUnit.SqLite.Infrastructure
         {
             var data = await solarRepository.GetAllUsers();
             Assert.IsNotNull(data);
-            Assert.That(data.Count(), Is.EqualTo(1));   
+            Assert.That(data.Count(), Is.EqualTo(2));
         }
 
         [Test]
@@ -43,7 +44,7 @@ namespace SolarXNUnit.SqLite.Infrastructure
         {
             var data = await solarRepository.GetAllUsers();
             Assert.IsNotNull(data);
-            Assert.IsFalse(data.Count()>1);
+            Assert.That(data.Count(), Is.EqualTo(2));
         }
 
 
@@ -115,16 +116,6 @@ namespace SolarXNUnit.SqLite.Infrastructure
         [Test]
         public async Task GetMonthlyUpdates_Success()
         {
-            _db.Panels.Add(new Panel
-            {
-                PanelId = 1,
-                UserId = "ERCXET",
-                PanelName = "Solar Panles",
-                Capacity = "600W"
-            });
-
-            await _db.SaveChangesAsync();
-
             _db.SolarPerformances.Add(new SolarPerformance
             {
                 UserId = "ERCXET",
@@ -200,11 +191,30 @@ namespace SolarXNUnit.SqLite.Infrastructure
         [Test]
         public async Task AddToPanel_Success()
         {
+            _db.Deliveries.Add(new Delivery
+            {
+                DeliveryId = 20,
+                OrderId = 2,
+                Status = DeliveryStatus.Delivered.ToString(),
+                AssignedAt = TimeUtility.NowIST(),
+                AssignedBy = "Admin",
+                IsActive = true
+            });
+            _db.Installations.Add(new Installations
+            {
+                InstallationId = "INST-TEST-PANEL",
+                DeliveryId = 20,
+                OrderId = 2,
+                Status = InstallationStatus.Completed.ToString(),
+                CreatedAt = TimeUtility.NowIST(),
+                IsPanelCreated = false
+            });
+            await _db.SaveChangesAsync();
             await solarRepository.AddToPanel();
             //checking the data is inserted
             Assert.That(await _db.Panels.AnyAsync(), Is.True);
 
-            var installation = await _db.Installations.FirstAsync(i => i.InstallationId== "INST-20260201-0002");
+            var installation = await _db.Installations.FirstAsync(i => i.InstallationId== "INST-TEST-PANEL");
 
             Assert.That(installation.IsPanelCreated, Is.True);
         }
@@ -262,17 +272,6 @@ namespace SolarXNUnit.SqLite.Infrastructure
         [Test]
         public async Task GetPanlesDetails_Success()
         {
-            _db.Panels.Add(new Panel
-            {
-                PanelId = 1,
-                UserId = "ERCXET",
-                PanelName = "Solar Panles",
-                Capacity = "600W",
-                IsActive = true,
-            });
-
-            await _db.SaveChangesAsync();
-
             var result = await solarRepository.GetPanelDetails(1);
             Assert.Multiple(() => {
                 Assert.IsNotEmpty(result.ToString());

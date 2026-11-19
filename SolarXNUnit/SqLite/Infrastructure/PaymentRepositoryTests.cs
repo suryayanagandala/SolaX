@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels.DTO_S;
 using CoreModels.Enums;
 using DbAccessaLayer.Infrastructure;
@@ -103,6 +103,11 @@ namespace SolarXNUnit.SqLite.Tests
         [Test]
         public async Task PaymentGateway_Should_Throw_When_AlreadyPaid()
         {
+            // Remove the fixture payment so the first call can pay this order.
+            var seededPayment = await _db.Payments.Where(x => x.OrderId == 1).ToListAsync();
+            _db.Payments.RemoveRange(seededPayment);
+            await _db.SaveChangesAsync();
+
             // Arrange: pay once
             var dto1 = new PaymentCreateDto
             {

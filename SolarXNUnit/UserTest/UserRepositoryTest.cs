@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using BusinessLayer;
 using CoreModels;
 using CoreModels.CustomMessages;
@@ -408,7 +408,7 @@ namespace SolarXNUnit.UserTest
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<Exception>(async () => await _userRepository.UpdatePassword(dto));
-            Assert.That(ex.Message, Is.EqualTo("Messages not found:User.OldPassword"));
+            Assert.That(ex.Message, Is.EqualTo("Oldpassowrd must be same as previous password"));
         }
 
 
@@ -588,7 +588,7 @@ namespace SolarXNUnit.UserTest
         {
             var email = "fakeemail";
             var ex=Assert.ThrowsAsync<Exception>(async () => await _userRepository.UpdateOtpManager(email, "098765", "password"));
-            Assert.That(ex.Message, Does.Contain("Invalid email"));
+            Assert.That(ex.Message, Does.Contain("Email Id not exists"));
         }
 
         [Test]

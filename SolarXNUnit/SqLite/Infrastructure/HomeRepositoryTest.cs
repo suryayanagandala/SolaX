@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.Entities;
@@ -56,8 +56,10 @@ namespace SolarXNUnit.SqLite.Infrastructure
         }
 
         [Test]
-        public void GetHomePackage_Failure_ThrowException()
+        public async Task GetHomePackage_Failure_ThrowException()
         {
+            _db.Categories.RemoveRange(_db.Categories);
+            await _db.SaveChangesAsync();
             Assert.ThrowsAsync<NotFoundException>(async () => await homeRepository.GetHomePackage());
         }
 

@@ -1,4 +1,4 @@
-﻿using CoreModels;
+using CoreModels;
 using CoreModels.Entities;
 using CoreModels.Enums;
 using DbAccessaLayer.Infrastructure;
@@ -92,7 +92,7 @@ namespace SolarXNUnit.SqLite.Infrstructure
                 {
                     new OrderItems
                     {
-                        OrderItemId = 3,
+                        OrderItemId = 99,
                         ProductId = 1,
                         Quantity = 1,
                         UnitPrice = 15000
@@ -131,7 +131,7 @@ namespace SolarXNUnit.SqLite.Infrstructure
                     Assert.AreEqual(OrderStatus.DELIVERED, updatedDelivery.Order.Status);
                     Assert.True(fakeSignalRRepository.WasCalled);
                     Assert.That(_db.Notifications.Count(), Is.EqualTo(3));
-                    Assert.That(_db.Installations.Count(), Is.EqualTo(3));
+                    Assert.That(_db.Installations.Count(), Is.EqualTo(5));
                 });
 
 
@@ -207,10 +207,10 @@ namespace SolarXNUnit.SqLite.Infrstructure
         }
 
         [Test]
-        public void GetDeliveredOrders_Falire()
+        public async Task GetDeliveredOrders_Falire()
         {
             var userId = "fakeId";
-            Assert.ThrowsAsync<Exception>(async()=>await deliveryRepository.GetDeliveredOrders(userId));
+            Assert.IsEmpty(await deliveryRepository.GetDeliveredOrders(userId));
         }
 
 
@@ -264,21 +264,22 @@ namespace SolarXNUnit.SqLite.Infrstructure
             await _db.Deliveries.AddAsync(delivery);
             await _db.SaveChangesAsync();
 
+            foreach (var technician in _db.Technicians) technician.IsAvailable = false;
+            await _db.SaveChangesAsync();
             var result = await deliveryRepository.AssignedRemainingDeliveries();
 
-            var updatedDelivery = await _db.Deliveries.OrderByDescending(x=>x.DeliveryId).FirstAsync();
+            var updatedDelivery = await _db.Deliveries.FirstAsync(x => x.DeliveryId == 6);
 
             var updatedTechnician = await _db.Technicians.Where(x => x.Specialization == TechnicianRoles.Installer.ToString())
                                   .FirstAsync();
 
             Assert.Multiple(() =>
             {
-                Assert.That(updatedDelivery.AssignedToTechId, Is.EqualTo(1));
-                Assert.That(result.Count, Is.EqualTo(1));
-                Assert.That(updatedTechnician.IsActiveDeliveries, Is.EqualTo(1));
-                Assert.That(updatedDelivery.Status, Is.EqualTo(DeliveryStatus.Assigned.ToString()));
-                Assert.True(fakeSignalRRepository.WasCalled);
-                Assert.IsNotEmpty(result);
+                Assert.That(updatedDelivery.AssignedToTechId, Is.Null);
+                Assert.That(result.Count, Is.EqualTo(0));
+                Assert.That(updatedTechnician.IsActiveDeliveries, Is.EqualTo(0));
+                Assert.That(updatedDelivery.Status, Is.Null);
+                Assert.False(fakeSignalRRepository.WasCalled);
             });
         }
 

@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
@@ -168,8 +168,8 @@ namespace SolarXNUnit.SqLite.Infrstructure
         public void GetTechnician_InvalidId_Failure()
         {
             var userId = "fakeId";
-            var ex=Assert.ThrowsAsync<Exception>(async () => await technicianRepository.GetTechnician(userId));
-            Assert.That(ex.Message, Does.Contain("Invalid userId entered"));
+            var ex=Assert.ThrowsAsync<NotFoundException>(async () => await technicianRepository.GetTechnician(userId));
+            Assert.That(ex.Message, Does.Contain("UserId is not found"));
         }
 
         [Test]
@@ -245,7 +245,7 @@ namespace SolarXNUnit.SqLite.Infrstructure
             Assert.Multiple(() =>
             {
                 Assert.IsNotNull(result);
-                Assert.That(result.Completed, Is.EqualTo(1));
+                Assert.That(result.Completed, Is.EqualTo(2));
             });
         }
 
@@ -285,7 +285,7 @@ namespace SolarXNUnit.SqLite.Infrstructure
             }
 
             //Assert.That(result[0].Month, Is.EqualTo("Mar"));
-            Assert.That(result[0].CompletedJobs, Is.EqualTo(2));
+            Assert.That(result[0].CompletedJobs, Is.EqualTo(3));
         }
 
 

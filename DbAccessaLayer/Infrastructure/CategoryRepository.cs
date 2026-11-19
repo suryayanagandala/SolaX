@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
@@ -328,14 +328,14 @@ namespace DbAccessaLayer.Infrastructure
                 }
                 var slug =  GenerateSlug(dto.Name.Trim());
                 var existCategory=await _db.Categories.FirstOrDefaultAsync(x=>x.CategoryId== categoryId&&x.IsActive&&x.ParentCategoryId==null);
+                if (existCategory == null)
+                {
+                    throw new NotFoundException(MessageHelper.Get("Categories", "NotFoundCategories"));
+                }
                 var imageUrl = await ImageHelper.SaveCategoryImage(dto.Image, _env);
                 if (imageUrl == null)
                 {
                     throw new Exception("Image is required");
-                }
-                if (existCategory == null)
-                {
-                    throw new NotFoundException(MessageHelper.Get("Categories", "NotFoundCategories"));
                 }
                 else
                 {

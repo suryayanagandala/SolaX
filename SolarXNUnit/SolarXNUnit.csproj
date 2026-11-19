@@ -31,4 +31,8 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\SolarProject\message.json" Link="message.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

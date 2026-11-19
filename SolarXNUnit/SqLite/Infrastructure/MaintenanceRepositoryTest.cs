@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
 using CoreModels.Enums;
@@ -193,7 +193,7 @@ namespace SolarXNUnit.SqLite.Infrastructure
         {
             var dto = new MaintenanceReportDto
             {
-                RequestId = "R3934582",
+                RequestId = "NONEXISTENT-REQUEST",
                 Notes = "Fixed inverter",
                 ReplacedParts = "Wire",
                 Images = new List<IFormFile>
@@ -206,8 +206,11 @@ namespace SolarXNUnit.SqLite.Infrastructure
         }
 
         [Test]
-        public void UploadMaintenaces_DataExistsException()
+        public async Task UploadMaintenaces_DataExistsException()
         {
+            var completedRequest = await _db.MaintenanceRequests.FirstAsync(x => x.RequestId == "R3934581");
+            completedRequest.Status = "Completed";
+            await _db.SaveChangesAsync();
             var dto = new MaintenanceReportDto
             {
                 RequestId = "R3934581",

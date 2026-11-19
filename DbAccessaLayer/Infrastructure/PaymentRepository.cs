@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -46,6 +46,9 @@ namespace DbAccessaLayer.Infrastructure
                 }
 
                 decimal totalAmount = order.OrderItem.Sum(x => x.Quantity * x.Product.Price);
+
+                if (await _db.Payments.AnyAsync(x => x.OrderId == dto.OrderId))
+                    throw new Exception("Already payment exist");
 
                 var payment = new Payments
                 {
@@ -134,7 +137,8 @@ namespace DbAccessaLayer.Infrastructure
                 {
                     throw new Exception("no order found");
                 }
-                var payment=order.Payment.OrderByDescending(x=>x.PaymentDate).FirstOrDefault();
+                var payment = order.Payment.OrderByDescending(x => x.PaymentDate).FirstOrDefault()
+                    ?? await _db.Payments.Where(x => x.OrderId == orderId).OrderByDescending(x => x.PaymentDate).FirstOrDefaultAsync();
                 var invoice = new Invoices
                 {
                     OrderId = orderId,
@@ -143,7 +147,7 @@ namespace DbAccessaLayer.Infrastructure
                     PhoneNumber = order.PhoneNumber,
                     Amount = order.TotalAmount,
                     PaymentMethod = order.Payment.FirstOrDefault()?.PaymentMethod ?? "Cash",
-                    TotalAmount = order.Payment.First().Amount,
+                    TotalAmount = payment?.Amount ?? order.TotalAmount,
                     OrderStatus = order.Status.ToString(),
                     PaymentStatus = order.Payment.FirstOrDefault()?.PaymentStatus ?? "Pending",
                     InvoiceDate = TimeUtility.NowIST()
@@ -284,7 +288,8 @@ namespace DbAccessaLayer.Infrastructure
                 order.Status = OrderStatus.CONFIRMED;
                 _db.Orders.Update(order);
 
-                await _db.Carts.Where(x => x.UserId == userId).ExecuteUpdateAsync(x => x.SetProperty(s => s.IsActive, false));
+                var userCarts = await _db.Carts.Where(x => x.UserId == userId).ToListAsync();
+                foreach (var cart in userCarts) cart.IsActive = false;
                 await _db.SaveChangesAsync();
 
 

@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
@@ -197,30 +197,36 @@ namespace DbAccessaLayer.Infrastructure
         {
             try
             {
-                var deliveries = await _db.Deliveries.Include(d => d.Order) .ThenInclude(o => o.OrderItem).ThenInclude(oi => oi.Product)
-                                .Include(d => d.Installations).Where(d => d.Status == DeliveryStatus.Delivered.ToString()&& d.Installations.Any(i =>
-                                i.Status == InstallationStatus.Completed.ToString() && i.IsPanelCreated==false)).ToListAsync();
+                var deliveredDeliveryIds = await _db.Deliveries
+                    .Where(d => d.Status == DeliveryStatus.Delivered.ToString())
+                    .Select(d => d.DeliveryId)
+                    .ToListAsync();
 
-                var panelsToAdd = deliveries
-                    .SelectMany(d => d.Order.OrderItem.Select(oi => new Panel
-                    {
-                        UserId = d.Order.UserId,   
-                        PanelName = oi.Product.ProductName,
-                        Capacity = oi.Product.Capacity,
-                        IsActive=true
-                    }))
-                    .ToList();
+                var installations = await _db.Installations
+    .Include(i => i.delivery)
+        .ThenInclude(d => d.Order)
+            .ThenInclude(o => o.OrderItem)
+                .ThenInclude(item => item.Product)
+    .Where(i => deliveredDeliveryIds.Contains(i.DeliveryId)
+             && i.Status == InstallationStatus.Completed.ToString()
+             && !i.IsPanelCreated)
+    .ToListAsync();
+var panelsToAdd = installations
+    .SelectMany(i => i.delivery.Order.OrderItem.Select(item => new Panel
+    {
+        UserId = i.delivery.Order.UserId,
+        PanelName = item.Product.ProductName,
+        Capacity = item.Product.Capacity,
+        IsActive = true
+    }))
+    .ToList();
 
-                await _db.Panels.AddRangeAsync(panelsToAdd);
-                foreach (var delivery in deliveries)
-                {
-                    foreach (var installation in delivery.Installations
-                             .Where(i => i.Status == InstallationStatus.Completed.ToString()))
-                    {
-                        installation.IsPanelCreated = true;
-                    }
-                }
-                await _db.SaveChangesAsync();
+await _db.Panels.AddRangeAsync(panelsToAdd);
+foreach (var installation in installations)
+{
+    installation.IsPanelCreated = true;
+}
+await _db.SaveChangesAsync();
             }
             catch (Exception)
             {

@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
@@ -507,9 +507,9 @@ namespace DbAccessaLayer.Infrastructure
             if (user == null)
                 throw new UserNotFound("User not found");
 
-            user.FullName = dto.FullName.Trim().ToLower();
-            user.PhoneNumber = dto.PhoneNumber.Trim().ToLower();
-            user.Address = dto.Address.Trim().ToLower();
+            user.FullName = dto.FullName.Trim();
+            user.PhoneNumber = dto.PhoneNumber.Trim();
+            user.Address = dto.Address.Trim();
             user.UpdatedAt = TimeUtility.NowIST();
             user.EmailId = dto.Email!.Trim().ToLower();
 

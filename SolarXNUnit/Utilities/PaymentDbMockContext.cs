@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -53,7 +53,27 @@ namespace SolarXNUnit.Utilities
         [SetUp]
         public void Setup()
         {
+            // Rebuild the mocked database for every test to prevent cross-test mutations.
+            _products = DataInitializer.GetProducts();
+            _orders = DataInitializer.GetOrders();
+            _technicians = DataInitializer.GetTechnicians();
+            _carts = DataInitializer.GetCarts();
+            _payments = DataInitializer.GetPayments();
+            _notifications = new List<Notifications>();
+            _invoices = new List<Invoices>();
+            _deliveries = new List<Delivery>();
+            _users = DataInitializer.GetUsers();
+            foreach (var order in _orders)
+            {
+                order.User = _users.Single(user => user.UserId == order.UserId);
+                foreach (var item in order.OrderItem)
+                {
+                    item.Order = order;
+                    item.Product = _products.Single(product => product.ProductId == item.ProductId);
+                }
+            }
             _signalRRepository = new Mock<ISignalRRepository>();
+            _signalRRepository.Setup(x => x.SendAsyncNotification(It.IsAny<string>(), It.IsAny<NotificationDto>())).Returns(Task.CompletedTask);
             _transaction = new Mock<IDbContextTransaction>();
 
             _transaction.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>()))
@@ -73,6 +93,10 @@ namespace SolarXNUnit.Utilities
                 AttachDbSet(_technicians, x => _mockDb.Setup(db => db.Technicians).Returns(x));
                 AttachDbSet(_carts, x => _mockDb.Setup(db => db.Carts).Returns(x));
                 AttachDbSet(_notifications, x => _mockDb.Setup(db => db.Notifications).Returns(x));
+                _mockDb.Setup(db => db.Set<Notifications>()).Returns(_mockDb.Object.Notifications);
+                Mock.Get(_mockDb.Object.Notifications).Setup(db => db.AddAsync(It.IsAny<Notifications>(), It.IsAny<CancellationToken>()))
+                    .Callback<Notifications, CancellationToken>((notification, _) => _notifications.Add(notification))
+                    .Returns(new ValueTask<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Notifications>>((Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Notifications>)null!));
                 AttachDbSet(_invoices, x => _mockDb.Setup(db => db.Invoices).Returns(x));
                 AttachDbSet(_deliveries, x => _mockDb.Setup(db => db.Deliveries).Returns(x));
 
@@ -131,6 +155,10 @@ namespace SolarXNUnit.Utilities
                     return list.FirstOrDefault(x =>
                         prop != null && prop.GetValue(x).Equals(id));
                 });
+
+            mockSet.Setup(m => m.AddAsync(It.IsAny<T>(), It.IsAny<CancellationToken>()))
+                .Callback<T, CancellationToken>((entity, _) => list.Add(entity))
+                .Returns(new ValueTask<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T>>((Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<T>)null!));
 
             attach(mockSet.Object);
         }

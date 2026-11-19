@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using CoreModels.Entities;
@@ -44,6 +44,17 @@ namespace SolarXNUnit.Utilities
         [SetUp]
         public void Setup()
         {
+            // Each test receives fresh data so mutations do not leak into later tests.
+            _users = DataInitializer.UsersData();
+            _otpManager = DataInitializer.OtpManagers().ToList();
+            users = DataInitializer.UsersData().ToList();
+            _notifications = new List<Notifications>();
+            var roles = DataInitializer.GetRoles();
+            foreach (var user in users.Concat(_users))
+            {
+                user.Role = roles.FirstOrDefault(role => role.RoleId == user.RoleId)
+                    ?? new Roles { RoleId = user.RoleId, RoleName = user.RoleId == 3 ? "Admin" : "User" };
+            }
          
             // 1️ Initialize basic mocks FIRST
 
@@ -93,6 +104,11 @@ namespace SolarXNUnit.Utilities
 
             _mockDb.Setup(x => x.Users).Returns(mockSet.Object);
             _mockDb.Setup(x => x.Set<Users>()).Returns(mockSet.Object);
+
+            var refreshTokenSet = new Mock<DbSet<RefreshTokens>>();
+            refreshTokenSet.Setup(x => x.AddAsync(It.IsAny<RefreshTokens>(), It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<RefreshTokens>>((Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<RefreshTokens>)null!));
+            _mockDb.Setup(x => x.RefreshTokens).Returns(refreshTokenSet.Object);
 
             _mockDb.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
                    .ReturnsAsync(1);
@@ -146,7 +162,9 @@ namespace SolarXNUnit.Utilities
                 { "Jwt:DurationInMinutes", "60" }
             };
 
-            IConfiguration config = new ConfigurationBuilder().AddInMemoryCollection(inMemorySettings)
+            IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "message.json"))
+                .AddInMemoryCollection(inMemorySettings)
                 .Build();
 
             //  Initialize static dictionary

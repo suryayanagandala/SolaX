@@ -1,4 +1,4 @@
-﻿using DbAccessaLayer.Infrastructure;
+using DbAccessaLayer.Infrastructure;
 using SolarXNUnit.SqLite.Base;
 using System;
 using System.Collections.Generic;
@@ -41,10 +41,7 @@ namespace SolarXNUnit.SqLite.Infrstructure
         {
             string roleName = "fakerole";
 
-            var result = roleRepository.GetUsersFromUser(roleName);
-
-            Assert.IsNotNull(result);
-            Assert.IsEmpty(result);
+            Assert.Throws<Exception>(() => roleRepository.GetUsersFromUser(roleName));
         }
         [Test]
         public void GetUsersFromUser_NullRole_ThrowsException()

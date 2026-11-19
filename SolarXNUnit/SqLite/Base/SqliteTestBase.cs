@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.DTO_S;
 using DbAccessaLayer.Helpers;
@@ -74,6 +74,7 @@ namespace SolarXNUnit.SqLite.Base
                 ["Installation:Installed"] = "Installation already exists"
             };
             var config = new ConfigurationBuilder()
+                .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "message.json"))
                 .AddInMemoryCollection(inMemorySettings)
                 .Build();
             MessageHelper.Initialize(config);

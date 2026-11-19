@@ -1,7 +1,8 @@
-﻿using CoreModels.DTO_S;
+using CoreModels.DTO_S;
 using DbAccessaLayer.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using SolarXNUnit.SqLite.Base;
 using SolarXNUnit.SqLite.SeedData;
@@ -44,6 +45,9 @@ namespace SolarXNUnit.SqLite.Infrstructure
         public async Task GetInstallationStataus_Succes()
         {
             var userId = "ABX123";
+            var installation = await _db.Installations.FirstAsync(x => x.InstallationId == "INST-20260201-0001");
+            installation.Status = "Assigned";
+            await _db.SaveChangesAsync();
             var result = await installRepository.GetInstallationStatus(userId);
 
             

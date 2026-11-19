@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.Interfaces;
+using ApplicationLayer.Interfaces;
 using CoreModels;
 using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
@@ -107,7 +107,7 @@ namespace DbAccessaLayer.Infrastructure
                     throw new ArgumentException("Role name is required");
                 var user = (from r in _db.Set<Roles>()
                             join u in _db.Set<Users>() on r.RoleId equals u.RoleId
-                            where r.RoleName == role && r.IsActive
+                            where r.RoleName == role && r.IsActive && u.IsActive && u.IsActive
                             select new User
                             {
                                 UserId = u.UserId,

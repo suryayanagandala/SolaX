@@ -1,4 +1,4 @@
-﻿using CoreModels.CustomMessages;
+using CoreModels.CustomMessages;
 using CoreModels.DTO_S;
 using DbAccessaLayer.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -49,7 +49,7 @@ namespace SolarXNUnit.SqLite.Infrastructure
             
             var result=await categoryRepository.GetAllCategories();
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(3, result.Count());
         }
 
         [Test]
@@ -87,6 +87,7 @@ namespace SolarXNUnit.SqLite.Infrastructure
                 Slug = "light panel 1",
                 Description = "used for light power generation",
                 ParentId = null,
+                Image = CreateFakeImage("category.png"),
                 
             };
 
@@ -245,7 +246,8 @@ namespace SolarXNUnit.SqLite.Infrastructure
             var dto = new CreateUpdateCategoryDto
             {
                 Name = "solar child",
-                Description = "more reliable"
+                Description = "more reliable",
+                Image = CreateFakeImage("category.png")
             };
             Assert.ThrowsAsync<NotFoundException>(async () => await categoryRepository.UpdateParentCategory(id, dto));
         }
@@ -265,7 +267,8 @@ namespace SolarXNUnit.SqLite.Infrastructure
             var dto = new CreateUpdateCategoryDto
             {
                 Name = "solar child",
-                Description = "more reliable"
+                Description = "more reliable",
+                Image = CreateFakeImage("category.png")
             };
 
             await categoryRepository.UpdateParentCategory(id,dto);
