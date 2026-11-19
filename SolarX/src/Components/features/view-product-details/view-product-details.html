@@ -1,0 +1,415 @@
+<div class="display-content">
+    <aside>
+        <div class="image-zoom-container">
+            <div class="image-content" (mousemove)="onZoomMove($event)" (mouseleave)="onZoomLeave()">
+                <img [src]="getMainImage()">
+            </div>
+            <div class="zoom-preview" *ngIf="showZoom"></div>
+        </div>
+
+
+        <div class="thumbnails" *ngIf="productDetails.productImages?.length">
+            <img *ngFor="let img of productDetails.productImages" [src]="getImageUrl(img.imageUrl)"
+                (click)="selectImage(img.imageUrl)" [class.active]="img.imageUrl===selectedImage">
+        </div>
+    </aside>
+    <section>
+        <div class="section-header">
+            <h4>{{productDetails.productName}}</h4>
+            <p style="color: rgb(26, 26, 225);"><b style="color:black">Brand : </b>{{productDetails.brand}}</p>
+            <p style="color:rgb(26, 26, 225)"><b style="color:black">Category: </b>{{productDetails.categoryName}}</p>
+        </div>
+        <div class="price-container">
+            <h4><mat-icon class="mat-icon-alignment">currency_rupee</mat-icon>{{productDetails.price}}</h4>
+            <div class="span">
+                <span *ngIf="productDetails.isActive" class="status-active">
+                    <mat-icon class="mat-icon-alignment" style="color: green;">fiber_manual_record</mat-icon>InStock
+                </span>
+
+                <span *ngIf="!productDetails.isActive" class="status-inactive">
+                    <mat-icon class="mat-icon-alignment" style="color: red;">fiber_manual_record</mat-icon>OutOfStock
+                </span>
+            </div>
+        </div>
+
+        <div class="content-container">
+            <p>{{productDetails.description}}</p>
+            <ul>
+                <b>Key Specifications</b>
+                <li>Power:{{productDetails.capacityValue}}Watts</li>
+                <li>Capcity:{{productDetails.capacity}}</li>
+                <li>Type:{{productDetails.type}}</li>
+                <li>Waranty:{{productDetails.warranty_Years}} Years</li>
+                <li>Stock:{{productDetails.stock}} units avaiable</li>
+                <li>Expected Date to be delivered : <b>{{expectedDate |date:'mediumDate'}}</b></li>
+            </ul>
+        </div>
+
+
+
+        <div class="d-flex justify-content-center addtocart-button">
+            <table class="table-bordered" width="150">
+                <tbody>
+                    <tr class="text-center">
+                        <td width="20">
+                            <button (click)="decreaseQty()">
+                                <mat-icon class="mat-icon-alignment">remove</mat-icon>
+                            </button>
+
+                        </td>
+                        <td>
+                            <span class="qty">{{quantity}}</span>
+
+                        </td>
+                        <td width="20">
+                            <button (click)="increaseQty()">
+                                <mat-icon class="mat-icon-alignment">add</mat-icon>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <!-- <p class="stock" *ngIf="stock>0">In Stock</p>
+        <p class="out-stock" *ngIf="stock===0">Out of Stock</p> -->
+
+        <div class="actions">
+            <button mat-raised-button color="warn" (click)="addToCart()">
+                ADD TO CART
+            </button>
+            <button mat-raised-button color="primary" (click)="buyNow()">
+                Buy NOW
+            </button>
+        </div>
+    </section>
+</div>
+
+<div class="mat-group">
+    <mat-tab-group mat-stretch-tabs="false" (selectedIndexChange)="onTabIndex($event)">
+        <mat-tab label="Description"></mat-tab>
+        <mat-tab label="Specifications"></mat-tab>
+        <mat-tab label="Product Analytics"></mat-tab>
+        <mat-tab>
+            <ng-template mat-tab-label>
+               <span class="ai-tab">
+                 AI Recommendations
+                 <span class="new-badge">NEW</span>
+               </span>
+            </ng-template>
+        </mat-tab>
+    </mat-tab-group>
+
+
+    <div *ngIf="selectedTabIndex === 0" class="tab-content">
+        {{ productDetails.description }}
+    </div>
+
+    <div *ngIf="selectedTabIndex === 1" class="tab-content">
+        <ul>
+            <li>Power : {{ productDetails.capacity }}</li>
+            <li>Type : {{ productDetails.type }}</li>
+            <li>Warranty : {{ productDetails.warranty_Years }} Years</li>
+        </ul>
+    </div>
+
+    <div *ngIf="selectedTabIndex===2" class="tab-content">
+        <div class="row">
+            <div class="col-md-4 text-center">
+
+                <h5 class="fw-semibold">Total Power Generation</h5>
+                <div class="d-flex flex-column align-items-center mb-4">
+                    <i class="bi bi-lightning-charge-fill text-warning fs-2"></i>
+                    <span class="fw-bold fs-5">
+                        {{productAnalyticsData.powerGenerated}} {{productAnalyticsData.unit}}
+                    </span>
+                </div>
+
+                <h5 class="fw-semibold">Total Selling Count</h5>
+                <div class="d-flex flex-column align-items-center">
+                    <i class="bi bi-cart-check-fill text-primary fs-2"></i>
+                    <span class="fw-bold fs-5">
+                        {{productAnalyticsData.quantity}}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="selectedTabIndex===3" class="tab-content">
+
+
+        <div class="ai-container" *ngIf="recommendations.aiExplanation">
+
+            <div class="ai-header">
+                <mat-icon>smart_toy</mat-icon> AI Smart Recommendation
+            </div>
+
+            <div class="ai-body">
+                <span class="typing-text">
+                    {{ recommendedText }}
+                </span>
+                <span class="cursor" *ngIf="isTyping">|</span>
+            </div>
+
+        </div>
+
+        <mat-tab-group>
+
+
+            <mat-tab label="Batteries">
+                <div class="ai-grid">
+
+                    <div class="ai-card" *ngFor="let b of recommendations.batteries">
+
+
+                        <span class="badge-top best">Best Match</span>
+
+                        <img [src]="getImageUrl(b.productImages?.[0]?.imageUrl)" [class.skeleton]="!b.isImageLoaded"
+                            (load)="b.isImageLoaded = true" />
+
+                        <h6>{{b.productName}}</h6>
+
+
+                        <div class="tag-container">
+                            <span class="tag">High Efficiency</span>
+                            <span class="tag">Long Backup</span>
+                        </div>
+
+                        <p>{{b.capacity}}</p>
+
+                        <div class="price">
+                            <span class="bi bi-currency-rupee"></span>{{b.price}}
+                        </div>
+
+
+                        <label class="compare-checkbox" *ngIf="recommendations.batteries.length>1">
+                            <input type="checkbox" name="compare" [checked]="compareBatteries.includes(b)"
+                                (change)="toggleCompare(b,'battery',$event)">
+                            Compare
+                        </label>
+
+
+                        <button mat-raised-button color="accent" class="view-btn "
+                            [queryParams]="{productId:b.productId}" [routerLink]="['/view-deatils']">
+                            View-Details
+                        </button>
+
+                        <button mat-raised-button color="primary" class="view-btn" (click)="whyThisExplainations(b)">
+                            <mat-icon>smart_toy</mat-icon> Why This ?
+                        </button>
+
+                        <div class="ai-explain-box" *ngIf="b.showExplaination">
+                            <span class="typing-text">
+                                {{ b.aiText }}
+                            </span>
+                            <span class="cursor" *ngIf="isTyping">|</span>
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- <button *ngIf="compareBatteries.length === 2" class="compare-btn" (click)="compareProduct('battery')">
+                    <mat-icon color="primary" fontIcon="compare"></mat-icon> Compare Batteries
+                </button> -->
+
+
+
+            </mat-tab>
+
+
+
+            <!-- INVERTERS -->
+            <mat-tab label="Inverters">
+                <div class="ai-grid">
+
+                    <div class="ai-card" *ngFor="let i of recommendations.inverters">
+
+                        <span class="badge-top performance">High Performance</span>
+
+                        <img [src]="getImageUrl(i.productImages?.[0]?.imageUrl)" [class.skeleton]="!i.isImageLoaded"
+                            (load)="i.isImageLoaded = true" />
+
+                        <h6>{{i.productName}}</h6>
+
+                        <div class="tag-container">
+                            <span class="tag">Efficient</span>
+                            <span class="tag">Stable Output</span>
+                        </div>
+
+                        <p>{{i.capacity}}</p>
+
+                        <div class="price">
+                            <span class="bi bi-currency-rupee"></span>{{i.price}}
+                        </div>
+
+                        <label class="compare-checkbox" *ngIf="recommendations.inverters.length>1">
+                            <input type="checkbox" name="compare" [checked]="compareInverters.includes(i)"
+                                (change)="toggleCompare(i,'inverters',$event)">
+                            Compare
+                        </label>
+
+                        <button mat-raised-button color="accent" class="view-btn "
+                            [queryParams]="{productId:i.productId}" [routerLink]="['/view-deatils']">
+                            View-Details
+                        </button>
+
+                        <button mat-raised-button color="primary" class="view-btn" (click)="whyThisExplainations(i)">
+                            <mat-icon>smart_toy</mat-icon> Why This ?
+                        </button>
+
+                        <div class="ai-explain-box" *ngIf="i.showExplaination">
+                            <span class="typing-text">
+                                {{ i.aiText }}
+                            </span>
+                            <span class="cursor" *ngIf="isTyping">|</span>
+                        </div>
+
+
+                    </div>
+
+                </div>
+            </mat-tab>
+
+
+            <mat-tab label="Accessories">
+                <div class="ai-grid">
+
+                    <div class="ai-card" *ngFor="let a of recommendations.accessories">
+
+                        <span class="badge-top budget">Recommended</span>
+
+                        <img [src]="getImageUrl(a.productImages?.[0]?.imageUrl)" [class.skeleton]="!a.isImageLoaded"
+                            (load)="a.isImageLoaded = true" />
+
+                        <h6 class="product-height">{{a.productName}}</h6>
+
+                        <div class="tag-container">
+                            <span class="tag">Essential</span>
+                        </div>
+
+                        <p>{{a.type}}</p>
+
+                        <div class="price">
+                            <span class="bi bi-currency-rupee"></span>{{a.price}}
+                        </div>
+
+                        <button mat-raised-button color="accent" class="view-btn "
+                            [queryParams]="{productId:a.productId}" [routerLink]="['/view-deatils']">
+                            View-Details
+                        </button>
+
+                        <button mat-raised-button color="primary" class="view-btn" (click)="whyThisExplainations(a)">
+                            <mat-icon>smart_toy</mat-icon> Why This ?
+                        </button>
+
+                        <div class="ai-explain-box" *ngIf="a.showExplaination">
+                            <span class="typing-text">
+                                {{ a.aiText }}
+                            </span>
+                            <span class="cursor" *ngIf="isTyping">|</span>
+                        </div>
+
+
+                    </div>
+
+                </div>
+            </mat-tab>
+
+            <!-- AI COMBO TAB -->
+            <mat-tab label=" AI Combo" *ngIf="comboDto">
+               
+                <ng-template mat-tab-label>
+                    <mat-icon style="margin-right: 5px;">smart_toy</mat-icon>
+                    AI Combo
+                </ng-template>
+                <div class="combo-container" >
+
+                    <!-- BATTERY CARD -->
+                    <div class="combo-card">
+
+                        <span class="badge-ai">
+                            <mat-icon>auto_awesome</mat-icon> AI Recommended
+                        </span>
+
+                        <h4><mat-icon style="color: #4CAF50;">battery_full</mat-icon> Battery</h4>
+
+                        <img [src]="getImageUrl(comboDto.battery.productImages[0]?.imageUrl)">
+
+                        <h5>{{comboDto.battery.productName}}</h5>
+                        <p>{{comboDto.battery.capacity}}</p>
+
+                        <div class="price">
+                            ₹{{comboDto.battery.price}}
+                        </div>
+
+                        <div class="actions">
+                            <button mat-raised-button color="primary" (click)="comboCart(comboDto.battery.productId)">
+                                <mat-icon>shopping_cart</mat-icon> Add
+                            </button>
+
+                            <button mat-stroked-button color="accent" [queryParams]="{productId:comboDto.battery.productId}" [routerLink]="['/view-deatils']">
+                                <mat-icon>visibility</mat-icon> View
+                            </button>
+                        </div>
+
+                    </div>
+
+
+                    <!-- INVERTER CARD -->
+                    <div class="combo-card">
+
+                        <span class="badge-ai">
+                            <mat-icon>bolt</mat-icon> AI Recommended
+                        </span>
+
+                        <h4><mat-icon style="color: green;">bolt</mat-icon> Inverter</h4>
+
+                        <img [src]="getImageUrl(comboDto.inverter.productImages[0]?.imageUrl)">
+
+                        <h5>{{comboDto.inverter.productName}}</h5>
+                        <p>{{comboDto.inverter.capacity}}</p>
+
+                        <div class="price">
+                            ₹{{comboDto.inverter.price}}
+                        </div>
+
+                        <div class="actions">
+                            <button mat-raised-button color="primary" (click)="comboCart(comboDto.inverter.productId)">
+                                <mat-icon>shopping_cart</mat-icon> Add
+                            </button>
+
+                            <button mat-stroked-button color="accent"  [queryParams]="{productId:comboDto.inverter.productId}" [routerLink]="['/view-deatils']">
+                                <mat-icon>visibility</mat-icon> View
+                            </button>
+                        </div>
+
+                    </div>
+
+
+                    <!-- AI EXPLANATION -->
+                    <div class="combo-reason">
+                        <mat-icon>smart_toy</mat-icon>
+                        <span class="typing-text">{{typedReason}}</span>
+                    </div>
+
+
+                    <!-- BUY FULL COMBO -->
+                    <div class="combo-buy">
+                        <button mat-raised-button color="warn" (click)="buyCombo()">
+                            <mat-icon>shopping_cart</mat-icon>
+                            Add To Cart
+                        </button>
+                    </div>
+
+                </div>
+
+            </mat-tab>
+
+        </mat-tab-group>
+
+    </div>
+
+
+</div>

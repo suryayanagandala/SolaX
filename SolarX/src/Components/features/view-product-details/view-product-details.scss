@@ -1,0 +1,498 @@
+.display-content {
+    display: flex;
+    padding: 30px;
+    width: 100%;
+    background-color:var(--content-bg)!important;
+    color:var(--text-color) !important;
+    box-shadow: 0 8px 12px rgba(0.2,0.5,1,0.2);
+    gap: 20px;
+    align-items: flex-start;
+}
+
+
+.display-content aside {
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    padding: 10px;
+}
+
+
+.image-content {
+    width: 100%;
+    height: 300px;
+   
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0px 25px;
+    // cursor: zoom-in;
+     cursor: crosshair;
+
+}
+
+.image-content img {
+
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1rem;
+
+}
+
+.zoom-preview {
+  position: absolute;  
+  top: 0;
+  left: 105%;           
+
+  width: 400px;
+  height: 400px;
+
+  border: 1px solid #ddd;
+  background-repeat: no-repeat;
+  background-size: 200%;
+
+  z-index: 10;
+  background-color: white;
+}
+
+
+.thumbnails {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    overflow-x: auto;
+}
+
+.thumbnails img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    border-radius: 6px;
+    padding: 4px;
+    // background: #f5f5f5;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.thumbnails img:hover {
+    transform: translateY(-2px);
+}
+
+.thumbnails img.active {
+    border-color: #1976d2;
+}
+
+
+section {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 10px 30px;
+}
+
+.span {
+    display: flex;
+    align-items: center;
+
+}
+
+.status-active {
+    font-weight: 600;
+    color: green;
+    font-size: 20px;
+}
+
+.status-inactive {
+    font-weight: 600;
+    color: red;
+}
+
+.content-container {
+    margin-top: 10px;
+}
+
+ul {
+
+    margin-left: 10px;
+    padding: 0px;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 30px;
+
+    
+}
+
+.qty {
+    font-size: 1rem;
+    min-width: 50px;
+    text-align: center;
+  
+
+
+}
+
+button {
+    border: none;
+    // background-color: white;
+}
+
+.tab-content {
+  padding: 16px;
+  line-height: 1.6;
+  border-top: 1px solid #ddd;
+}
+
+.mat-mdc-tab {
+  min-width: 120px;
+}
+
+.mat-group{
+ background-color: var(--content-bg) !important;
+ color:var(--text-color) !important;
+}
+
+.addtocart-button{
+    color:var(--text-color) !important;
+    mat-icon{
+          color:var(--text-color) !important;
+          background-color: var(--content-bg) !important;
+    }
+}
+
+.image-zoom-container{
+    position: relative;
+}
+
+
+
+.ai-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    align-items: start;  
+}
+
+
+.ai-card {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: var(--content-bg)!important;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    transition: 0.3s;
+    align-self: start;     }
+
+
+.ai-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+
+.ai-card h6 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 20px;
+    max-height: 40px;      
+    min-height: 40px;
+    margin: 5px 0;
+}
+.ai-container {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.ai-header {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #38bdf8;
+}
+
+.ai-body {
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.cursor {
+    display: inline-block;
+    margin-left: 2px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+
+.tag-container {
+    margin: 5px 0;
+}
+.tag {
+    font-size: 10px;
+    background: var(--toolbar-bg)!important;
+    padding: 3px 6px;
+    margin-right: 4px;
+    border-radius: 5px;
+}
+
+
+.price {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+
+.view-btn {
+    width: 100%;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    flex-shrink: 0; 
+}
+
+
+.ai-explain-box {
+    margin-top: 5px;             
+    padding: 10px;
+    border-radius: 8px;
+    background: #0f172a;            
+    color: #38bdf8;
+    font-size: 13px;
+    animation: fadeIn 0.3s ease-in;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+.badge-top {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 20px;
+    color: white;
+}
+.badge-top.best { background: #28a745; }
+.badge-top.performance { background: #007bff; }
+.badge-top.budget { background: #ff9800; }
+
+.ai-card img.skeleton {
+    background: linear-gradient(
+        90deg,
+        #2a2e3b 25%,
+        #3a3f53 50%,
+        #2a2e3b 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.2s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+
+.compare-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.compare-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background: #38bdf8;
+    border: none;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.compare-btn:hover {
+    transform: scale(1.05);
+}
+
+.combo-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    overflow-y: hidden;
+}
+
+/* CARD */
+.combo-card {
+    flex: 1;
+    min-width: 260px;
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    padding: 15px;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    position: relative;
+    transition: 0.3s;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.combo-card:hover {
+    transform: translateY(-6px);
+}
+
+/* IMAGE */
+.combo-card img {
+    width: 120px;
+    height: 100px;
+    object-fit: contain;
+    margin: 10px 0;
+}
+
+/* PRICE */
+.price {
+    font-size: 18px;
+    font-weight: bold;
+    color: #38bdf8;
+    margin: 10px 0;
+}
+
+/* ACTIONS */
+.actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+/* BADGE */
+.badge-ai {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #38bdf8;
+    color: black;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* AI REASON */
+.combo-reason {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background: #020617;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #cbd5f5;
+}
+
+/* BUY BUTTON */
+.combo-buy {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.combo-buy button {
+    padding: 12px 30px;
+    font-size: 16px;
+}
+
+/* TYPING EFFECT */
+.typing-text {
+    display: inline-block;
+    border-right: 2px solid #38bdf8;
+    padding-right: 5px;
+}
+
+.ai-tab{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap:5px;
+    padding:4px 8px;
+    overflow: hidden;
+}
+
+.ai-tab .new-badge{
+  position: absolute;
+  top: 1px;
+  left: 2px;
+
+  font-size: 7px;
+  font-weight: 700;
+ letter-spacing: 0.9px;
+//   color: #ffb300; 
+  color: red;
+  text-transform: uppercase;
+
+  text-shadow: 0 0 6px rgba(255, 179, 0, 0.6);
+
+
+}
+.ai-tab::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+
+  width: 50%;
+  height: 100%;
+
+  background: linear-gradient(120deg,transparent, rgba(255, 255, 255, 0.6),transparent);
+  
+  transform: skewX(-20deg);
+  animation: tabShimmer 3s infinite;
+}
+
+
+
+
+@keyframes tabShimmer {
+  0% { left: -120%; }
+  100% { left: 120%; }
+}

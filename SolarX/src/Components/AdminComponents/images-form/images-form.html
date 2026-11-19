@@ -1,0 +1,8 @@
+<div class="container">
+   <!-- <mat-icon>arrow_back</mat-icon> -->
+    <h4>{{isEditMode?'Update Image':'Upload Image'}}</h4>
+    <input type="file" (change)="onFileSelected($event)" [multiple]="!isEditMode">
+    <button mat-raised-button color="primary" (click)="submit()">
+  {{ isEditMode ? 'Update' : 'Upload' }}
+</button>
+</div>

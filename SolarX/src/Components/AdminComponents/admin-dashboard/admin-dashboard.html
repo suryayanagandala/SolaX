@@ -1,0 +1,172 @@
+<!-- KPI CARDS -->
+<div class="dashboard-cards">
+
+  <mat-card class="card">
+    <i class="bi bi-person"></i>
+    <h6>Total Users</h6>
+    <p>{{stats.users}}</p>
+  </mat-card>
+
+  <mat-card class="card">
+    <i class="bi bi-cart"></i>
+    <h6>Total Orders</h6>
+    <p>{{stats.orders}}</p>
+  </mat-card>
+
+  <mat-card class="card">
+    <i class="bi bi-box"></i>
+    <h6>Total Products</h6>
+    <p>{{stats.products}}</p>
+  </mat-card>
+
+  <mat-card class="card">
+    <i class="bi bi-grid"></i>
+    <h6>Active Panels</h6>
+    <p>{{stats.panlesCount}}</p>
+  </mat-card>
+
+</div>
+
+<!-- MONTHLY PRODUCTION -->
+<div class="row mt-4">
+
+  <div class="col-md-8">
+
+    <mat-card class="chart-card">
+
+      <h4>Monthly Solar Production</h4>
+
+      <apx-chart
+        *ngIf="monthlyChart"
+        [series]="monthlyChart.series"
+        [chart]="monthlyChart.chart"
+        [xaxis]="monthlyChart.xaxis"
+        [yaxis]="monthlyChart.yaxis"
+        [stroke]="monthlyChart.stroke"
+        [dataLabels]="monthlyChart.dataLabels">
+      </apx-chart>
+
+    </mat-card>
+
+  </div>
+
+  <div class="col-md-4">
+
+    <mat-card class="chart-card">
+
+      <h4>Product Trends</h4>
+
+      <canvas #soldProductsChart
+        baseChart
+        [data]="trendChartData"
+        [options]="trendChartOptions"
+        type="bar">
+      </canvas>
+
+    </mat-card>
+
+  </div>
+
+</div>
+
+<!-- DAILY + TOP PRODUCTS -->
+
+<div class="row mt-4">
+
+  <div class="col-md-8">
+
+    <mat-card class="chart-card">
+
+      <h4>Daily Solar Production</h4>
+
+      <apx-chart
+        *ngIf="dailyChart"
+        [series]="dailyChart.series"
+        [chart]="dailyChart.chart"
+        [xaxis]="dailyChart.xaxis"
+        [yaxis]="dailyChart.yaxis"
+        [stroke]="dailyChart.stroke"
+        [dataLabels]="dailyChart.dataLabels">
+      </apx-chart>
+
+    </mat-card>
+
+  </div>
+
+  <div class="col-md-4">
+
+    <mat-card class="chart-card">
+
+      <h4>Top Sold Products</h4>
+
+      <canvas #soldProductsChart
+        baseChart
+        [data]="barChartData"
+        [options]="barChartOptions"
+        type="bar">
+      </canvas>
+
+    </mat-card>
+
+  </div>
+
+</div>
+
+<!-- ALERTS SECTION -->
+
+<div class="row mt-4">
+
+  <div class="col-md-6">
+
+    <mat-card class="chart-card">
+
+      <h4>Solar System Alerts</h4>
+
+      <canvas
+        baseChart
+        [data]="panelHealthChart"
+        [options]="panelHealthOptions"
+        type="doughnut">
+      </canvas>
+      
+    </mat-card>
+
+  </div>
+
+  <div class="col-md-6">
+
+    <mat-card class="chart-card">
+
+      <h4>Low Stock Products</h4>
+
+      <canvas
+        baseChart
+        [data]="lowStockChart"
+        [options]="lowStockOptions"
+        type="bar">
+      </canvas>
+
+    </mat-card>
+
+  </div>
+
+</div>
+
+<div *ngIf="aiProductUpdates">
+    <mat-card>
+        <mat-card-header>
+             <h4>Alerts</h4>
+
+        </mat-card-header>
+        <mat-card-content *ngIf="anmalyData">
+             <div *ngFor="let item of anmalyData"  class="alert-item" [ngClass]="{
+               'high':item.severity==='High',
+               'medium':item.severity==='Medium',
+               'low':item.severity==='Low'
+             }">
+                Panel {{item.panelId}} -
+      {{item.severity}} Drop ({{item.dropPercentage}}%)
+             </div>
+        </mat-card-content>
+    </mat-card>
+</div> 

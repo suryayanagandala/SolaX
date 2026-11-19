@@ -1,0 +1,58 @@
+<div class="container">
+  <h4 class="text">Product Images</h4>
+
+  <div class="display-header">
+    <mat-icon (click)="gotoProducts()" style="cursor: pointer;">arrow_back</mat-icon>
+
+    <div *ngIf="!loading && images.length === 0">
+      <span class="text-danger">No Images found for this product</span>
+    </div>
+
+    <button mat-raised-button color="accent"
+      [queryParams]="{ productId: productId }"
+      routerLink="/admin/images-form">
+      <mat-icon>add</mat-icon>Add Images
+    </button>
+  </div>
+
+  
+  <!-- <div class="spinner-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div> -->
+
+ 
+  <div class="image-grid" *ngIf="loading">
+    <mat-card class="image-card skeleton-card" *ngFor="let s of [1,2,3,4,5,6]">
+      <div class="skeleton skeleton-image"></div>
+      <mat-card-content>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text small"></div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  
+  <div class="image-grid" *ngIf="!loading && images.length > 0">
+    <mat-card class="image-card" *ngFor="let img of images">
+      <img mat-card-image [src]="getImageUrl(img.imageUrl)" alt="Product Image">
+
+      <mat-card-content>
+        <p>Image ID: {{ img.imageId }}</p>
+        <p>Created: {{ img.createdAt | date:'medium' }}</p>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-icon-button color="primary"
+          routerLink="/admin/images-form"
+          [queryParams]="{imageId:img.imageId, productId: productId}">
+          <mat-icon>edit</mat-icon>
+        </button>
+
+        <button mat-button color="warn" (click)="deleteProduct(img.imageId)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+</div>

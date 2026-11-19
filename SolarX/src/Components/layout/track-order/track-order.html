@@ -1,0 +1,27 @@
+<div>
+  <button mat-icon-button routerLink="/order-history" class="m-5 ">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+</div>
+<div class="tracking-container">
+    
+    <div class="step" *ngFor="let step of trackDto;let i=index" [ngClass]="changeStep(i)">
+       <div class="icon">
+         <i class="bi" [ngClass]="{
+            'bi-check-circle-fill': changeStep(i) === 'completed',
+           'bi-truck': step.stage === 'Shipped',
+           'bi-box-seam': step.stage === 'Confirmed',
+           'bi-geo-alt': step.stage === 'OutofDelivery',
+           'bi-house-check': step.stage === 'Delievered'
+         }">
+
+         </i>
+       </div>
+       <div class="label">
+      {{ step.stage }}
+    </div>
+
+ 
+    <div class="line" *ngIf="i !== trackDto.length - 1"></div>
+    </div>
+</div>

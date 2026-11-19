@@ -1,0 +1,59 @@
+.mat-card{
+    display: flex;
+    justify-content:space-between;
+    align-items: center;
+    gap:30px;
+    
+}
+
+.mat-card mat-form-field{
+    width:50%;
+    height:80px;
+
+}
+
+button{
+    height:50px;
+}
+.status-active {
+  font-weight: 600;
+  color: green;
+}
+
+.status-inactive {
+  font-weight: 600;
+  color: red;
+  cursor: help;
+}
+
+.table-wrapper {
+  width: 100%;
+}
+
+.table-scroll {
+  overflow-x: auto;       
+  max-width: 100%;
+}
+
+  table {
+    min-width: 1000px;  
+   
+  }
+
+  mat-paginator {
+    width: 100%;  
+    display: flex;
+    justify-content: flex-end; // align right or center
+  }
+
+
+.mat-header-row {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+.mat-header-cell {
+  font-weight: 600;
+  background-color: #f5f5f5; 
+}

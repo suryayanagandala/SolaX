@@ -1,0 +1,84 @@
+<mat-sidenav-container class="header-sidenav-container">
+
+
+  <mat-sidenav-content class="header">
+
+    <mat-toolbar class="mat-elevation-z2 tool-bar">
+      <div class="logo" routerLink="/home">
+        <img src="Assets/Themes/logo.jpg" alt="solar logo" class="image">
+        <h4>SolarX</h4>
+      </div>
+
+      <span class="spacer"></span>
+      <a mat-button routerLink="/">Home</a>
+      <a mat-button routerLink="/products">Products</a>
+      <a mat-button routerLink="/home" fragment="services">Services</a>
+      <a mat-button routerLink="/home" fragment="contact">Contact</a>
+
+      <ng-container *ngIf="!isLoggedIn(); else loggedIn">
+        <div class="display-buttons">
+          <button class="login-color" (click)="goToLogin()">Login</button>
+          <button class="register-color" (click)="goToRegister()">Register</button>
+        </div>
+      </ng-container>
+
+      <button mat-icon-button (click)="toggleTheme()">
+          <mat-icon>
+             {{ (themeService.isDarkMode$ | async) ? 'light_mode' : 'dark_mode' }}
+          </mat-icon>
+        </button>
+
+      <ng-template #loggedIn>
+
+
+
+        <div class="notification-wrapper">
+
+          <button mat-icon-button (click)="toggleNotification($event)">
+            <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" [matBadgeHidden]="notificationCount === 0">
+              notifications
+            </mat-icon>
+          </button>
+
+          <div class="notification-dropdown" *ngIf="isDropdownOpen" (click)="$event.stopPropagation()">
+
+            <div class="empty" *ngIf="notification.length === 0">
+              <h4 class="text-center fw-bold ms-2 fs-5">No Notifications</h4>
+            </div>
+
+            <div class="notification-item" *ngFor="let item of recentNotifications" (click)="openNotification(item)">
+
+              <div class="notification-header">
+                <span class="type">{{item.notificationType}}</span>
+                <small>{{item.createdAt | date:'short'}}</small>
+              </div>
+
+              <p class="message">{{item.message}}</p>
+
+            </div>
+
+            <button class="see-more text-center" *ngIf="notification.length > 3" (click)="goToNotifications()">
+              See All Notifications...
+            </button>
+
+          </div>
+
+        </div>
+
+
+
+        <button mat-icon-button>
+          <mat-icon routerLink="/cart" [matBadge]="cartItemCount" [matBadgeHidden]="cartItemCount===0"
+            matBadgeColor="primary">shopping_cart</mat-icon>
+        </button>
+
+        <button mat-icon-button (click)="toggleMenu()">
+          <mat-icon>person</mat-icon>
+        </button>
+
+        
+
+      </ng-template>
+    </mat-toolbar>
+  </mat-sidenav-content>
+</mat-sidenav-container>

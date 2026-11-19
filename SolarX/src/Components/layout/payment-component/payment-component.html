@@ -1,0 +1,119 @@
+<div class="main-content">
+    <mat-card class="payment-card" >
+    <mat-card-title>
+        <h4 class="title">Payment Selection</h4>
+    </mat-card-title>
+
+    <mat-card-content>
+        <mat-tab-group animationDuration="300ms" (selectedTabChange)="onTabChange($event.index)">
+
+            <!-- card -->
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <i class="bi bi-credit-card"></i> Credit/Debit Card
+                </ng-template>
+                <div class="tab-content" [formGroup]="creditCard">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Card Number</mat-label>
+                        <input type="text" matInput placeholder="1234 5678 1234 5678" required minlength="12"
+                            maxlength="12" formControlName="cardNumber">
+                        <br>
+                        <mat-error *ngIf="creditCard.get('cardNumber')?.hasError('required')">
+                            Cart Number must be required
+                        </mat-error>
+
+                        <mat-error *ngIf="creditCard.get('cardNumber')?.hasError('pattern')">
+                            Cart number must be 12 digits
+                        </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Holder Name</mat-label>
+                        <input type="text" matInput placeholder="Venkatesh" required formControlName="name">
+                        <br>
+
+                        <mat-error *ngIf="creditCard.get('name')?.hasError('required')">
+                            Name is required
+                        </mat-error>
+                    </mat-form-field>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <mat-form-field appearance="outline" class="w-100">
+                                <mat-label>Expiry</mat-label>
+                                <input type="text" matInput placeholder="MM/YY" required formControlName="expiry">
+                                <mat-error *ngIf="creditCard.get('expiry')?.hasError('pattern')">
+                                    Expiry must be in MM/YY format
+                                </mat-error>
+                                <mat-error *ngIf="creditCard.get('expiry')?.hasError('expired')">
+                                  Card is expired
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="col-md-6">
+                            <mat-form-field appearance="outline" class="w-100">
+                                <mat-label>CVV</mat-label>
+                                <input type="password" matInput placeholder="***" required formControlName="cvv">
+
+                                <mat-error *ngIf="creditCard.get('cvv')?.hasError('pattern')">
+                                    CVV must be 3 digits
+                                </mat-error>
+                            </mat-form-field>
+
+                        </div>
+                    </div>
+
+                    <button mat-raised-button color="primary" (click)="confirmPayment()"
+                        [disabled]="creditCard.invalid">
+                        Pay <i class="bi bi-currency-rupee"></i>{{totalAmount}}
+                    </button>
+
+                </div>
+            </mat-tab>
+
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <i class="bi bi-phone"></i> UPI
+                </ng-template>
+
+                <div class="tab-content center">
+                    <img [src]="qrCodeIamge" alt="qr code" class="image-section" *ngIf="!showImage">
+
+
+                    <p *ngIf="expiredTime>0; else generateqr">
+                        Expires in <b>{{expiredTime}}</b> sec
+                    </p>
+                    <ng-template #generateqr>
+                        <button mat-raised-button color="accent" (click)="generateQr()">
+                            GenerateQr
+                        </button>
+                    </ng-template>
+
+                    <button mat-raised-button color="primary" *ngIf="expiredTime>0" (click)="confirmPayment()">
+                        Pay <i class="bi bi-currency-rupee"></i>{{totalAmount}}
+                    </button>
+                </div>
+            </mat-tab>
+
+
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <i class="bi bi-cash"></i> Cash
+                </ng-template>
+                <div class="tab-content">
+                    <mat-icon class="cod-icon">local_shipping</mat-icon>
+                    <p>
+                        Pay <b><i class="bi bi-currency-rupee"></i>{{totalAmount}}</b> in cash when your order is
+                        delivered.
+                    </p>
+
+                    <button mat-raised-button color="accent" (click)="confirmPayment()">
+                        Place Order
+                    </button>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </mat-card-content>
+</mat-card>
+</div>

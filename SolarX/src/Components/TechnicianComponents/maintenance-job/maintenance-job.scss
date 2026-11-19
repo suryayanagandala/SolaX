@@ -1,0 +1,18 @@
+body{
+    min-height: 100vh;
+    background: none;
+}
+
+.img-content{
+    text-align: center;
+    padding-top: 70px;
+    img{
+        width:200px;
+        height:200px;
+        
+    }
+}
+
+.content table{
+    background-color: var(--content-bg) !important;
+}

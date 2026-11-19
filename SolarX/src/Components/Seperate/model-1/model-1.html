@@ -1,0 +1,406 @@
+<div class="header">
+    <h2 class="text-primary fs-4 ms-3 my-3">SOURCEVIEW<sup class="fs-6">TM</sup></h2>
+    <div class="title mx-3">
+        <p><strong>IDN Name: </strong>APOLLO HOSPITAL</p>
+        <p><strong>IDN UCN: </strong>00005018</p>
+        <p><strong>Output Reference: </strong>APOLLOHOSPITALTraumaTEST00252062</p>
+    </div>
+</div>
+<div class="stepper-wrapper">
+    <mat-horizontal-stepper linear>
+
+        <!-- STEP 1 -->
+        <mat-step [stepControl]="stepForm1" label="Platform Setup">
+            <form [formGroup]="stepForm1">
+
+                <div class="step-card">
+
+                    <h3>Platform Setup</h3>
+                    <p class="subtitle">Select platforms and tools</p>
+
+                    <!-- FORM ROW -->
+                    <div class="form-side">
+                        <div class="form-row me-5">
+
+                            <!-- PLATFORM TOOLS -->
+                            <mat-form-field appearance="outline">
+                                <mat-label>Platform Tools</mat-label>
+
+                                <mat-select formControlName="platformTools" multiple>
+
+                                    <mat-select-trigger>
+                                        <ng-container
+                                            *ngIf="(stepForm1.value.platformTools || []).length; else emptyPlatform">
+
+                                            <mat-chip-set>
+                                                <mat-chip *ngFor="let p of stepForm1.value.platformTools.slice(0,2)"
+                                                    removable="true" (removed)="removePlatform(p)">
+                                                    {{ p }}
+                                                    <button matChipRemove>
+                                                        <mat-icon
+                                                            style="vertical-align: middle; font-size: 1rem; border:none">cancel</mat-icon>
+                                                    </button>
+                                                </mat-chip>
+
+                                                <mat-chip *ngIf="stepForm1.value.platformTools.length > 2">
+                                                    +{{ stepForm1.value.platformTools.length - 2 }}
+                                                </mat-chip>
+                                            </mat-chip-set>
+
+                                        </ng-container>
+
+                                        <ng-template #emptyPlatform>
+                                            Select tools
+                                        </ng-template>
+                                    </mat-select-trigger>
+
+                                    <mat-option *ngFor="let platform of platformOptions" [value]="platform">
+                                        {{ platform }}
+                                    </mat-option>
+
+                                </mat-select>
+                            </mat-form-field>
+
+                            <!-- SUMMARY TOOLS -->
+                            <mat-form-field appearance="outline">
+                                <mat-label>Summary Tools</mat-label>
+
+                                <mat-select formControlName="summaryTools" multiple>
+
+                                    <mat-select-trigger>
+                                        <ng-container
+                                            *ngIf="(stepForm1.value.summaryTools || []).length; else emptySummary">
+
+                                            <mat-chip-set>
+                                                <mat-chip *ngFor="let s of stepForm1.value.summaryTools.slice(0,2)"
+                                                    removable="true" (removed)="removeSummary(s)">
+                                                    {{ s }}
+                                                    <button matChipRemove>
+                                                        <mat-icon
+                                                            style="vertical-align: middle; font-size: 1rem; border:none">cancel</mat-icon>
+                                                    </button>
+                                                </mat-chip>
+
+                                                <mat-chip *ngIf="stepForm1.value.summaryTools.length > 2">
+                                                    +{{ stepForm1.value.summaryTools.length - 2 }}
+                                                </mat-chip>
+                                            </mat-chip-set>
+
+                                        </ng-container>
+
+                                        <ng-template #emptySummary>
+                                            Select tools
+                                        </ng-template>
+                                    </mat-select-trigger>
+
+                                    <mat-option *ngFor="let p of platformOptions" [value]="p">
+                                        {{ p }}
+                                    </mat-option>
+
+                                </mat-select>
+                            </mat-form-field>
+
+                        </div>
+
+                        <!-- CHECKBOXES -->
+                        <div class="checkbox-group ms-5">
+
+                            <mat-checkbox color="primary" formControlName="removeListPrice">
+                                Remove List Price
+                            </mat-checkbox>
+
+                            <mat-checkbox color="primary" formControlName="showSplit">
+                                Platform Split
+                            </mat-checkbox>
+
+                            <mat-checkbox color="primary" formControlName="showDps">
+                                Show DPS
+                            </mat-checkbox>
+
+                        </div>
+
+                    </div>
+                    <!-- BUTTON -->
+                    <div class="btn-container">
+                        <button mat-raised-button color="primary" matStepperNext>
+                            Next
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+        </mat-step>
+
+        <!-- STEP 2 -->
+        <mat-step [stepControl]="stepForm2" label="Customer Info">
+            <form [formGroup]="stepForm2">
+                <div class="step-card">
+                    <h3>Customer Information</h3>
+                    <p class="subtitle">Configure customer-specific display settings</p>
+                    <!-- Customer Name -->
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Customer Display Name</mat-label>
+                        <input matInput formControlName="customerName" placeholder="Enter customer name" readonly>
+                    </mat-form-field>
+
+                    <!-- Footer Toggle -->
+                    <div class="toggle-group mb-2">
+                        <mat-checkbox color="primary" formControlName="showFooter">
+                            Show Footer in Report
+                        </mat-checkbox>
+                    </div>
+
+                    <!-- Notes -->
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Notes (Optional)</mat-label>
+                        <textarea matInput rows="2" formControlName="notes"></textarea>
+                        <mat-hint align="end">
+                            {{ stepForm2.value.notes?.length || 0 }}/200
+                        </mat-hint>
+                    </mat-form-field>
+                    <div class="btn-row">
+                        <button mat-button matStepperPrevious>Back</button>
+                        <button mat-raised-button color="primary" matStepperNext>Next</button>
+                    </div>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 3 -->
+        <mat-step [stepControl]="stepForm3" label="Global Settings">
+            <form [formGroup]="stepForm3">
+                <div class="step-card">
+
+                    <h3>Global Settings</h3>
+                    <p class="subtitle">Configure TAM visibility and usage period</p>
+
+                    <div class="stepForm3">
+                        <!-- TAM Toggle -->
+                        <div class="toggle-group">
+                            <mat-checkbox color="primary" formControlName="showTam">
+                                Show TAM Value in Report
+                            </mat-checkbox>
+                            <mat-checkbox color="primary" formControlName="showDates">
+                                Show Usage Date Ranges
+                            </mat-checkbox>
+                        </div>
+
+                        <!-- Usage Mode -->
+                        <!-- <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Usage Mode</mat-label>
+                        <mat-select formControlName="usageMode">
+
+                            <mat-option *ngFor="let mode of usageModes" [value]="mode">
+                                {{ mode }}
+                            </mat-option>
+
+                        </mat-select>
+
+                        <mat-hint>Select how usage data should be considered</mat-hint>
+                    </mat-form-field> -->
+
+                        <!-- Date Range -->
+                        <div class="grid-2">
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>TAM Value</mat-label>
+                                <input matInput type="text" formControlName="tamValue">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Start Month</mat-label>
+                                <input matInput type="month" formControlName="startDate">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>End Month</mat-label>
+                                <input matInput type="month" formControlName="endDate">
+                            </mat-form-field>
+
+                        </div>
+                    </div>
+
+
+
+                    <!-- Preview -->
+                    <div class="preview-box">
+                        <strong>Preview:</strong><br>
+                        {{ stepForm3.value.usageMode }} usage from
+                        {{ stepForm3.value.startDate }} to
+                        {{ stepForm3.value.endDate }}
+                    </div>
+
+                    <div class="btn-row">
+                        <button mat-button matStepperPrevious>Back</button>
+                        <button mat-raised-button color="primary" matStepperNext>Next</button>
+                    </div>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- STEP 4 -->
+        <mat-step [stepControl]="stepForm4" label="Platform Configuration">
+
+            <form [formGroup]="stepForm4">
+
+                <div class="step-card">
+
+                    <h3>Platform Configuration</h3>
+                    <p class="subtitle">Configure each platform individually</p>
+
+                    <mat-accordion multi>
+
+                        <div formArrayName="platforms">
+
+                            <mat-expansion-panel *ngFor="let platform of platformArray.controls; let i = index"
+                                [formGroupName]="i">
+
+                                <mat-expansion-panel-header>
+
+                                    <mat-panel-title>
+                                        {{ platform.get('name')?.value }}
+                                    </mat-panel-title>
+
+                                    <mat-panel-description>
+                                        {{ platform.get('segments')?.value?.length || 0 }} Segments Selected
+                                    </mat-panel-description>
+
+                                </mat-expansion-panel-header>
+
+                                <!-- SEGMENTS -->
+                                <mat-form-field appearance="outline" class="w-100">
+                                    <mat-label>Segments</mat-label>
+
+                                    <mat-select formControlName="segments" multiple>
+
+                                        <mat-select-trigger>
+                                            <mat-chip-set>
+
+                                                <mat-chip *ngFor="let s of platform.get('segments')?.value || []"
+                                                    removable="true" (removed)="removeSegments(i,s)">
+                                                    {{ s }}
+                                                    <button matChipRemove>
+                                                        <mat-icon
+                                                            style="vertical-align: middle; font-size: 1rem; border:none">cancel</mat-icon>
+
+                                                    </button>
+                                                </mat-chip>
+
+                                            </mat-chip-set>
+                                        </mat-select-trigger>
+
+                                        <mat-option *ngFor="let seg of segmentsList" [value]="seg">
+                                            {{ seg }}
+                                        </mat-option>
+
+                                    </mat-select>
+                                </mat-form-field>
+
+                                <!-- INPUTS -->
+                                <div class="grid-3">
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Customer Reported</mat-label>
+                                        <input matInput type="number" formControlName="customerReported">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Admin Estimated</mat-label>
+                                        <input matInput type="number" formControlName="adminEstimated">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>File Reported</mat-label>
+                                        <input matInput type="number" formControlName="fileReported">
+                                    </mat-form-field>
+
+                                </div>
+
+                            </mat-expansion-panel>
+
+                        </div>
+
+                    </mat-accordion>
+
+                    <div class="btn-row">
+                        <button mat-button matStepperPrevious>Back</button>
+                        <button mat-raised-button color="primary" matStepperNext>Next</button>
+                    </div>
+
+                </div>
+
+            </form>
+
+        </mat-step>
+
+        <!-- FINAL STEP -->
+        <mat-step label="Summary">
+            <div class="step-card">
+                <h3>Summary & Review</h3>
+                <p class="subtitle">Review your configuration</p>
+                <!-- PLATFORM SETUP -->
+                <div class="summary-card">
+                    <h4>Platform Setup</h4>
+
+                    <p><strong>Platform Tools:</strong> {{ summaryData.platformSetup.platformTools?.join(', ') }}</p>
+                    <p><strong>Summary Tools:</strong> {{ summaryData.platformSetup.summaryTools?.join(', ') }}</p>
+
+                    <p>
+                        <strong>Options:</strong>
+                        {{ summaryData.platformSetup.removeListPrice ? 'Remove List Price' : '' }},
+                        {{ summaryData.platformSetup.showSplit ? 'Show Split' : '' }},
+                        {{ summaryData.platformSetup.showDps ? 'Show DPS' : '' }}
+                    </p>
+                </div>
+
+                <!-- CUSTOMER -->
+                <div class="summary-card">
+                    <h4>Customer Info</h4>
+
+                    <p><strong>Name:</strong> {{ summaryData.customer.customerName }}</p>
+                    <p><strong>Footer:</strong> {{ summaryData.customer.showFooter ? 'Enabled' : 'Disabled' }}</p>
+                    <p><strong>Notes:</strong> {{ summaryData.customer.notes }}</p>
+                </div>
+
+                <!-- GLOBAL -->
+                <div class="summary-card">
+                    <h4>Global Settings</h4>
+
+                    <p><strong>TAM:</strong> {{ summaryData.global.showTam ? 'Visible' : 'Hidden' }}</p>
+                    <p><strong>Usage Mode:</strong> {{ summaryData.global.usageMode }}</p>
+                    <p>
+                        <strong>Date Range:</strong>
+                        {{ summaryData.global.startDate }} → {{ summaryData.global.endDate }}
+                    </p>
+                </div>
+
+                <!-- PLATFORM CONFIG -->
+                <div class="summary-card">
+                    <h4>Platform Configuration</h4>
+
+                    <div *ngFor="let p of summaryData.platforms" class="platform-summary">
+
+                        <h5>{{ p.name }}</h5>
+
+                        <p><strong>Segments:</strong> {{ p.segments?.join(', ') || 'None' }}</p>
+
+                        <p>
+                            <strong>TAM Values:</strong><br>
+                            Customer: {{ p.customerReported }} |
+                            Admin: {{ p.adminEstimated }} |
+                            File: {{ p.fileReported }}
+                        </p>
+
+                    </div>
+
+                </div>
+                <div class="btn-row">
+                    <button mat-button matStepperPrevious>Back</button>
+                    <button mat-raised-button color="primary" (click)="submit()">Save Configuration</button>
+                </div>
+            </div>
+        </mat-step>
+
+    </mat-horizontal-stepper>
+</div>

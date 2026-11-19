@@ -1,0 +1,57 @@
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 15px;
+}
+
+.card {
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.card i {
+  font-size: 26px;
+  color: #1976d2;
+}
+
+.card p {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.chart-card {
+  padding: 20px;
+  border-radius: 10px;
+  color:var(--text-color) !important;
+}
+
+.chart-card h4 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+canvas {
+  max-height: 320px;
+}
+
+.high {
+  background-color: #dc3545; 
+}
+
+.medium {
+  background-color: #fd7e14; 
+}
+
+.low {
+  background-color: #ffc107; 
+  color: black;
+}
+
+.alert-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+}

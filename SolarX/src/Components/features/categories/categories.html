@@ -1,0 +1,38 @@
+<div class="card-section">
+    <h3 class="title">Explore Solar Panel Categories</h3>
+
+    <div class="category-grid" *ngIf="loading"> 
+      <div class="category-card skeleton" *ngFor="let i of [1,2,3,4,5,6]"> 
+        <div class="image-wrapper"> 
+          <div class="skeleton-img">
+
+          </div>
+         </div> 
+         <div class="skeleton-text title">
+
+         </div> <div class="skeleton-text button">
+
+         </div> 
+        </div> 
+      </div>
+
+    <div class="category-grid" *ngIf="!loading">
+  <mat-card class="category-card" *ngFor="let cat of categories">
+
+    
+    <div class="image-wrapper">
+      <img [src]="getImageUrl(cat.imageUrl)" alt="Category">
+        <div class="category-title">
+           {{ cat.name }}
+        </div>
+    </div>
+    <mat-card-content>
+      <button mat-button class="btn text-white" routerLink="/products" [queryParams]="{slug:cat.slug}">
+        <mat-icon>open_in_new</mat-icon>
+        View Products
+      </button>
+    </mat-card-content>
+
+  </mat-card>
+</div>
+</div>

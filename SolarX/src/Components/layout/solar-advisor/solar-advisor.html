@@ -1,0 +1,130 @@
+<div class="main-body">
+    <p class="text-center">solar-advisor</p>
+
+    <div class="form-section">
+        <p class="fw-bold text-details">Enter your details</p>
+        <form [formGroup]="sizingForm" (ngSubmit)="calculateSizing()">
+
+            <mat-grid-list cols="2" rowHeight="100px" gutterSize="10px">
+
+                <mat-grid-tile>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Monthly Electricity Bill (₹)</mat-label>
+                        <input matInput type="number" formControlName="monthlyBill">
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Monthly Usage (kWh)</mat-label>
+                        <input matInput type="number" formControlName="monthlyUnits">
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Roof Size (sq.ft)</mat-label>
+                        <input matInput type="number" formControlName="roofSize">
+                        <mat-error *ngIf="sizingForm.get('roofSize')?.hasError('required')">
+                            Roof Size is required
+                        </mat-error>
+                        <mat-error *ngIf="sizingForm.get('roofSize')?.hasError('min')">
+                            Minimum 22 s.q is required
+                        </mat-error>
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile>
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Location</mat-label>
+                        <mat-select formControlName="location">
+                            <mat-option value="Chennai">Chennai</mat-option>
+                            <mat-option value="Mumbai">Mumbai</mat-option>
+                            <mat-option value="Delhi">Delhi</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile colspan="2">
+                    <button mat-raised-button color="primary" class="w-50" [disabled]="sizingForm.invalid">
+                        Calculate Sizing
+                    </button>
+                </mat-grid-tile>
+
+            </mat-grid-list>
+
+        </form>
+    </div>
+
+    <ng-container *ngIf="sizingResponse">
+         <div class="sizing-results m-2">
+
+        <div class="card-grid">
+            <div class="border border-warning p-3 h-100 d-flex">
+                <i class="fa-solid fa-gauge fa-2x text-primary ps-3"></i>
+                <p class="ms-5">System Size</p>
+            </div>
+            <div *ngIf="sizingResponse" class="text-center">
+
+                <span><strong class="fs-3 ">{{sizingResponse.requiredKW}}</strong>Kw</span>
+            </div>
+        </div>
+
+        <div class="card-grid">
+            <div class="border border-warning p-3 h-100 d-flex">
+                <i class="fa-solid fa-solar-panel fa-2x text-warning ps-3"></i>
+                <p class="ms-5">Solar Panels</p>
+            </div>
+            <div *ngIf="sizingResponse" class="text-center">
+
+                <span><strong class="fs-3">{{sizingResponse.numberOfPanels}}</strong> Panels</span>
+            </div>
+        </div>
+
+        <div class="card-grid">
+            <div class="border border-warning p-3 h-100 d-flex">
+                <i class="fa-solid fa-battery-full fa-2x text-success ps-3"></i>
+                <p class="ms-5">Battery BackUp</p>
+            </div>
+            <div *ngIf="sizingResponse" class="text-center">
+
+                <span><strong class="fs-3">{{sizingResponse.minBatteryKWh}}-{{sizingResponse.maxBatteryKWh}}</strong>
+                    KWh</span>
+            </div>
+        </div>
+
+        <div class="card-grid">
+            <div class="border border-warning p-3 h-100 d-flex">
+                <i class="fa-solid fa-bolt fa-2x text-danger ps-3"></i>
+                <p class="ms-5">Inverter Size</p>
+            </div>
+            <div *ngIf="sizingResponse" class="text-center">
+
+                <span><strong class="fs-3">{{sizingResponse.inverterKW}}</strong> KW</span>
+            </div>
+        </div>
+
+
+
+    </div>
+    <div class="ai-Insight">
+        <div class="top-section">
+            <!-- <mat-icon color=primary style="font-size: 2;">edit_note</mat-icon> -->
+            <i class="fas fa-pen-nib" style="font-size: 2rem;"></i>
+            <span class="ms-5 fs-3">AI Insight</span>
+        </div>
+        <div class="bottom-section p-3">
+            <p [innerHTML]="displayed"></p>
+        </div>
+    </div>
+    <div>
+        <apx-chart *ngIf="chartOptions && chartOptions.series?.length" [series]="chartOptions.series!"
+            [chart]="chartOptions.chart!" [xaxis]="chartOptions.xaxis!" [yaxis]="chartOptions.yaxis!"
+            [stroke]="chartOptions.stroke!" [fill]="chartOptions.fill!" [colors]="chartOptions.colors!"
+            [dataLabels]="chartOptions.dataLabels!" [tooltip]="chartOptions.tooltip!"
+            [annotations]="chartOptions.annotations!" [grid]="chartOptions.grid!" [markers]="chartOptions.markers!"
+            [legend]="chartOptions.legend!">
+        </apx-chart>
+    </div>
+    </ng-container>
+</div>

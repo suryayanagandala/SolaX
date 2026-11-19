@@ -1,0 +1,54 @@
+<div class="home">
+   <div class="container mt-4" *ngIf="dto.length>0; else noDataFound">
+
+      <mat-accordion>
+
+         <mat-expansion-panel *ngFor="let item of dto" class="background-content">
+
+            <mat-expansion-panel-header>
+               <mat-panel-title class="display-content">
+                  {{item.productName}} — Qty: {{item.quantity}}
+               </mat-panel-title>
+
+               <mat-panel-description class="display-content">
+                  Order #{{item.orderId}}
+               </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="details-section">
+
+               <img [src]="getImageUrl(item.productImage)" width="120">
+
+               <p><strong>Delivered:</strong> {{item.deliveryAt | date:'short'}}</p>
+               <p><strong>Total Price:</strong> ₹{{item.price}}</p>
+
+
+               <mat-form-field appearance="outline" class="compact-height">
+                  <mat-label class="display-content">How many items  issue? </mat-label>
+                  <mat-select [(ngModel)]="item.selectedQty">
+                     <mat-option *ngFor="let q of [].constructor(item.quantity); let i = index" [value]="i+1">
+                        {{i+1}}
+                     </mat-option>
+                  </mat-select>
+               </mat-form-field>
+
+               <button mat-raised-button color="warn" [disabled]="!item.isActive" (click)="openDialogueCompoenet(item)" class="ms-3">
+                  Raise Request
+               </button>
+
+            </div>
+
+         </mat-expansion-panel>
+
+      </mat-accordion>
+
+
+   </div>
+   <ng-template #noDataFound>
+      <div class="img-content">
+         <img src="Assets/Themes/NoFounf.jpg" alt="" class="rounded-circle">
+         <br>
+         <strong class="mt-5" style="margin-left: 500px;">You don't have any Installations </strong>
+      </div>
+   </ng-template>
+</div>

@@ -1,0 +1,64 @@
+<div class="container mt-4">
+
+  <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
+
+
+    <mat-form-field appearance="outline" class="w-100 mb-3">
+      <mat-label>Installation Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+      <mat-error *ngIf="reportForm.get('notes')?.hasError('required')">
+        Notes are required
+      </mat-error>
+      <mat-error *ngIf="reportForm.get('notes')?.hasError('minlength')">
+        Minimum 20 characters required
+      </mat-error>
+    </mat-form-field>
+
+
+    <div formGroupName="replacedParts" class="mb-3">
+      <label class="fw-bold mb-2">Checklist</label>
+
+      <div *ngFor="let item of checkListItems">
+        <mat-checkbox [formControlName]="item.key">
+          {{ item.label }}
+        </mat-checkbox>
+      </div>
+
+      <div class="text-danger mt-2" *ngIf="reportForm.get('replacedParts')?.errors?.['atleastOneRequired']
+                  && reportForm.get('replacedParts')?.touched">
+        Please select at least one checklist item.
+      </div>
+    </div>
+
+
+    <div class="mb-3">
+      <label class="fw-bold">Upload Images</label>
+      <input type="file" multiple (change)="onImageSelected($event)" class="form-control" />
+
+      <div class="text-danger mt-2" *ngIf="reportForm.get('images')?.hasError('required')
+                  && reportForm.get('images')?.touched">
+        At least one image is required.
+      </div>
+    </div>
+
+
+    <div class="row image-preview-row">
+      <div class="col-md-3 mb-3" *ngFor="let img of previewImages; let i = index">
+        <div class="card image-card">
+          <img [src]="img" class="card-img-top preview-img" />
+          <button type="button" class="btn btn-sm btn-danger remove-btn" (click)="removeImage(i)">
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+
+    <button mat-raised-button color="primary" type="submit">
+      Submit Report
+    </button>
+
+  </form>
+
+</div>

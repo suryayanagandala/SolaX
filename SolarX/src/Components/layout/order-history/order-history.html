@@ -1,0 +1,145 @@
+
+<div class="home">
+
+  <h4 class="fw-bold m-4 header">Order History</h4>
+
+  <div class="section" *ngFor="let o of paginatedOrders">
+
+    
+    <div class="header-section d-flex justify-content-between align-items-center"
+         (click)="toggleExpand(o.orderId)">
+
+     
+      <div class="left-section d-flex align-items-center">
+
+        
+        <span class="badge p-2"
+              [ngClass]="{
+                'bg-primary text-white': o.status === 'CREATED',
+                'bg-warning text-dark': o.status === 'PAYMENT_PENDING' || o.status === 'COD_PENDING',
+                'bg-success text-white': o.status === 'PAID' || o.status === 'CONFIRMED' || o.status === 'DELIVERED',
+                'bg-info text-dark': o.status === 'SHIPPED',
+                'bg-danger text-white': o.status === 'CANCELLED' || o.status === 'PAYMENT_FAILED'
+              }">
+
+          <i [ngClass]="{
+              'bi bi-plus-circle': o.status === 'CREATED',
+              'bi bi-credit-card': o.status === 'PAYMENT_PENDING',
+              'bi bi-cash-stack': o.status === 'PAID',
+              'bi bi-cash': o.status === 'COD_PENDING',
+              'bi bi-check-circle': o.status === 'CONFIRMED',
+              'bi bi-truck': o.status === 'SHIPPED',
+              'bi bi-check-circle-fill': o.status === 'DELIVERED',
+              'bi bi-x-circle-fill': o.status === 'CANCELLED',
+              'bi bi-exclamation-triangle-fill': o.status === 'PAYMENT_FAILED'
+          }" class="me-2"></i>
+
+          {{ o.status }}
+        </span>
+
+      
+        <div class="ms-3">
+          <strong>Order ID:</strong>
+          <span class="text-primary fw-bold">{{ o.orderId }}</span>
+        </div>
+
+        
+        <div class="ms-4">
+          {{ o.payment[0]?.paymentDate | date:'MMM d, y, h:mm a' }}
+        </div>
+
+      </div>
+
+      
+      <div class="d-flex align-items-center gap-3">
+
+       
+        <div>
+          <strong>Total:</strong>
+          <i class="bi bi-currency-rupee"></i>{{ o.totalAmount }}
+        </div>
+
+        
+        <button class="btn btn-sm d-flex align-items-center"
+                [ngClass]="{
+                  'btn-primary': o.status === 'SHIPPED',
+                  'btn-danger': o.status === 'CREATED' || o.status==='CONFIRMED',
+                  'btn-success': o.status === 'DELIVERED',
+                  'btn-warning': o.status === 'PAYMENT_PENDING' || o.status === 'COD_PENDING',
+                  'btn-secondary': o.status === 'CANCELLED' || o.status === 'PAYMENT_FAILED'
+                }"
+                (click)="methodCalling(o.status,o.orderId); $event.stopPropagation();">
+
+          <i [ngClass]="{
+              'bi bi-truck': o.status === 'SHIPPED',
+              'bi bi-x-circle': o.status === 'CREATED'||o.status==='CONFIRMED',
+              'bi bi-check-circle-fill': o.status === 'DELIVERED',
+              'bi bi-credit-card': o.status === 'PAYMENT_PENDING',
+              'bi bi-cash': o.status === 'COD_PENDING',
+              'bi bi-ban': o.status === 'CANCELLED',
+              'bi bi-exclamation-triangle-fill': o.status === 'PAYMENT_FAILED'
+          }"></i>
+
+          <span class="ms-2">
+            {{
+              o.status === 'SHIPPED' ? 'Track Order' :
+              o.status === 'CREATED'||o.status==='CONFIRMED' ? 'Cancel Order' :
+              o.status === 'DELIVERED' ? 'Delivered' :
+              o.status === 'PAYMENT_PENDING' ? 'Pay Now' :
+              o.status === 'COD_PENDING' ? 'COD Pending' :
+              o.status === 'CANCELLED' ? 'Cancelled' :
+              o.status === 'PAYMENT_FAILED' ? 'Failed' :
+              'View'
+            }}
+          </span>
+        </button>
+
+      </div>
+    </div>
+
+    
+    <div class="body-section"
+         [@expandCollapse]="expandedOrderId === o.orderId ? 'expanded' : 'collapsed'">
+
+      
+      <div class="middle-section d-flex align-items-center"
+           *ngFor="let item of o.items">
+
+        
+        <div class="image">
+          <img [src]="getImageUrl(item?.product?.imageUrl)">
+        </div>
+
+        
+        <div class="description">
+          <p class="h6">{{ item?.productName }}</p>
+
+        
+          <div *ngIf="o.status==='DELIVERED'"
+               class="delivery-data bg-success bg-opacity-25 text-success p-2 rounded">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Delivered on {{ o.deliveryDate | date:'shortDate' }}
+          </div>
+
+         
+          <div *ngIf="o.status!=='DELIVERED'">
+            <span class="fw-bold">Expected Delivery:</span>
+            {{ o.deliveryDate | date:'shortDate' }}
+          </div>
+        </div>
+
+        
+        <span class="spacer flex-grow-1"></span>
+
+      </div>
+
+    </div>
+  </div>
+
+  
+  <mat-paginator [length]="ordersData.length" [pageSize]="pageSize" [pageSizeOptions]="[5,10]"
+      (page)="onPageChange($event)">
+  </mat-paginator>
+
+</div>
+

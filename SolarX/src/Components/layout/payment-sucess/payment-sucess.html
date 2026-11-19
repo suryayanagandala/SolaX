@@ -1,0 +1,28 @@
+<div class="sucess-container">
+    <div class="success-card">
+        <div class="icon">
+            <i class="bi bi-check-circle-fill text-success"></i>
+        </div>
+
+        <h2>Payment sucessfully</h2>
+        <p class="info">
+          Amount Paid:<strong><i class="bi bi-currency-rupee"></i>{{amount}}</strong>
+        </p>
+        <p class="info">
+          OrderId:<strong>{{orderId}}</strong>
+        </p>
+        <p class="info">
+          Payment Method:<strong>{{paymentMethod}}</strong>
+        </p>
+
+        <div class="actions text-center">
+            <!-- <button mat-raised-button color="primary" (click)="openInvoice(false)">
+                View OrderDetails
+            </button> -->
+
+            <button mat-raised-button color="primary" (click)="openInvoice(true)">
+                 Download Invoice
+            </button>
+        </div>
+    </div>
+</div>

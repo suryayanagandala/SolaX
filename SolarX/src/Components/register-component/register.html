@@ -1,0 +1,129 @@
+<div class="create-container">
+  <form [formGroup]="registerForm" (ngSubmit)=" submit()">
+    <mat-card class="mat-card">
+      <mat-card-header>
+        <h2 class="title">
+          {{ isEditMode ? 'Edit Profile' : 'Create Account' }}
+        </h2>
+      </mat-card-header>
+
+      <mat-card-content>
+
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="fullName">
+
+          <mat-error *ngIf="registerForm.get('fullName')?.hasError('required')">
+            Name is required
+          </mat-error>
+
+          <mat-error *ngIf="registerForm.get('fullName')?.hasError('pattern')">
+            Name cannot contain only spaces
+          </mat-error>
+        </mat-form-field>
+
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="emailId" style="background-color: none;">
+
+          <mat-error *ngIf="registerForm.get('emailId')?.hasError('required')">
+            Email is required
+          </mat-error>
+
+          <mat-error *ngIf="registerForm.get('emailId')?.hasError('email')">
+            Enter valid email address
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width" *ngIf="!isEditMode">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" />
+
+          <button mat-icon-button matSuffix type="button" (click)="togglePassword()">
+            <mat-icon>
+              {{ hidePassword ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+          </button>
+
+
+          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">
+            Password is required
+          </mat-error>
+        </mat-form-field>
+
+
+
+        <div class="maintain-gap" *ngIf="!isEditMode">
+          <p>
+            <mat-icon [ngClass]="hasCapital()?'success-icon':''">
+              {{hasCapital() ? 'check_circle':'cancel'}}
+            </mat-icon>
+            First Letter Must be Capital
+          </p>
+
+          <p>
+            <mat-icon [ngClass]="hasDigit()?'success-icon':''">
+              {{hasDigit() ? 'check_circle' :'cancel'}}
+            </mat-icon>
+            Must Contain a number
+          </p>
+
+          <p>
+            <mat-icon [ngClass]=" hasSpecialChar() ? 'success-icon' : ''">
+              {{ hasSpecialChar() ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+            One special character (@$!%*?&)
+          </p>
+
+          <p>
+            <mat-icon [ngClass]="minLength() && maxLength() ? 'success-icon' : ''">
+              {{ minLength() && maxLength() ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+            8-12 characters
+          </p>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Phone Number</mat-label>
+          <input matInput formControlName="phoneNumber" maxlength="10">
+
+          <mat-error *ngIf="registerForm.get('phoneNumber')?.hasError('required')">
+            Phone number is required
+          </mat-error>
+
+          <mat-error *ngIf="registerForm.get('phoneNumber')?.hasError('pattern')">
+            Enter valid 10 digit mobile number
+          </mat-error>
+        </mat-form-field>
+
+
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <textarea matInput rows="4" formControlName="address"></textarea>
+
+          <mat-error *ngIf="registerForm.get('address')?.hasError('required')">
+            Address is required
+          </mat-error>
+
+          <mat-error *ngIf="registerForm.get('address')?.hasError('pattern')">
+            Address cannot contain only spaces
+          </mat-error>
+        </mat-form-field>
+
+      </mat-card-content>
+
+      <mat-card-actions class="login-actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid">
+
+          {{ isEditMode ? 'Edit Profile' : 'Create Account' }}
+
+        </button>
+      </mat-card-actions>
+
+    </mat-card>
+  </form>
+
+</div>

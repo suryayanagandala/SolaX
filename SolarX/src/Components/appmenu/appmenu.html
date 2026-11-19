@@ -1,0 +1,52 @@
+<app-header (menuClick)="toggleSideNav()"></app-header>
+
+<div class="overlay-backdrop" *ngIf="sideNavOpen" (click)="toggleSideNav()"></div>
+
+<div class="overlay-sidenav" [class.open]="sideNavOpen">
+    <div class="sidenav-header">
+        <img src="Assets/Themes/User-Photo.jpg" class="user-photo">
+        <span class="text-white">{{ username }}</span>
+
+    </div>
+
+    <mat-nav-list>
+        <a mat-list-item routerLink="./dashboard" (click)="toggleSideNav()">
+            <mat-icon matListIcon>dashboard</mat-icon> Dashboard
+        </a>
+        <a mat-list-item routerLink="/order-history" (click)="toggleSideNav()">
+            <mat-icon>receipt_long</mat-icon> Orders
+        </a>
+        <a mat-list-item routerLink="./cart" (click)="toggleSideNav()">
+            <mat-icon>shopping_cart</mat-icon> Cart
+        </a>
+        <!-- <a mat-list-item routerLink="./settings" (click)="toggleSideNav()">
+            <mat-icon>settings</mat-icon> Settings
+        </a> -->
+        <a mat-list-item routerLink="/maintenance-page" (click)="toggleSideNav()">
+            <mat-icon>handyman</mat-icon> Maintenance
+        </a>
+        <a mat-list-item routerLink="./solar-advisor" (click)="toggleSideNav()" class="solar-ai-item">
+
+            <a mat-list-item class="solar-ai-item" >
+                <span class="new-badge">NEW</span>
+                <div class="menu-content">
+                    <mat-icon class="solar-icon">solar_power</mat-icon>
+                    <span class="menu-text">Solar AI Advisor</span>
+                </div>
+
+            </a>
+
+        </a>
+        <a mat-list-item routerLink="/register" [queryParams]="{userId:userId}">
+            <mat-icon>person</mat-icon>
+            Update Profile
+        </a>
+        <mat-divider></mat-divider>
+        <a mat-list-item (click)="logout(); toggleSideNav()">
+            <mat-icon color="warn">logout</mat-icon> Logout
+        </a>
+    </mat-nav-list>
+</div>
+<div class="main-content">
+    <router-outlet></router-outlet>
+</div>

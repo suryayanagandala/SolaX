@@ -1,0 +1,111 @@
+<div class="mat-card">
+    <mat-form-field>
+        <mat-label>search</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Name,Date,Type" class="text-dark">
+    </mat-form-field>
+    <button mat-raised-button color="accent" routerLink="/admin/productOperations">
+        AddProduct
+    </button>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-scroll">
+        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8 ">
+            <!-- productName -->
+            <ng-container matColumnDef="productName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Product Name</th>
+                <td mat-cell *matCellDef="let p">{{p.productName}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="categoryId">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>CategoryId</th>
+                <td mat-cell *matCellDef="let p">{{p.categoryId}}</td>
+            </ng-container>
+
+            <!-- Brand -->
+            <ng-container matColumnDef="brand">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Brand</th>
+                <td mat-cell *matCellDef="let p">{{p.brand}}</td>
+            </ng-container>
+
+            <!-- Type -->
+            <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+                <td mat-cell *matCellDef="let p">{{p.type}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
+                <td mat-cell *matCellDef="let p">{{p.price}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="stock">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
+                <td mat-cell *matCellDef="let p">{{p.stock}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+                <td mat-cell *matCellDef="let p">{{p.description}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="capacity">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Capacity </th>
+                <td mat-cell *matCellDef="let p">{{p.capacity}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="createdAt">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>CreatedDate</th>
+                <td mat-cell *matCellDef="let p">{{p.createdAt | date:'dd/MM/yyyy, hh:mm a':'+0530'}}</td>
+            </ng-container>
+
+            <!-- <ng-container matColumnDef="updatedAt">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Update At</th>
+                <td mat-cell *matCellDef="let p">{{p.updateAt}}</td>
+            </ng-container> -->
+
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+                <td mat-cell *matCellDef="let p">
+                    <span *ngIf="p.isActive" class="status-active">
+                        <mat-icon style="color: green;">fiber_manual_record</mat-icon>Active
+                    </span>
+
+                    <span *ngIf="!p.isActive" class="status-inactive">
+                        <mat-icon style="color: red;">fiber_manual_record</mat-icon>InActive
+                    </span>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let p">
+                    <button mat-button color="primary" routerLink="/admin/viewImages"
+                        [queryParams]="{productId:p.productId}"><mat-icon>image</mat-icon></button>
+                    <button mat-button color="primary" routerLink="/admin/productOperations"
+                        [queryParams]="{productId:p.productId}"><mat-icon>edit</mat-icon></button>
+
+                    <button mat-button color="warn" *ngIf="p.isActive" (click)="deleteProduct(p.productId)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+
+                
+
+                    <button  mat-icon-button color="warn" *ngIf="!p.isActive" matTooltip="{{ p.deletedReason }}"
+                        matTooltipPosition="above" matTooltipClass="reason-tooltip">
+                        <mat-icon>info</mat-icon>
+                    </button>
+
+                    <button mat-button color="accent" *ngIf="!p.isActive" (click)="restoreProduct(p.productId)">
+                        <mat-icon>restore</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </div>
+</div>
+
+<mat-paginator [pageSizeOptions]="[5, 10, 25, 50]" showFirstLastButtons></mat-paginator>

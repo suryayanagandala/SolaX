@@ -1,0 +1,31 @@
+<div class="container mt-4">
+  <div>
+    <p class="display-6">Delivered History</p>
+
+    <table class="table table-bordered table-hover table-striped text-center">
+      <thead class="table-primary">
+        <tr class="align-middle">
+          <th>OrderId</th>
+          <th>Delivered At</th>
+          <th>Address</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody class="table-danger">
+        <tr *ngFor="let d of paginatedMessages">
+          <td>{{d.orderId}}</td>
+          <td>{{d.deliveryAt | date:'shortDate'}}</td>
+          <td>{{d.delievryAddress}}</td>
+          <td class="text-success fw-bold fs-5">{{d.status}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+    <mat-paginator [length]="deliveredOrdersDto.length" [pageSize]="pageSize" [pageIndex]="pageIndex"
+      [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons (page)="onPageEvent($event)">
+    </mat-paginator>
+
+  </div>
+</div>

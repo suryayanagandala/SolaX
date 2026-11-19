@@ -1,0 +1,154 @@
+
+.tool-bar {
+  display: flex;
+  padding: 0 24px;
+  // background-color: rgb(245, 168, 25);
+  // overflow: visible !important;
+  background-color: var(--toolbar-bg) !important;
+  color:var(--text-color) !important;
+}
+
+.tool-bar button:hover{
+  background-color: var(--active-bg) !important;
+}
+
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  display:flex;
+  flex-direction: row;
+  align-items: center;
+  gap:10px;
+}
+
+.image{
+    height:40px;
+    width:40px;
+    border-radius: 50%;
+    
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+a {
+  font-weight: 500;
+  margin-right: 8px;
+  font-size: 15px;
+}
+
+a:hover{
+    background-color: rgb(194, 147, 60);
+    color:white;
+}
+
+.login-color{
+    background-color: rgb(11, 187, 11);
+    border-radius: 5px;
+    border: none;
+    font-size: 15px;
+    padding:0 10px;
+    
+}
+
+.register-color{
+    background-color: rgb(228, 228, 28);
+    border-radius: 5px;
+    border: none;
+    font-size: 15px;
+    padding:0 10px;
+}
+
+
+
+.display-buttons{
+    display: flex;
+    align-items: center;
+    gap:20px;
+}
+
+
+.user-section {
+  display: flex;
+  align-items: center;
+  margin-right: 16px; 
+}
+
+.user-section .user-photo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%; 
+  object-fit: cover;
+  margin-right: 8px; 
+}
+
+.user-section .username {
+  font-weight:500;
+  font-size: 20;
+}
+
+
+.notification-wrapper{
+  position: relative;
+}
+
+.notification-dropdown{
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 340px;
+  max-height: 420px;
+
+  background: var(--content-bg) !important;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+
+  overflow-y: auto;
+  z-index: 99999;
+}
+
+.notification-item{
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: normal;
+  color: var(--text-color) !important;
+}
+
+.notification-item:hover{
+  background-color: var(--content-bg) !important;
+}
+
+.notification-header{
+  display: flex;
+  justify-content: space-between;
+  color:var(--text-color) !important;
+}
+
+.message{
+  font-size: 13px;
+  // color: #666;
+  color: var(--text-color) !important;
+}
+
+.see-more{
+  text-align: center;
+  border:none;
+  font-weight: 600;
+  color: #1976d2;
+  cursor: pointer;
+  align-content: center;
+  font-size: 15px;
+  background: none;
+  margin-left:60px;
+}
+
+.empty{
+  text-align: center;
+  padding: 20px;
+}

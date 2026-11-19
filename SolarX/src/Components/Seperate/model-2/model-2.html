@@ -1,0 +1,31 @@
+<div class="main-body">
+   <mat-horizontal-stepper linear>
+       <mat-step [stepControl]="quickForm" label="platform Details">
+          <form [formGroup]="quickForm">
+             <div class="step-content-center">
+                 <h2>Quick Configuration</h2>
+                 <p class="sub-text">Enter minimal details to auto-generate setup</p>
+                 <mat-form-field appearance="outline" class="w-25 ">
+                     <mat-label>Customer</mat-label>
+                     <input type="text" matInput formControlName="customerName" >
+                 </mat-form-field>
+
+                 <mat-form-field appearance="outline" class="w-25 ms-5">
+                    <mat-label>PlatForms</mat-label>
+                    <mat-select formControlName="platforms" multiple>
+                        <mat-option *ngFor="let p of platformOptions" [value]="p">
+                           {{p}}
+                        </mat-option>
+                    </mat-select>
+                 </mat-form-field>
+
+                 <div class="btn-grp">
+                     <button mat-flat-button color="primary" (click)="generateAndProceed()">
+                      Generate Configuration
+                 </button>
+                 </div>
+             </div>
+          </form>
+       </mat-step>
+   </mat-horizontal-stepper>
+</div>

@@ -1,0 +1,49 @@
+
+mat-card-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  align-items: start;
+}
+
+
+mat-form-field[formControlName="password"],
+.maintain-gap {
+  display: block; 
+}
+
+
+mat-form-field[formControlName="phoneNumber"] {
+  grid-column: 2;
+  align-self: start !important; 
+}
+
+
+mat-form-field[formControlName="fullName"] {
+  grid-column: 1;
+}
+mat-form-field[formControlName="emailId"] {
+  grid-column: 2;
+}
+mat-form-field[formControlName="address"] {
+  grid-column: span 2;
+}
+
+
+mat-card-actions.login-actions {
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.create-container{
+  min-height: 100vh;
+}
+
+.mat-card{
+    min-height: 100vh;
+}
+
+mat-error{
+  color: var(--text-color) !important;
+}

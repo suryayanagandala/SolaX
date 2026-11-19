@@ -1,0 +1,56 @@
+.container{
+    height:100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.display-card{
+    width:300px;
+     align-content: center;
+     background-color: rgb(205, 197, 190);
+     padding:20px;
+}
+
+.display-card mat-card-header{
+   justify-content: center;
+}
+
+
+mat-form-field{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.display-card .mat-mdc-form-field{
+    justify-content: center;
+}
+
+mat-hint{
+    margin-top: 10px ;
+    text-align: center;
+    font-size: medium;
+}
+
+mat-card-actions{
+    margin-top: 30px;
+    display:flex;
+    justify-content: center;
+}
+
+button{
+    width:200px;
+}
+
+button:hover{
+    background-color: rgb(236, 185, 119);
+}
+
+.blink{
+    animation:blink 2s linear infinite;
+    color:rgb(114, 114, 247)
+}
+@keyframes blink{
+    0%,100%{opacity: 1;}
+    50%{opacity:0}
+}

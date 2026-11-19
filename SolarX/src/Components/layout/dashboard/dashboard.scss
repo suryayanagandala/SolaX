@@ -1,0 +1,142 @@
+body{
+    background-color:  #111f34;
+    height: max-content;
+}
+
+
+.content{
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(1, 15, 1, 0.8);
+    background-color: #111f34;
+    color:white;
+    border:2px solid rgb(103, 99, 99);
+  
+}
+.row-content{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap:40px;
+}
+.left-section {
+    flex-shrink: 0;
+}
+
+.right-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  background: #f4f6f9;
+  border-radius: 12px;
+}
+.kpi-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  
+}
+.card:nth-child(1) .kpi-icon {
+  color: #22c55e; 
+}
+
+.card:nth-child(2) .kpi-icon {
+  color: #3b82f6; 
+}
+
+.card:nth-child(3) .kpi-icon {
+  color: #a78bfa; 
+}
+
+.card:nth-child(4) .kpi-icon {
+  color: #facc15; 
+}
+
+.main-section{
+    display: flex;
+    gap:20px;
+    width:100%;
+   
+}
+.charts-section{
+  display: flex;
+  flex-direction: column;
+  gap:20px;
+  width:60%;
+  margin-left: 16px;
+  color:white;
+  
+}
+
+.radial-chart-wrapper{
+    margin-top: 0px;
+    padding-top: 0px;
+     border: 2px solid rgb(103, 99, 99);
+    flex:1;
+    margin-right: 16px;
+    border-radius: 10px;
+}
+
+::ng-deep .apexcharts-menu {
+  background: #ffffff !important;
+}
+
+::ng-deep .apexcharts-menu-item {
+  color: #000000 !important;
+}
+
+.dashboard-container{
+ border: 2px solid rgb(103, 99, 99);
+ border-radius: 10px;
+}
+.monthly-chart{
+ border: 2px solid rgb(103, 99, 99);
+ border-radius: 10px;
+}
+
+.panel-select {
+  width: 100%;
+}
+::ng-deep .mat-form-field-label {
+  color: white;
+}
+
+::ng-deep .mat-form-field-outline {
+  stroke: white;
+}
+
+::ng-deep .mat-select-value-text {
+  color: white;
+}
+
+.panel-overview{
+    color:white;
+    display: block;
+    border:2px solid teal;
+    gap:10px;
+    padding-left: 10px;;
+    
+}
+
+.radial-chart{
+    flex:1;
+}
+
+
+.chart-loader{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}

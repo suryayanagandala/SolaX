@@ -1,0 +1,148 @@
+<mat-card class="mat-card">
+    <form [formGroup]="productForm" (ngSubmit)="submit()">
+        <mat-card-header>
+            <h3>{{isEditMode?'Edit Product':'Create Product'}}</h3>
+        </mat-card-header>
+
+        <mat-card-content class="display-card">
+            <mat-form-field appearance="outline">
+                <mat-label>Product Name</mat-label>
+                <input type="text" matInput formControlName="productName">
+                <mat-error *ngIf="productForm.get('productName')?.hasError('required')">
+                    Product Name is required</mat-error>
+            </mat-form-field>
+
+               <mat-form-field appearance="outline">
+                  <mat-label>Select Category</mat-label>
+
+                   <mat-select formControlName="categoryId">
+
+    
+                      <mat-option [value]="null">None (Parent Category)</mat-option>
+
+                    <ng-container *ngFor="let parent of categories">
+
+     
+                        <mat-option [value]="parent.categoryId" class="parent-option">
+                            {{ parent.name }}
+                        </mat-option>
+
+    
+                    <mat-option *ngFor="let child of parent.children" [value]="child.categoryId" class="child-option">
+                        &nbsp;&nbsp;— {{ child.name }}
+                    </mat-option>
+
+                    </ng-container>
+
+                 </mat-select>
+                </mat-form-field>
+            
+
+
+            <mat-form-field appearance="outline">
+                <mat-label>Brand</mat-label>
+                <mat-error *ngIf="productForm.get('brand')?.hasError('required')">
+                    Brand is required
+                </mat-error>
+                <input type="text" matInput formControlName="brand">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Type</mat-label>
+                <mat-select formControlName="type">
+                    <mat-option *ngFor="let p of types" [value]="p.value">
+                        {{p.label}}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="productForm.get('type')?.hasError('required')">
+                    Type is required
+                </mat-error>
+            </mat-form-field>
+
+
+            <mat-form-field appearance="outline">
+                <mat-label>Price</mat-label>
+                <input type="number" matInput formControlName="price">
+                <mat-error *ngIf="productForm.get('price')?.hasError('required')">
+                    price is required
+                </mat-error>
+                <mat-error *ngIf="productForm.get('price')?.hasError('min')">
+                    Price atleast equal or more than 0
+                </mat-error>
+            </mat-form-field>
+
+
+            <mat-form-field appearance="outline">
+                <mat-label>Stock</mat-label>
+                <input type="number" matInput formControlName="stock">
+                <mat-error *ngIf="productForm.get('stock')?.hasError('required')">
+                    stock is required
+                </mat-error>
+                <mat-error *ngIf="productForm.get('stock')?.hasError('min')">
+                    Stock atleast equal or more than 0
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Capacity Value</mat-label>
+                <input type="number" matInput formControlName="capacityValue">
+                <mat-error *ngIf="productForm.get('capacityValue')?.hasError('required')">
+                    Capacity Value is required
+                </mat-error>
+                <mat-error *ngIf="productForm.get('capacityValue')?.hasError('min')">
+                    Capacity Value atleast equal or more than 0
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label> Capacity</mat-label>
+                <input type="text" matInput formControlName="capacity">
+                <mat-error *ngIf="productForm.get('capacity')?.hasError('required')">
+                    Capcity is required
+                </mat-error>
+            </mat-form-field>
+
+
+            <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea rows="4" cols="3" matInput formControlName="description"></textarea>
+                <mat-error *ngIf="productForm.get('description')?.hasError('required')">
+                    Description is required
+                </mat-error>
+                <mat-error *ngIf="productForm.get('description')?.hasError('minLength')">
+                    description has min 30 characters required
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Warranty (Years)</mat-label>
+                <input matInput type="number" formControlName="warranty_Years" />
+                <mat-error *ngIf="productForm.get('warranty_Years')?.hasError('required')">
+                    Warranty period is required </mat-error>
+                <mat-error *ngIf="productForm.get('warranty_Years')?.hasError('min')">
+                    Waranty Years atleast equal or more than 0
+                </mat-error>
+            </mat-form-field>
+
+            <!-- <div *ngIf="isEditMode">
+                <mat-form-field>
+                    <mat-label>Is Active</mat-label>
+                    <mat-select formControlName="isActive">
+                        <mat-option [value]="true">Active</mat-option>
+                        <mat-option [value]="false">Inactive</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div> -->
+        </mat-card-content>
+
+        <mat-card-actions class="mat-card-button">
+            <button mat-raised-button color="primary" type="submit">
+                {{isEditMode?'Update':'Create'}}
+            </button>
+
+            <button mat-raised-button color="warn" type="reset">
+               Clear
+            </button>
+        </mat-card-actions>
+    </form>
+</mat-card>

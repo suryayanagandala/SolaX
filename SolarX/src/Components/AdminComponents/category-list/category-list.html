@@ -1,0 +1,79 @@
+<div class="page-container">
+    <div class="header">
+        <h4>Categories</h4>
+        <button mat-raised-button color="primary" routerLink="/admin/category-form">
+            <mat-icon>add</mat-icon>Add Category
+        </button>
+    </div>
+
+    <div class="loading-container" *ngIf="loading">
+        <mat-progress-spinner diameter="40" mode="indeterminate">
+        </mat-progress-spinner>
+    </div>
+
+    <div *ngIf="!loading" class="display-card">
+        <mat-accordion>
+            <mat-expansion-panel *ngFor="let category of categories">
+                <mat-expansion-panel-header>
+                    <div class="header-row">
+                        <div class="header-left">
+                            <mat-icon>folder</mat-icon>
+                            <span>{{ category.name }}</span>
+                        </div>
+
+                        <div class="header-actions" (click)="$event.stopPropagation()">
+                            <button mat-icon-button color="primary" (click)="editCategory(category.categoryId)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="warn" *ngIf="category.isActive"
+                                (click)="deleteParentCategory(category.categoryId)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="warn" *ngIf="!category.isActive"
+                                matTooltip="{{category.deletedReason}}" matTooltipPosition="above">
+                                <mat-icon>info</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="warn" *ngIf="!category.isActive"
+                                (click)="restoreParentCategory(category.categoryId)">
+                                <mat-icon>restore</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </mat-expansion-panel-header>
+
+                <mat-list *ngIf="(category.children?.length ?? 0) > 0">
+                    <mat-list-item *ngFor="let child of category.children">
+                        <mat-icon matListItemIcon>chevron_right</mat-icon>
+                        <div matListItemTitle>{{ child.name }}</div>
+
+                        <div matListItemMeta class="actions" (click)="editCategory(child.categoryId)">
+                            <button mat-icon-button color="primary">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="warn" *ngIf="child.isActive"
+                                (click)="deleteCategory(child.categoryId)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="accent" *ngIf="!child.isActive"
+                                matTooltip="{{ child.deletedReason }}" matTooltipPosition="above">
+                                <mat-icon>info</mat-icon>
+                            </button>
+
+                            <button mat-icon-button color="warn" *ngIf="!child.isActive"
+                                (click)="restoreCategory(child.categoryId)">
+                                <mat-icon>restore</mat-icon>
+                            </button>
+                        </div>
+                    </mat-list-item>
+
+                </mat-list>
+            </mat-expansion-panel>
+        </mat-accordion>
+
+    </div>
+</div>

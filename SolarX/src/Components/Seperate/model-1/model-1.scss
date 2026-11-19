@@ -1,0 +1,174 @@
+// .stepper-wrapper {
+//   display: flex;
+//   justify-content: center;
+//   padding: 20px;
+// }
+
+// mat-vertical-stepper {
+//   width: 600px; 
+//   max-width: 100%;
+// }
+
+
+.header{
+    display: flex;
+    flex-direction: column;
+}
+
+.title{
+    display: flex;
+    justify-content: space-between;
+}
+
+.step-content-center {
+  max-width: 600px;
+  margin: 0 auto;  
+  text-align: center;
+}
+
+mat-horizontal-stepper {
+  background: #f3f4f6;
+//   min-height: 100%;
+//   border-radius: 12px;
+//   padding: 20px;
+//   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* Background */
+.stepper-wrapper {
+  background: #f3f4f6;
+  min-height: 100vh;
+//   padding: 40px 0;
+}
+
+/* Card */
+.step-card {
+  background: #ffffff;
+  padding: 30px 35px;
+  border-radius: 12px;
+  max-width: 90%;
+  margin: auto;
+  margin-top: 10px;
+//   box-shadow: 0 10px 60px rgba(0,0,0,0.08);
+}
+
+/* Titles */
+h3,h4 {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #777;
+  margin-bottom: 25px;
+}
+
+.form-side{
+    display: flex;
+    //   border:2px solid red;
+    // gap:10px;
+    
+    // justify-content: center;
+    // justify-content: space-between;
+}
+
+/* Row layout */
+.form-row {
+   width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+//   margin-bottom: 20px;
+    // border:2px solid red;
+}
+
+mat-form-field {
+  flex: 1;
+}
+
+/* Chips */
+mat-chip {
+  font-size: 12px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+/* Checkbox group */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+//   justify-content: center;
+//   margin: 20px 0;
+  flex-wrap: wrap;
+  gap: 10px;
+//   border:2px solid red;
+}
+
+/* Buttons */
+.btn-container {
+  text-align: end;
+}
+
+button[mat-raised-button] {
+  min-width: 140px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+
+.sub-text {
+  color: gray;
+  margin-bottom: 20px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+.grid-3{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+.preview-box {
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.summary-card {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.platform-summary {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.stepForm3{
+    display: flex;
+    justify-content: space-between;
+}
+
+.toggle-group{
+    display: flex;
+    flex-direction: column;
+}

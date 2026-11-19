@@ -1,0 +1,85 @@
+<mat-card class="mat-card">
+
+  <mat-card-header>
+    <h4>{{ isEditMode ? 'Update Category' : 'Upload Category' }}</h4>
+  </mat-card-header>
+
+  <form [formGroup]="categoryform" (ngSubmit)="submit()">
+
+    <mat-card-content class="mat-form">
+
+      <!-- NAME -->
+      <mat-form-field appearance="outline">
+        <mat-label>Category Name</mat-label>
+        <input matInput type="text" formControlName="name">
+        <mat-error *ngIf="categoryform.get('name')?.hasError('required')">
+          Category Name is required
+        </mat-error>
+      </mat-form-field>
+
+      <!-- DESCRIPTION -->
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description"></textarea>
+        <mat-error *ngIf="categoryform.get('description')?.hasError('required')">
+          Description is required
+        </mat-error>
+      </mat-form-field>
+
+      <!-- PARENT -->
+      <mat-form-field appearance="outline">
+        <mat-label>Parent Category</mat-label>
+        <mat-select formControlName="parentId">
+          <mat-option [value]="null">None (Parent Category)</mat-option>
+
+          <mat-option *ngFor="let cat of categories" [value]="cat.categoryId">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- IMAGE UPLOAD -->
+      <div class="mt-3">
+
+        <label class="fw-bold">Category Image</label>
+
+        <input type="file"
+               (change)="onFileChange($event)"
+               [disabled]="categoryform.value.parentId"
+               accept="image/*"
+               class="form-control">
+
+        <!-- WARNING -->
+        <small class="text-danger" *ngIf="categoryform.value.parentId">
+          Image allowed only for parent category
+        </small>
+
+        <!-- PREVIEW -->
+        <div *ngIf="imagePreview" class="mt-2">
+          <img [src]="imagePreview"
+               width="120"
+               height="120"
+               style="border-radius:8px; object-fit:cover;">
+        </div>
+
+      </div>
+
+    </mat-card-content>
+
+    <!-- ACTIONS -->
+    <mat-card-actions class="actions">
+
+      <button mat-raised-button color="primary" type="submit">
+        {{ isEditMode ? 'Update' : 'Upload' }}
+      </button>
+
+      <button mat-raised-button color="warn" type="button" (click)="resetForm()">
+        Clear
+      </button>
+
+    </mat-card-actions>
+
+  </form>
+
+</mat-card>
+

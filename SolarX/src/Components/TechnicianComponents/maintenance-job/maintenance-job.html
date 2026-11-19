@@ -1,0 +1,43 @@
+<body>
+    <!-- <p class="display-6">Maintenances </p> -->
+    <div class="container  p-3">
+    <div class="m-0 p-0" *ngIf="dto.length;else empty">
+       <div class="content">
+          <table class="table table-bordered table-hover align-middle text-center">
+            <thead>
+                <tr class="fw-bold text-dark">
+                    <th>RequestId</th>
+                    <th>OrderId</th>
+                    <th>Address</th>
+                    <th>phoneNumber</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="align-middle" *ngFor="let i of paginatedMaintenances">
+                    <td>{{i.requestId}}</td>
+                    <td>{{i.orderId}}</td>
+                    <td>{{i.assignedDate|date:'short'}}</td>
+                    <td>{{i.customerAddress}}</td>
+                    <td>{{i.status}}</td>
+                    <td><button mat-raised-button color="primary" (click)="reportForm(i.requestId)">MarkAsCompleted</button></td>
+                </tr>
+            </tbody>
+
+          </table>
+          <mat-paginator [length]="dto.length" [pageIndex]="pageIndex" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20]"
+          (page)="onPageEvent($event)" showFirstLastButtons>
+         
+          </mat-paginator>
+       </div>
+    </div>
+    <ng-template #empty>
+        <div class="img-content">
+            <img src="Assets/Themes/NoFounf.jpg" alt="" class="rounded-circle">
+            <h4>You don't have any Maintenances</h4>
+        </div>
+    </ng-template>
+</div>
+
+</body>

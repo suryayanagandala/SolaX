@@ -1,0 +1,72 @@
+<div class="home">
+  <mat-icon (click)="goBack()" class="ms-4 mt-2 arrow">arrow_back</mat-icon>
+  <div class="notification-page">
+
+    <!-- HEADER -->
+    <div class="header">
+      <h2>Notifications</h2>
+
+      <button mat-raised-button color="primary" (click)="markAllRead()">
+        <mat-icon>done_all</mat-icon>
+        Mark All As Read
+      </button>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter">
+      <div>
+         <button mat-button (click)="setFilter('all')" [class.active]="filter==='all'">
+         <mat-icon>list</mat-icon>
+        All
+      </button>
+
+      <button mat-button (click)="setFilter('unread')" [class.active]="filter==='unread'">
+         <mat-icon>mark_email_unread</mat-icon>
+         Unread
+      </button>
+      </div>
+
+      <div>
+          <mat-form-field appearance="outline" class="compact-field">
+             <!-- <mat-label>Notifications</mat-label> -->
+             <mat-icon matPrefix>search</mat-icon>
+             <input type="text" matInput [(ngModel)]="searchText" (input)="onSearchChange()" placeholder="Search by title or message">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="compact-field">
+         <!-- <mat-label>Select Date</mat-label> -->
+         <!-- <mat-icon matPrefix>calendar_today</mat-icon> -->
+         <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" (change)="onDateChange()" [max]="today" placeholder="Search by Date">
+         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+         <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      </div>
+    </div>
+
+  
+    <div class="notification-list">
+
+      
+      <div class="notification-card" *ngFor="let item of paginationNotifications" [class.unread]="!item.isRead">
+
+        <div class="title">
+          <mat-icon color="primary">
+           {{ item.isRead ? 'drafts' : 'markunread' }}
+          </mat-icon>
+          <span>{{ item.notificationType }}</span>
+          <small>{{ item.createdAt | date:'short' }}</small>
+        </div>
+
+        <p>{{ item.message }}</p>
+
+      </div>
+
+    </div>
+
+  
+    <mat-paginator  [length]="filteredNotifications.length"  [pageSize]="pageSize"  [pageIndex]="pageIndex"
+      [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons (page)="onPageChange($event)">
+    </mat-paginator>
+
+  </div>
+</div>

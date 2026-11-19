@@ -1,0 +1,30 @@
+<div class="container">
+    <mat-card class="display-card">
+    <mat-card-header>
+        <h2>Verify Otp</h2>
+    </mat-card-header>
+    <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()">
+       <mat-card-content>
+           <mat-form-field>
+              <mat-label>Enter Otp</mat-label>
+              <input type="text" maxlength="6" formControlName="otpText"  matInput autocomplete="one-time-code"
+                  (input)="onOtpChange()">
+
+
+              <mat-hint *ngIf="!expired" class="blink">
+                OTP expires {{timerDisplay}}
+              </mat-hint>
+
+              <mat-hint *ngIf="expired">
+                OTP expired.Please click on resend
+              </mat-hint>
+
+           </mat-form-field>
+       </mat-card-content>
+
+       <mat-card-actions>
+         <button mat-stroked-button color="accent" *ngIf="expired" type="button" (click)="resendOtp()">Resend Otp</button>
+       </mat-card-actions>
+    </form>
+</mat-card>
+</div>

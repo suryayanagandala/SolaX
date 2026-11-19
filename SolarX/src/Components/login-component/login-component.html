@@ -1,0 +1,69 @@
+<div class="login-container">
+    <div class="sun-section">
+        <h1>Powering the Future </h1>
+        <div class="sun-rotate">
+            <img src="Assets/Themes/panelimage1.jpg" alt="SolarX Sun" class="sun-image">
+        </div>
+
+        <p>SolarX Energy Management System</p>
+    </div>
+
+    <div class="form-section">
+        <div class="card-animate">
+            <form [formGroup]="_loginForm" (ngSubmit)="Login()">
+                <mat-card class="login-card">
+                    <mat-card-header>
+                        <h1 class="text-center ms-5">User Login</h1>
+                        <br>
+                    </mat-card-header>
+
+                    <mat-card-content>
+                        <mat-form-field>
+                            <mat-label> Email</mat-label>
+                            <input formControlName="email" matInput type="email" />
+                            <mat-error
+                                *ngIf=" (_loginForm.get('email')?.hasError('email') && (_loginForm.get('email')?.touched || submitted))">
+                                Enter a valid email
+                            </mat-error>
+                        </mat-form-field>
+
+                        <br><br>
+                        <mat-form-field>
+                            <mat-label>Password</mat-label>
+
+                            <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" />
+
+                            <button mat-icon-button matSuffix type="button" (click)="togglePassword()">
+                                <mat-icon>
+                                    {{ hidePassword ? 'visibility_off' : 'visibility' }}
+                                </mat-icon>
+                            </button>
+
+                            <mat-error *ngIf="(_loginForm.get('password')?.hasError('required') &&
+                    (_loginForm.get('password')?.touched || submitted))">
+                                Password is required
+                            </mat-error>
+
+                        </mat-form-field>
+
+
+
+                    </mat-card-content>
+
+                    <mat-card-actions class="login-actions">
+
+                        <button type="submit" mat-raised-button color="primary">Login</button>
+                        <button mat-raised-button color="accent" type="button" (click)="goToRegister()">Create
+                            Account</button>
+
+                    </mat-card-actions>
+                    <div class="d-flex justify-content-center">
+                        <a routerLink="/forgotPassword" type="button">Forgor Password?</a>
+                    </div>
+                </mat-card>
+
+            </form>
+        </div>
+    </div>
+
+</div>

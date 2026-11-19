@@ -1,0 +1,18 @@
+.why-solarx {
+  background: url('https://images.unsplash.com/photo-1509391366360-2e959784a276') center/cover no-repeat;
+  background-position: top;
+}
+
+.feature-card {
+  background:var(--content-bg) !important;
+  padding: 15px;
+  border-radius: 12px;
+  height: 100%;
+  text-align: center;
+}
+
+.feature-card i {
+  font-size: 32px;
+  color: #2f6b3f;
+  margin-bottom: 10px;
+}

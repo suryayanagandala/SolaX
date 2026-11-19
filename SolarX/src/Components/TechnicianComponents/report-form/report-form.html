@@ -1,0 +1,54 @@
+<div class="container mt-3 border border-1 border-primary">
+    <button mat-icon-button routerLink="/panel/installations">
+        <mat-icon>arrow_back</mat-icon>
+    </button>
+    <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
+        <mat-card class="d-flex flex-column justify-content-center p-5 gap-3">
+            <mat-form-field appearance="outline">
+                <mat-label>Installation Id</mat-label>
+                <input type="text" formControlName="installationId" readonly matInput>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <textarea cols="3" rows="3" formControlName="notes" matInput></textarea>
+                <mat-error *ngIf="reportForm.get('notes')?.invalid && reportForm.get('notes')?.touched">
+                    Minimum 20 characters is required
+                </mat-error>
+            </mat-form-field>
+
+            <label>Check List</label>
+
+            <div formGroupName="checkList">
+                <mat-checkbox *ngFor="let item of checkListItems" [formControlName]="item.key">
+                    {{ item.label }}
+                </mat-checkbox>
+            </div>
+
+            <mat-error *ngIf="reportForm.get('checkList')?.hasError('mandatoryIncomplete')
+                && reportForm.get('checkList')?.touched">
+                Please complete all mandatory installation steps.
+            </mat-error>
+
+            <label for="image">Upload Images</label>
+            <input type="file" multiple (change)="onImageSelected($event)">
+            <mat-error *ngIf="reportForm.get('images')?.invalid && reportForm.get('images')?.touched">
+                At least one image is required
+            </mat-error>
+
+            <div class="preview-wrapper" *ngIf="previewImages.length">
+                <div class="image-card" *ngFor="let img of previewImages; let i = index">
+                    <img [src]="img" alt="" class="preview-img">
+                    <button mat-icon-button color="warn" class="close-btn" (click)="removeImage(i)">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </div>
+            </div>
+
+
+            <button type="submit" mat-raised-button color="accent" [disabled]="reportForm.invalid" class="text-white">
+                Submit Report
+            </button>
+        </mat-card>
+    </form>
+</div>

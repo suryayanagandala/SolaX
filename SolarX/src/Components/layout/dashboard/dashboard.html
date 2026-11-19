@@ -1,0 +1,147 @@
+<body>
+    <p class="text-white fs-3 ms-4">Solar Monitoring</p>
+
+    <div class="first-block">
+        <div class="content" *ngIf="summaryDashbaord; else noDataFound">
+
+            <mat-card class="card row-content">
+                <div class="left-section">
+                    <i class="bi bi-lightning-charge-fill kpi-icon"></i>
+                </div>
+                <div class="right-section">
+                    <div class="kpi-value text-success fs-3 fw-bold">{{ summaryDashbaord.todayTotal |powerTransform  }} </div>
+                    <div class="kpi-label">Today's Production</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="card row-content">
+                <div class="left-section">
+                    <i class="bi bi-calendar kpi-icon"></i>
+                </div>
+                <div class="right-section">
+                    <div class="kpi-value text-primary fs-3 fw-bold">{{ summaryDashbaord.monthlyPower | powerTransform  }} 
+                    </div>
+                    <div class="kpi-label">Monthly Production</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="card row-content">
+                <div class="left-section">
+                    <i class="bi bi-bar-chart-fill kpi-icon"></i>
+                </div>
+                <div class="right-section">
+                    <div class="kpi-value text-info fs-3 fw-bold">{{ summaryDashbaord.lifeTimePower | powerTransform  }} </div>
+                    <div class="kpi-label">Lifetime Production</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="card row-content">
+                <div class="left-section">
+                    <i class="bi bi-currency-rupee kpi-icon"></i>
+                </div>
+                <div class="right-section">
+                    <div class="kpi-value fw-bold text-danger fs-3"> {{ summaryDashbaord.lifeTimeSavings |currencyPipe}}</div>
+                    <div class="kpi-label">Estimated Savings</div>
+                </div>
+            </mat-card>
+
+        </div>
+
+        <ng-template #noDataFound>
+            <div class="no-data">
+                <h3>No Solar Data Available</h3>
+                <p>Your system has not started generating data yet.</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <div class="main-section">
+        <div class="charts-section">
+            <div class="dashboard-container text-white">
+                <p class="fs-3 text-white ms-4">Daily Production Trend</p>
+                <div *ngIf="isChartLoading" class="chart-loader">
+                  <mat-spinner diameter="40"></mat-spinner>
+                 </div>
+                <apx-chart #chart [series]="chartOptions.series" [chart]="chartOptions.chart"
+                    [xaxis]="chartOptions.xaxis" [stroke]="chartOptions.stroke" [title]="chartOptions.title">
+                </apx-chart>
+
+            </div>
+
+            <div class="monthly-chart" *ngIf="monthlyPower.length > 0">
+                <apx-chart *ngIf="monthlyChart" [series]="monthlyChart.series" [chart]="monthlyChart.chart"
+                    [xaxis]="monthlyChart.xaxis" [yaxis]="monthlyChart.yaxis" [title]="monthlyChart.title"
+                    [tooltip]="monthlyChart.tooltip" [dataLabels]="monthlyChart.dataLabels" [plotOptions]="monthlyChart.plotOptions">
+                </apx-chart>
+            </div>
+
+
+
+        </div>
+        <div class="radial-chart-wrapper">
+            <p class="fs-3 text-white ms-2">Panel OverView</p>
+            <mat-form-field appearance="outline" class=" panel-select mt-4 white-form-field">
+                <mat-label class="text-white">Selected Panel</mat-label>
+
+                <mat-select class="text-white" [value]="selectedPanelId"
+                    (selectionChange)="onPanelChange($event.value)">
+                    <mat-option [value]="null">All Panels</mat-option>
+                    <mat-option *ngFor="let panel of activatedPanles" [value]="panel.panelId" class="text-white">
+                        {{panel.panelName}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div class="panel-overview">
+
+
+                <div *ngIf="panelDetails" class="details-section text-center">
+
+                    <div class="power d-flex align-items-center gap-3 justify-content-center">
+                        <p>Current Power:</p>
+                        <h2 class="text-success">{{ panelDetails.currentFlow }} W</h2>
+                    </div>
+
+                    <div class="production d-flex align-items-center gap-3 justify-content-center">
+                        <span>Production:</span>
+                        <strong class="text-success fs-3">{{panelDetails.power }} W</strong>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 mt-2 justify-content-center">
+                        <span>Temperature:</span>
+                        <strong class="text-success fs-3">{{ panelDetails.temperature }} °C</strong>
+                    </div>
+
+                </div>
+
+
+                <div class="radial-chart" *ngIf="radialChart">
+                    <apx-chart [series]="radialChart.series" [chart]="radialChart.chart"
+                        [plotOptions]="radialChart.plotOptions" [labels]="radialChart.labels">
+                    </apx-chart>
+                </div>
+
+                 <div *ngIf="!panelDetails" class="text-center">
+                   <span>Overall Efficiency of All Panels</span>
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+    <div class="">
+      <apx-chart *ngIf="forecastChartOptions" [series]="forecastChartOptions.series!" [chart]="forecastChartOptions.chart!"
+        [xaxis]="forecastChartOptions.xaxis!" [stroke]="forecastChartOptions.stroke!" [title]="forecastChartOptions.title!"
+        [markers]="forecastChartOptions.markers!" [theme]="forecastChartOptions.theme!">
+      </apx-chart>
+    </div>
+    <div class="">
+       <apx-chart *ngIf="dailyweatherChart" [series]="dailyweatherChart.series" [chart]="dailyweatherChart.chart"
+       [xaxis]="dailyweatherChart.xaxis" [yaxis]="dailyweatherChart.yaxis" [title]="dailyweatherChart.title"
+       [dataLabels]="dailyweatherChart.dataLabels" [theme]="dailyweatherChart.theme" [annotations]="dailyweatherChart.annotations">
+
+       </apx-chart>
+    </div>
+    
+</body>

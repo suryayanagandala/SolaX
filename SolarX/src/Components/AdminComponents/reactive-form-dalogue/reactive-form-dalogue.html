@@ -1,0 +1,43 @@
+<h4 mat-dialog-title>Deactivated Product</h4>
+
+<form [formGroup]="reasonForm">
+
+<mat-dialog-content>
+
+  <mat-form-field appearance="outline" class="w-100">
+    <mat-label>Reason</mat-label>
+
+    <textarea
+      matInput
+      formControlName="reason"
+      rows="3"
+      (blur)="trimInput()">
+    </textarea>
+
+    <mat-error *ngIf="reasonForm.get('reason')?.touched && reasonForm.get('reason')?.hasError('required')">
+      Reason is required
+    </mat-error>
+
+    <mat-error *ngIf="reasonForm.get('reason')?.touched && reasonForm.get('reason')?.hasError('minlength')">
+      Minimum 5 characters required
+    </mat-error>
+
+  </mat-form-field>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+
+  <button mat-raised-button color="warn" (click)="close()">
+    Cancel
+  </button>
+
+  <button mat-raised-button color="primary"
+          [disabled]="reasonForm.invalid"
+          (click)="submit()">
+    Submit
+  </button>
+
+</mat-dialog-actions>
+
+</form>

@@ -1,0 +1,103 @@
+<div class="containers">
+    <div class="page-header">
+        <span>Solar Products</span>
+        <span *ngIf="parentCategory"> › {{ parentCategory.name }}</span>
+        <span *ngIf="selectedChild"> › {{ selectedChild.name }}</span>
+    </div>
+
+    <div class="hero">
+        <div class="hero-text">
+            <h2>Top Solar Products</h2>
+            <p>Browse our selection of high quality solar products for all your energy needs</p>
+
+        </div>
+    </div>
+    <div class="container mt-4">
+        <h4 class="text-center">Filter the products</h4>
+        <div class="category-header">
+
+            <div class="header-top">
+                <mat-form-field appearance="outline" class="category-select">
+                    <mat-label>Category</mat-label>
+                    <mat-select [(value)]="selectedParentSlug" (selectionChange)="onParentCategoryChange($event.value)">
+                        <mat-option *ngFor="let cat of parentCategories" [value]="cat.slug">
+                            {{ cat.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <h4 class="title">{{ parentCategory?.name }} Products</h4>
+            </div>
+
+            <div class="filter-box">
+                <div>
+                    <h4>Filter by price</h4>
+                </div>
+                <div class="slider-container">
+                    <mat-slider min="0" [max]="maxPrice" step="500" [formGroup]="priceForm">
+                        <input formControlName="priceRange" matSliderThumb (change)="applyFilters()" />
+                    </mat-slider>
+                    <p class="price">
+                        Up to <mat-icon class="rupee-icon">currency_rupee</mat-icon>
+                        {{ priceForm.value.priceRange | number }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- child categort tabs -->
+    <!-- SKELETON TABS -->
+    <div class="child-tabs" *ngIf="loading">
+        <div class="tab-skeleton" *ngFor="let i of [1,2,3,4,5]">
+
+        </div>
+    </div>
+
+    <div class="child-tabs" *ngIf="!loading &&parentCategory">
+
+        <button mat-stroked-button [class.active]="!selectedChild" (click)="loadParentCategories()">
+            All
+        </button>
+
+        <button mat-stroked-button *ngFor="let child of childCategories"
+            [class.active]="selectedChild?.categoryId === child.categoryId" (click)="filterByChild(child)">
+            {{ child.name }}
+        </button>
+    </div>
+
+    <div class="content">
+
+        <!-- SKELETON PRODUCTS -->
+        <section class="products-grid" *ngIf="loading">
+            <div class="products-card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-text title"></div>
+                <div class="skeleton-text small"></div>
+                <div class="skeleton-text price"></div>
+                <div class="skeleton-btn"></div>
+            </div>
+        </section>
+
+        <section class="products-grid" *ngIf="!loading">
+            <mat-card class="products-card" *ngFor="let p of pagedProducts">
+                <img mat-card-image [src]="getProductImage(p)" width="250" height="250">
+                <mat-card-content>
+                    <h4>{{p.productName}}</h4>
+                    <p class="brand">{{p.brand}}</p>
+                    <p class="price"><mat-icon class="mat-align">currency_rupee</mat-icon>{{p.price|number}}</p>
+                </mat-card-content>
+                <mat-card-actions>
+                    <button mat-raised-button color="primary" (click)="viewProductById(p.productId)">
+                        View Details
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </section>
+    </div>
+
+    <mat-paginator [length]="filteredProducts.length" [pageSize]="pageSize" [pageSizeOptions]="[8,14,16]"
+        (page)="onPageChange($event)">
+
+    </mat-paginator>
+</div>

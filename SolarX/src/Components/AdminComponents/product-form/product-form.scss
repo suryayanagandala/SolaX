@@ -1,0 +1,25 @@
+.mat-card { 
+    
+  background-color: rgba(214, 157, 52, 0.7); 
+  
+   transition: background-color 0.3s ease; } 
+    .mat-card:hover 
+    { 
+        background-color: rgba(214, 157, 52, 1); 
+    }
+.display-card{
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:30px;
+}
+
+.mat-card-button{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    gap:50px;
+}
+
+.mat-card-button button{
+    width:150px;
+}

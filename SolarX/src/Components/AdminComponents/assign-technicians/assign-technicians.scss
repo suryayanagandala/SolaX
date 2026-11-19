@@ -1,0 +1,16 @@
+.form-grid{
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap:30px;
+    grid-template-rows: auto;
+}
+mat-card-actions{
+    display:flex;
+    gap:50px;
+    justify-content: center;
+    align-items: center;
+}
+
+mat-card-actions button{
+    width:250px;
+}

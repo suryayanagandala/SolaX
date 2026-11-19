@@ -1,0 +1,139 @@
+
+.page-container {
+  padding: 20px 24px;
+  background-color: var(--content-bg) !important;
+  min-height: 100vh;
+  width:70%;
+  margin:0 auto;
+}
+
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.header h4 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}
+
+
+mat-accordion {
+  display: block;
+  width: 100%;
+}
+
+
+mat-expansion-panel {
+  margin-bottom: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+
+
+mat-expansion-panel-header {
+  font-weight: 600;
+  font-size: 15px;
+  background-color: var(--content-bg) !important;
+}
+
+
+mat-expansion-panel-header mat-icon {
+  margin-right: 10px;
+  color: #2e7d32;
+}
+
+
+mat-list {
+  padding: 0 16px 12px;
+}
+
+
+mat-list-item {
+  border-radius: 8px;
+  margin: 6px 0;
+  background-color:var(--sidebar-bg) !important;
+}
+
+
+mat-list-item:hover {
+  background-color: #f1f5f1;
+}
+
+
+mat-list-item mat-icon[matListIcon] {
+  color: #757575;
+}
+
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+
+.actions button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+
+.actions mat-icon {
+  font-size: 18px;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.header-actions {
+  margin-left: auto; 
+  display: flex;
+  gap: 6px;
+}
+
+
+.child-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+
+.child-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+
+.header-actions button,
+.child-actions button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}

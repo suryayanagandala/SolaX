@@ -1,0 +1,30 @@
+.mat-card{
+ display:flex;
+ flex-direction: column;
+ width:50%;
+ margin:0 auto;
+ padding:10px;
+}
+
+.mat-form mat-form-field{
+    width:100%;
+}
+
+
+
+.actions{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:30px;
+}
+
+.actions button{
+width:200px;
+
+}
+
+mat-card-header h4{
+   width: 100%;
+  text-align: center
+}

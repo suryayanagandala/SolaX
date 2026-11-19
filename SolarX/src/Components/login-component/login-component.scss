@@ -1,0 +1,116 @@
+.login-container{
+    display:flex;
+    justify-content: center;
+  
+    height:100vh;
+    width:100%;
+}
+
+.sun-section{
+    width:50%;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    display: flex;
+    flex-direction: column;
+    gap:20px;
+    justify-content: center;
+    align-items: center;
+    color:Black;
+    text-align: center;
+    padding: 40px;
+}
+.sun-rotate {
+  animation: sunRotate 20s linear infinite;
+}
+
+.sun-image {
+  width: 220px;
+  animation: sunPulse 4s ease-in-out infinite;
+  margin-bottom: 20px;
+  
+}
+.sun-section h1 {
+  font-size: 28px;
+  
+  margin-bottom: 80px;
+}
+
+.sun-section p {
+  margin-top: 20px;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+@keyframes sunRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+@keyframes sunPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.form-section{
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+}
+
+.login-card {
+  width: 420px;
+  padding: 20px;
+
+  
+}
+.card-animate {
+  animation: slideIn 0.9s ease-out forwards;
+}
+
+
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.login-card .mat-mdc-form-field {
+  width: 100%;
+}
+
+.login-actions{
+    display:flex;
+    gap:20px;
+}
+
+.login-actions button{
+    flex:1;
+}
+
+@media (max-width:760px) {
+    .login-container{
+        flex-direction: column;
+    }
+
+    .sun-section,.form-section{
+        width: 100%;
+    }
+    .sun-image{
+        width:120px;
+    }
+}
