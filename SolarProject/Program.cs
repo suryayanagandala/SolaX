@@ -96,9 +96,9 @@ builder.Services.AddAuthentication(options =>
 builder.Configuration.AddJsonFile("message.json",optional:false,reloadOnChange:true);
 
 
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+//builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
+//builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
 
 builder.Services.AddHttpClient<AiInterfaceRepository,AiRepository>();
 
@@ -155,7 +155,7 @@ builder.Services.AddHostedService<MaintenenceAssignmentBackGroundService>();
 
 builder.Services.AddHostedService<AlertBackgroundService>();
 
-builder.Services.AddHostedService<WeatherForeCastSerice>();
+//builder.Services.AddHostedService<WeatherForeCastSerice>();
 
 builder.Services.AddScoped<IAccessRepository, AccessoryRepository>();
 

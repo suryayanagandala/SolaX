@@ -439,7 +439,9 @@ namespace DbAccessaLayer.Infrastructure
 
                 var prompt = BuildPrompt(recomendations, product);
 
-                recomendations.AIExplanation = await _aiInterfaceRepository.GenerateExplanation(prompt);
+                //recomendations.AIExplanation = await _aiInterfaceRepository.GenerateExplanation(prompt);
+
+                recomendations.AIExplanation = "Ai Service is disabled";
 
                 return recomendations;
             }
