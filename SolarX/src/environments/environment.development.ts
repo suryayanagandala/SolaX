@@ -1,4 +1,4 @@
 export const environment = {
-    apiUrl:'https://localhost:44362/api',
-    imageUrl:'https://localhost:44362'
+  apiUrl: 'https://solarx-api-emcaesddhtebeqev.centralindia-01.azurewebsites.net/api',
+  imageUrl: 'https://solarx-api-emcaesddhtebeqev.centralindia-01.azurewebsites.net'
 };
