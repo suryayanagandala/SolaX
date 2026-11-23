@@ -460,6 +460,7 @@ namespace DbAccessaLayer.Infrastructure
                 UserId = userId,
                 Message = message,
                 Type = CoreModels.Enums.NotificationType.System,
+                CreatedAt = TimeUtility.NowIST(),
                 IsRead = false,
                 IsActive = true,
             };

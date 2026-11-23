@@ -27,7 +27,7 @@ namespace DbAccessaLayer.Infrastructure
     public class AccessoryRepository : IAccessRepository
     {
         private readonly ApplicationDbContext _db;
-        private readonly AiInterfaceRepository _aiInterfaceRepository;
+        //private readonly AiInterfaceRepository _aiInterfaceRepository;
         private readonly ILogger<AccessoryRepository> logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ISignalRRepository signalRRepository;
@@ -35,7 +35,7 @@ namespace DbAccessaLayer.Infrastructure
             IHttpContextAccessor httpContextAccessor, ISignalRRepository signalRRepository)
         {
             _db = db;
-            _aiInterfaceRepository = aiInterfaceRepository;
+            //_aiInterfaceRepository = aiInterfaceRepository;
             this.logger = logger;
             _httpContextAccessor = httpContextAccessor;
             this.signalRRepository = signalRRepository;
@@ -514,7 +514,8 @@ namespace DbAccessaLayer.Infrastructure
             Explain why this is a good match in simple terms.
             ";
 
-            return await _aiInterfaceRepository.GenerateExplanation(prompt);
+            //return await _aiInterfaceRepository.GenerateExplanation(prompt);
+            return "Ollama is disabled";
         }
 
         public async Task<string> CompareProducts(int product1Id, int product2Id)
@@ -540,57 +541,60 @@ namespace DbAccessaLayer.Infrastructure
                 Keep it simple and short.
                 ";
 
-            return await _aiInterfaceRepository.GenerateExplanation(prompt);
+            //return await _aiInterfaceRepository.GenerateExplanation(prompt);
+            return "Ollama is disabled";
         }
 
         public async Task<ComboResposneDto> GetBestCombo(int productId)
         {
-            var product = await _db.Set<Products>().Where(x => x.ProductId == productId).FirstOrDefaultAsync();
-            if (product == null)
-            {
-                throw new NotFoundException(MessageHelper.Get("Poducts", "ProductId"));
-            }
+            //var product = await _db.Set<Products>().Where(x => x.ProductId == productId).FirstOrDefaultAsync();
+            //if (product == null)
+            //{
+            //    throw new NotFoundException(MessageHelper.Get("Poducts", "ProductId"));
+            //}
 
-            var capacity = product.CapacityValue;
-            double requiredKWh = (capacity * 5) / 1000.0;
+            //var capacity = product.CapacityValue;
+            //double requiredKWh = (capacity * 5) / 1000.0;
 
-            var batteries = await GetRecommendedBatteries(requiredKWh);
+            //var batteries = await GetRecommendedBatteries(requiredKWh);
 
-            double requiredWatt = capacity * 1.3;
+            //double requiredWatt = capacity * 1.3;
 
-            var inverters = await GetRecommendedInverters(requiredWatt * 0.7,requiredWatt * 1.5);
+            //var inverters = await GetRecommendedInverters(requiredWatt * 0.7,requiredWatt * 1.5);
 
-            var prompt = BuildBestComboPrompt(product, batteries, inverters);
+            //var prompt = BuildBestComboPrompt(product, batteries, inverters);
 
-            var aiResponse= await _aiInterfaceRepository.GenerateExplanation(prompt);
-            logger.LogInformation(aiResponse);
+            //var aiResponse= await _aiInterfaceRepository.GenerateExplanation(prompt);
+            //logger.LogInformation(aiResponse);
 
-            var expectedResult = JsonSerializer.Deserialize<ComboDto>(aiResponse.Trim(),
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-            logger.LogInformation(expectedResult.BatteryName);
-            logger.LogInformation(expectedResult.InverterName);
+            //var expectedResult = JsonSerializer.Deserialize<ComboDto>(aiResponse.Trim(),
+            //    new JsonSerializerOptions
+            //    {
+            //        PropertyNameCaseInsensitive = true
+            //    });
+            //logger.LogInformation(expectedResult.BatteryName);
+            //logger.LogInformation(expectedResult.InverterName);
 
-            var cleanInverterName = expectedResult.InverterName.Split("-")[0].Trim();
+            //var cleanInverterName = expectedResult.InverterName.Split("-")[0].Trim();
 
-            var battery = await _db.Products.Include(x=>x.ProductImages).FirstOrDefaultAsync(x => x.ProductName.Contains(expectedResult.BatteryName));
+            //var battery = await _db.Products.Include(x=>x.ProductImages).FirstOrDefaultAsync(x => x.ProductName.Contains(expectedResult.BatteryName));
 
-            var inverter = await _db.Products.Include(x=>x.ProductImages)
-                .FirstOrDefaultAsync(x => x.ProductName.Contains(cleanInverterName));
-            if (inverter == null)
-            {
-                throw new NotFoundException(MessageHelper.Get("Products","NotFound"));
-            }
+            //var inverter = await _db.Products.Include(x=>x.ProductImages)
+            //    .FirstOrDefaultAsync(x => x.ProductName.Contains(cleanInverterName));
+            //if (inverter == null)
+            //{
+            //    throw new NotFoundException(MessageHelper.Get("Products","NotFound"));
+            //}
 
 
-            return new ComboResposneDto
-            {
-                Battery = MapToDto(battery),
-                Inverter = MapToDto(inverter),
-                Reason = expectedResult.Reason
-            };
+            //return new ComboResposneDto
+            //{
+            //    Battery = MapToDto(battery),
+            //    Inverter = MapToDto(inverter),
+            //    Reason = expectedResult.Reason
+            //};
+
+            throw new NotImplementedException();
         }
 
         private ProductDto MapToDto(Products products)
@@ -680,7 +684,8 @@ namespace DbAccessaLayer.Infrastructure
 
                 var result= BuildBudgetPrompt(product,budget, batteries, inverters);
 
-                return  await _aiInterfaceRepository.GenerateExplanation(result);
+                // return  await _aiInterfaceRepository.GenerateExplanation(result);
+                return "Ollama is disabled";
             }
             catch(Exception)
             {
@@ -804,12 +809,13 @@ namespace DbAccessaLayer.Infrastructure
                 //{
                 //    throw new Exception("User not authenticated");
                 //}
-                var result = await _aiInterfaceRepository.GetPredictPower();
+                //var result = await _aiInterfaceRepository.GetPredictPower();
 
-                var response = GenerateInsights(result.Predictions, result.ForecastTimes);
+                //var response = GenerateInsights(result.Predictions, result.ForecastTimes);
 
-                await SaveAlertsIntoDataBase(response.Alerts, userId);
-                return response;
+                //await SaveAlertsIntoDataBase(response.Alerts, userId);
+                //return response;
+                throw new NotImplementedException();
             }
             catch (Exception)
             {
@@ -857,22 +863,24 @@ namespace DbAccessaLayer.Infrastructure
         {
             try
             {
-                var result = await _aiInterfaceRepository.GetWeatherInputs();
-                var predictions = new List<double>();
-                foreach(var item in result)
-                {
-                    var power = await _aiInterfaceRepository.GetPredictedPower(new PredictionRequest
-                    {
-                        Irradiance = item.Irradiance,
-                        Temperature = item.Temperature,
-                        CloudCover = item.CloudCover,
-                        Humidity = item.Humidity,
-                        Hour = item.Hour
-                    });
+                //var result = await _aiInterfaceRepository.GetWeatherInputs();
+                //var predictions = new List<double>();
+                //foreach(var item in result)
+                //{
+                //    var power = await _aiInterfaceRepository.GetPredictedPower(new PredictionRequest
+                //    {
+                //        Irradiance = item.Irradiance,
+                //        Temperature = item.Temperature,
+                //        CloudCover = item.CloudCover,
+                //        Humidity = item.Humidity,
+                //        Hour = item.Hour
+                //    });
 
-                    predictions.Add(power);
-                }
-                return predictions;
+                //    predictions.Add(power);
+                //}
+                //return predictions;
+
+                throw new NotImplementedException();
             }
             catch(Exception ex)
             {
@@ -885,35 +893,37 @@ namespace DbAccessaLayer.Infrastructure
         {
             try
             {
-                var weatherData=await _aiInterfaceRepository.GetDailyWeatherInputs();
-                var grouped = weatherData.GroupBy(x => x.Time.Date);
-                var list=new List<DailyForecast>();
-                var capcityValue=await CalculateTotalCapacityOfUser(userId);
-                foreach(var day in grouped)
-                {
-                    var task = day.Where(item => item.Hour >= 6 && item.Hour <= 18).Select(async item =>
-                    {
-                        var power = await _aiInterfaceRepository.GetPredictedPower(new PredictionRequest
-                        {
-                            Irradiance=item.Irradiance,
-                            Temperature=item.Temperature,
-                            CloudCover=item.CloudCover,
-                            Humidity=item.Humidity,
-                            Hour=item.Hour
-                        });
+                //var weatherData=await _aiInterfaceRepository.GetDailyWeatherInputs();
+                //var grouped = weatherData.GroupBy(x => x.Time.Date);
+                //var list=new List<DailyForecast>();
+                //var capcityValue=await CalculateTotalCapacityOfUser(userId);
+                //foreach(var day in grouped)
+                //{
+                //    var task = day.Where(item => item.Hour >= 6 && item.Hour <= 18).Select(async item =>
+                //    {
+                //        var power = await _aiInterfaceRepository.GetPredictedPower(new PredictionRequest
+                //        {
+                //            Irradiance=item.Irradiance,
+                //            Temperature=item.Temperature,
+                //            CloudCover=item.CloudCover,
+                //            Humidity=item.Humidity,
+                //            Hour=item.Hour
+                //        });
 
 
-                        return power * capcityValue;
-                    });
-                    var result=await Task.WhenAll(task);
+                //        return power * capcityValue;
+                //    });
+                //    var result=await Task.WhenAll(task);
 
-                    list.Add(new DailyForecast
-                    {
-                        Date = day.Key.ToString("MMM dd"),
-                        TotalEnergy = Math.Round(result.Sum(), 2)
-                    });
-                }
-                return list;
+                //    list.Add(new DailyForecast
+                //    {
+                //        Date = day.Key.ToString("MMM dd"),
+                //        TotalEnergy = Math.Round(result.Sum(), 2)
+                //    });
+                //}
+                //return list;
+
+                throw new NotImplementedException();
             }   
             catch(Exception)
             {

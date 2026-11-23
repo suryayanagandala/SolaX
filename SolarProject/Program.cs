@@ -96,11 +96,11 @@ builder.Services.AddAuthentication(options =>
 builder.Configuration.AddJsonFile("message.json",optional:false,reloadOnChange:true);
 
 
-//builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 //builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
 
-builder.Services.AddHttpClient<AiInterfaceRepository,AiRepository>();
+builder.Services.AddHttpClient<AiInterfaceRepository, AiRepository>();
 
 builder.Services.AddScoped<IEmailService, EmailServiceRepository>();
 
@@ -176,7 +176,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
-builder.Services.Configure<OllamaSettings>( builder.Configuration.GetSection("Ollama"));
+//builder.Services.Configure<OllamaSettings>( builder.Configuration.GetSection("Ollama"));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
