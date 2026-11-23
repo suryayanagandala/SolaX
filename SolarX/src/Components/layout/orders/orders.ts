@@ -118,7 +118,7 @@ export class Orders implements OnInit, AfterViewInit {
   initMap() {
     this.map = L.map('map').setView([17.385044, 78.486671], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
